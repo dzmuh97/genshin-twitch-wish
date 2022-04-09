@@ -1,0 +1,1 @@
+pyinstaller --onefile --icon=icon.ico --name TwitchGenshinWishSim main.py

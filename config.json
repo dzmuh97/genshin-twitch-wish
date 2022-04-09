@@ -1,0 +1,25 @@
+{
+  "CONFIG": {
+    "bot_token": "твич_токен_здесь",
+    "work_channel": "канал_куда_подключаться",
+    "self_wish": false,
+    "self_wish_every": 300,
+    "window_name": "Genshin Twitch Wish Simulator",
+    "play_sound": true,
+    "wish_timeout": 10,
+    "wish_global_timeout": 3,
+    "wish_fo_garant": 10,
+    "wish_fo_chance": 9,
+    "wish_fi_garant": 90,
+    "wish_fi_chance": 1,
+    "wish_fi_soft_a": 60
+  },
+  "MESSAGES": [
+    "тратит крутку в баннер!",
+    "решает испытать удачу!",
+    "тратит 160 гемов в баннер!",
+    "молится архонтам на удачу!",
+    "хочет поменять гемы на вайфу!",
+    "надеется на китайский рандом!"
+  ]
+}

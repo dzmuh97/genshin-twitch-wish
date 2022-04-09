@@ -1,0 +1,11 @@
+.git
+.idea
+__pycache__
+build
+dist
+
+.gitignore
+upx.exe
+*.spec
+*.zip
+*.exe
