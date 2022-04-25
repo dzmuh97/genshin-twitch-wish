@@ -12,7 +12,8 @@
     "wish_fo_chance": 9,
     "wish_fi_garant": 90,
     "wish_fi_chance": 1,
-    "wish_fi_soft_a": 60
+    "wish_fi_soft_a": 60,
+    "bot_usertext": "@{username} это твоя #{wish_count} крутка! Результат смотри на стриме HungryPaimon"
   },
   "MESSAGES": [
     "тратит крутку в баннер!",

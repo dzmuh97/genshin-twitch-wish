@@ -78,7 +78,7 @@ class Gacha:
                 self.wish_5_garant = 1
                 return '5', 'srnd'
         else:
-            if random.choice(range(100 - CONFIG['wish_fi_chance'])) == 0:
+            if random.choice(range(100)) < CONFIG['wish_fi_chance']:
                 self.wish_5_garant = 1
                 return '5', 'rnd'
 
@@ -94,7 +94,7 @@ class Gacha:
 
         self.wish_4_garant += 1
 
-        if random.choice(range(100 - CONFIG['wish_fo_chance'])) == 0:
+        if random.choice(range(100)) < CONFIG['wish_fo_chance']:
             self.wish_4_garant = 1
             return '4', 'rnd'
 
@@ -186,6 +186,7 @@ class Coordiantor:
         utext = random.choice(MESSAGES)
         wish_meta_type, wish_meta_name, wish_meta_star = merge_wish_meta((80, 450), WishMeta(wmetatype, wmetaelem), WishText(wname), int(wstar))
         self.objs.update({'fall_anim': {'obj': FallAnimated(wstar), 'play': False},
+                        'user_perm_text': {'obj': PermaText(self.cur_wish.username), 'play': False},
                         'back_anim_first': {'obj': BackAnimated('first', wstar), 'play': False},
                         'back_anim_second': {'obj': BackAnimated('second', wstar), 'play': False},
                         'back_static': {'obj': Background(), 'play': False},
@@ -212,6 +213,7 @@ class Coordiantor:
                 self.sound.append(sound_fall)
                 sound_fall.play()
 
+        userperma = self._play_obj('user_perm_text')
         fallobj = self._play_obj('fall_anim')
         if fallobj.is_play:
             return False
@@ -243,6 +245,7 @@ class Coordiantor:
         if back_tmpl.is_play:
             return False
 
+        userperma.is_play = False
         wish_back.is_play = False
         wish_color.is_play = False
         wish_meta_type.is_play = False
@@ -477,6 +480,20 @@ class WishText(Static):
         self.image = textobj
         self.rect = self.image.get_rect()
 
+class PermaText(Static):
+    def __init__(self, text):
+        super().__init__()
+        self.text = text
+        self.font = pygame.font.Font(os.path.join('fonts', 'Genshin_Impact.ttf'), 48)
+        self.lifetime = -1
+        self._load()
+
+    def _load(self):
+        textobj = self.font.render(self.text, True, USERTEXT_COLOR)
+        self.image = textobj
+        self.rect = self.image.get_rect()
+        self.rect.bottomright = (1270, 710)
+
 class TwitchBot(commands.Bot):
     def __init__(self, que):
         super().__init__(token=CONFIG['bot_token'], prefix='!', initial_channels=[CONFIG['work_channel'],])
@@ -494,6 +511,7 @@ class TwitchBot(commands.Bot):
         else:
             self.gacha_users = {}
         print('[TWITCH] Данные загружены. Всего:', len(self.gacha_users))
+        print('[TWITCH] Подключаемся к чату на канал %s..' % CONFIG['work_channel'])
 
     async def event_ready(self):
         print('[TWITCH] Подключено. Авторизован как:', self.nick, self.user_id)
@@ -521,7 +539,7 @@ class TwitchBot(commands.Bot):
         if message.echo:
             return
 
-        print('[TWITCH]', message.author.name, message.author.color, message.content)
+        print('[TWITCH] Чат', message.author.name, message.author.color, message.content)
         await self.handle_commands(message)
 
     @commands.command()
@@ -546,8 +564,9 @@ class TwitchBot(commands.Bot):
 
         self.last_re = int(time.time())
         print('[TWITCH] Отправляю ответ для', ctx.author.name)
-        text = '@%s это твоя #%d крутка! Результат смотри на стриме HungryPaimon'
-        await ctx.send(text % (ctx.author.name, ugacha.wish_count))
+
+        anwser_text = CONFIG['bot_usertext'].format(username=ctx.author.name, wish_count=ugacha.wish_count)
+        await ctx.send(anwser_text)
 
 def merge_wish_meta(cords, meta_type, meta_name, stars):
     meta_type.rect.center = cords
@@ -587,10 +606,19 @@ def add_outline_to_image(image, thickness, color):
     return new_img
 
 def draw_group(group):
+    draw_list = []
+    perm_test = []
     for anim in group:
         if not anim.is_play:
             continue
-        if isinstance(anim, WishText) or isinstance(anim, UserText):
+        if isinstance(anim, PermaText):
+            perm_test.append(anim)
+        else:
+            draw_list.append(anim)
+
+    draw_list += perm_test
+    for anim in draw_list:
+        if isinstance(anim, WishText) or isinstance(anim, UserText) or isinstance(anim, PermaText):
             text_with_ouline = add_outline_to_image(anim.image, 4, (0, 0, 0))
             mdisplay.blit(text_with_ouline, anim.rect)
             continue
@@ -608,8 +636,6 @@ def bot_hande(que):
     time.sleep(5)
 
     bot = TwitchBot(que)
-
-    print('[TWITCH] Подключаемся к чату..')
     bot.run()
 
 def thrbot(que):
