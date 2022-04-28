@@ -14,7 +14,11 @@
     "wish_fi_chance": 1,
     "wish_fi_soft_a": 60,
     "test_mode": false,
-    "bot_usertext": "@{username} это твоя #{wish_count} крутка! Результат смотри на стриме HungryPaimon"
+    "bot_usertext": [
+      "@{username} это твоя #{wish_count} крутка! Результат смотри на стриме через несколько секунд HungryPaimon",
+      "@{username} делает #{wish_count} крутку! Что же ему выпадет? Смотри на стриме HungryPaimon",
+      "@{username} решает испытать удачу #{wish_count} раз! Результат на стриме через несколько секунд HungryPaimon"
+    ]
   },
   "MESSAGES": [
     "тратит крутку в баннер!",

@@ -572,7 +572,8 @@ class TwitchBot(commands.Bot):
         self.last_re = int(time.time())
         print('[TWITCH] Отправляю ответ для', ctx.author.name)
 
-        anwser_text = CONFIG['bot_usertext'].format(username=ctx.author.name, wish_count=ugacha.wish_count)
+        anwser_text_c = random.choice(CONFIG['bot_usertext'])
+        anwser_text = anwser_text_c.format(username=ctx.author.name, wish_count=ugacha.wish_count)
         await ctx.send(anwser_text)
 
 def merge_wish_meta(cords, meta_type, meta_name, stars):
