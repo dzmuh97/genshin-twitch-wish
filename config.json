@@ -6,19 +6,25 @@
     "self_wish_every": 300,
     "window_name": "Genshin Twitch Wish Simulator",
     "play_sound": true,
-    "wish_timeout": 10,
-    "wish_global_timeout": 3,
+    "wish_global_timeout": 1,
+    "wish_timeout": {
+      "broadcaster": 600,
+      "mod": 600,
+      "subscriber": 600,
+      "user": 600
+    },
     "wish_fo_garant": 10,
     "wish_fo_chance": 9,
     "wish_fi_garant": 90,
     "wish_fi_chance": 1,
     "wish_fi_soft_a": 60,
     "test_mode": false,
-    "bot_usertext": [
-      "@{username} это твоя #{wish_count} крутка! Результат смотри на стриме через несколько секунд HungryPaimon",
-      "@{username} делает #{wish_count} крутку! Что же ему выпадет? Смотри на стриме HungryPaimon",
-      "@{username} решает испытать удачу #{wish_count} раз! Результат на стриме через несколько секунд HungryPaimon"
-    ]
+    "start_delay": 4,
+    "end_delay": 7,
+    "fps": 30,
+    "user_background": null,
+    "chroma_color": "#00FF00",
+    "history_file": null
   },
   "MESSAGES": [
     "тратит крутку в баннер!",
@@ -27,5 +33,10 @@
     "молится архонтам на удачу!",
     "хочет поменять гемы на вайфу!",
     "надеется на китайский рандом!"
+  ],
+  "CHATBOT": [
+    "{username} это твоя #{wish_count} крутка! Результат смотри на стриме через несколько секунд HungryPaimon",
+    "{username} делает #{wish_count} крутку! Что же ему выпадет? Смотри на стриме HungryPaimon",
+    "{username} решает испытать удачу #{wish_count} раз! Результат на стриме через несколько секунд HungryPaimon"
   ]
 }
