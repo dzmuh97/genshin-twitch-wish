@@ -409,13 +409,18 @@ class UserText(Static):
 
     def _render(self):
         textobj = None
+        font = None
+
         for sfont in range(18, 240):
             font = pygame.font.Font(os.path.join('fonts', 'Genshin_Impact.ttf'), sfont)
             textobj = font.render(self.text, True, USERTEXT_COLOR if self.color is None else self.color)
 
             if 1280 - textobj.get_width() < 30:
                 break
+
+        self.font = font
         self.image = textobj
+        self.out_image = surfill(textobj.copy(), (0, 0, 0, 0))
 
     def _load(self):
         self.rect = self.image.get_rect()
@@ -478,6 +483,7 @@ class WishText(Static):
     def _load(self):
         textobj = self.font.render(self.text, True, USERTEXT_COLOR)
         self.image = textobj
+        self.out_image = surfill(textobj.copy(), (0, 0, 0, 0))
         self.rect = self.image.get_rect()
 
 class PermaText(Static):
@@ -491,6 +497,7 @@ class PermaText(Static):
     def _load(self):
         textobj = self.font.render(self.text, True, USERTEXT_COLOR)
         self.image = textobj
+        self.out_image = surfill(textobj.copy(), (0, 0, 0, 0))
         self.rect = self.image.get_rect()
         self.rect.bottomright = (1270, 710)
 
@@ -579,33 +586,25 @@ def merge_wish_meta(cords, meta_type, meta_name, stars):
         starl.append(star)
     return meta_type, meta_name, starl
 
-def objfill(obj, color):
-    surface = obj.image
+def surfill(surface, color):
     w, h = surface.get_size()
     r, g, b, _ = color
     for x in range(w):
         for y in range(h):
             a = surface.get_at((x, y))[3]
             surface.set_at((x, y), pygame.Color(r, g, b, a))
+    return surface
+
+def objfill(obj, color):
+    obj.image = surfill(obj.image, color)
     return obj
 
-def add_outline_to_image(image, thickness, color):
-    mask = pygame.mask.from_surface(image)
-    mask_surf = mask.to_surface(setcolor=color)
-    mask_surf.set_colorkey((0, 0, 0))
+def render_text_outline(display, anim, tx):
+    offsets = [(ox, oy) for ox in range(-tx, 2 * tx, tx) for oy in range(-tx, 2 * tx, tx) if ox != 0 or oy != 0]
+    for ox, oy in offsets:
+        display.blit(anim.out_image, (anim.rect[0] + ox, anim.rect[1] + oy))
 
-    new_img = pygame.Surface((image.get_width() + 2, image.get_height() + 2))
-    new_img.fill(color)
-    new_img.set_colorkey(color)
-
-    for i in -thickness, thickness:
-        new_img.blit(mask_surf, (i + thickness, thickness))
-        new_img.blit(mask_surf, (thickness, i + thickness))
-    new_img.blit(image, (thickness, thickness))
-
-    return new_img
-
-def draw_group(group):
+def draw_group(display, group):
     draw_list = []
     perm_test = []
     for anim in group:
@@ -619,10 +618,8 @@ def draw_group(group):
     draw_list += perm_test
     for anim in draw_list:
         if isinstance(anim, WishText) or isinstance(anim, UserText) or isinstance(anim, PermaText):
-            text_with_ouline = add_outline_to_image(anim.image, 4, (0, 0, 0))
-            mdisplay.blit(text_with_ouline, anim.rect)
-            continue
-        mdisplay.blit(anim.image, anim.rect)
+            render_text_outline(display, anim, 1)
+        display.blit(anim.image, anim.rect)
 
 def update_group(group, speed):
     for anim in group:
@@ -646,21 +643,12 @@ def thrbot(que):
 def main():
     global mdisplay, wish_que, animations
 
-    # G = Gacha('dzmuh', '#FF0000')
-    # for q in range(100):
-    #     wo = G.generate_wish()
-    #     wish_que.put(wo)
-
-    #
-    # qitems = []
-    # for q in DATABASE['5']['char']:
-    #     wish = GachaWish('5', **q)
-    #     qitems.append(wish)
-
-    # random.shuffle(qitems) 
-    # for q in qitems:
-    #     wish_que.put(q)
-    #
+    if CONFIG['test_mode']:
+        CONFIG['bot_token'] = 'test_mode'
+        G = Gacha('test_mode', '#FF0000')
+        for q in range(100):
+            wo = G.generate_wish()
+            wish_que.put(wo)
 
     tbot_w = False
     tbot = None
@@ -694,7 +682,7 @@ def main():
 
         control.update()
         mdisplay.fill(HROMA)
-        draw_group(animations)
+        draw_group(mdisplay, animations)
         update_group(animations, 1.0)
 
         pygame.display.update()
