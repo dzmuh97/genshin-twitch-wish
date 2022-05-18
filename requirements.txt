@@ -1,3 +1,4 @@
 opencv-python==4.5.5.64
 pygame==2.1.2
 twitchio==2.2.0
+jsonschema==4.5.1

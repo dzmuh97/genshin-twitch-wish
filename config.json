@@ -20,11 +20,25 @@
     "wish_fi_soft_a": 60,
     "test_mode": false,
     "start_delay": 4,
-    "end_delay": 7,
+    "end_delay": {
+      "3": 7,
+      "4": 7,
+      "5": 12
+    },
+    "user_background": {
+      "path": "",
+      "ftype": "static"
+    },
+    "history_file": {
+      "path": "",
+      "3": true,
+      "4": true,
+      "5": true
+    },
     "fps": 30,
-    "user_background": null,
     "chroma_color": "#00FF00",
-    "history_file": null
+    "wish_command": "wish",
+    "send_notify": false
   },
   "MESSAGES": [
     "тратит крутку в баннер!",
@@ -38,5 +52,8 @@
     "{username} это твоя #{wish_count} крутка! Результат смотри на стриме через несколько секунд HungryPaimon",
     "{username} делает #{wish_count} крутку! Что же ему выпадет? Смотри на стриме HungryPaimon",
     "{username} решает испытать удачу #{wish_count} раз! Результат на стриме через несколько секунд HungryPaimon"
+  ],
+  "NOTIFY": [
+    "{username} ты снова можешь сделать крутку! Напиши в чат {command} чтобы испытать удачу HungryPaimon"
   ]
 }

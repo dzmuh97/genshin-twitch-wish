@@ -1,8 +1,10 @@
+import sys
+import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+
 import random
 import queue
 import time
-import sys
-import os
 import gc
 import cv2
 
@@ -13,21 +15,31 @@ import threading
 import asyncio
 import pygame
 import pickle
+
 import json
+import jsonschema
 
 from data import DATABASE
+from data import CONFIG_SCHEMA
 from twitchio.ext import commands
 
 _config = {}
 try:
     _config = json.loads(open('config.json', 'r', encoding='utf-8').read())
-except json.JSONDecodeError as e:
-    print('[MAIN] Ошибка при загрузке файла конфигурации:', type(e), e)
-    exit(input())
+except (json.JSONDecodeError, ValueError) as e:
+    print('[MAIN] Ошибка при загрузке файла конфигурации:', e)
+    sys.exit(input('Нажмите любую кнопку чтобы выйти > '))
+
+try:
+    jsonschema.validate(_config, schema=CONFIG_SCHEMA)
+except jsonschema.ValidationError as e:
+    print('[MAIN] Ошибка при загрузке файла конфигурации:', e)
+    sys.exit(input('Нажмите любую кнопку чтобы выйти > '))
 
 CONFIG = _config['CONFIG']
 MESSAGES = _config['MESSAGES']
 CHATBOT_MSG = _config['CHATBOT']
+NOTIFY_MSG = _config['NOTIFY']
 
 USERTEXT_COLOR = (255, 255, 255, 0)
 USERTEXT_OUTLINE = (0, 0, 0, 0)
@@ -38,15 +50,12 @@ pygame.display.set_caption(CONFIG['window_name'])
 programIcon = pygame.image.load('icon.png')
 pygame.display.set_icon(programIcon)
 
-SOUND = {}
-if CONFIG['play_sound']:
-    pygame.mixer.init()
-    SOUND = {
-        'fall': pygame.mixer.Sound(os.path.join('sound', 'soundfall.mp3')),
-        '3': pygame.mixer.Sound(os.path.join('sound', '3star.mp3')),
-        '4': pygame.mixer.Sound(os.path.join('sound', '4star.mp3')),
-        '5': pygame.mixer.Sound(os.path.join('sound', '5star.mp3')),
-    }
+SOUND = {
+    'fall': pygame.mixer.Sound(os.path.join('sound', 'soundfall.mp3')),
+    '3': pygame.mixer.Sound(os.path.join('sound', '3star.mp3')),
+    '4': pygame.mixer.Sound(os.path.join('sound', '4star.mp3')),
+    '5': pygame.mixer.Sound(os.path.join('sound', '5star.mp3'))
+}
 
 fps = pygame.time.Clock()
 mdisplay = pygame.display.set_mode(size=(1280, 720), vsync=1)
@@ -54,6 +63,9 @@ mdisplay = pygame.display.set_mode(size=(1280, 720), vsync=1)
 wish_que = queue.Queue()
 animations = []
 users = {}
+
+if CONFIG['play_sound']:
+    pygame.mixer.init()
 
 @dataclass
 class GachaWish:
@@ -132,7 +144,9 @@ class Gacha:
               star, '* ->', data.get('cwish_wname'),
               '[%s]' % star_types[star_type])
 
-        write_history(self.username, self.wish_count, star, star_types[star_type], data.get('cwish_wname'))
+        if CONFIG['history_file'][star]:
+            write_history(self.username, self.wish_count, star, star_types[star_type], data.get('cwish_wname'))
+
         return GachaWish(star, self.username, self.ucolor, **data)
 
 class Coordiantor:
@@ -200,7 +214,7 @@ class Coordiantor:
             'user_perm_text': {'obj': PermaText(self.cur_wish.username), 'play': False},
             'back_anim_first': {'obj': BackAnimated('first', wstar), 'play': False},
             'back_anim_second': {'obj': BackAnimated('second', wstar), 'play': False},
-            'back_static': {'obj': Background(), 'play': False},
+            'back_static': {'obj': Background(CONFIG['end_delay'][wstar]), 'play': False},
             'user_nick': {'obj': UserText(self.cur_wish.username, (640, 300), self.cur_wish.ucolor),'play': False},
             'user_text': {'obj': UserText(utext, (640, 530)), 'play': False},
             'wish_color': {'obj': Wish(wtype, cname), 'play': False},
@@ -212,12 +226,14 @@ class Coordiantor:
             }
         )
 
-        if CONFIG['user_background'] is None:
+        uback_p = CONFIG['user_background']['path']
+        uback_t = CONFIG['user_background']['ftype']
+        if not uback_p:
             return True
 
         self.objs.update(
             {
-            'user_background': {'obj': UserBackground(CONFIG['user_background']), 'play': False}
+            'user_background': {'obj': UserBackground(uback_p) if uback_t == 'static' else UserBackgroundAnim(uback_p), 'play': False}
             }
         )
 
@@ -225,7 +241,7 @@ class Coordiantor:
 
     def state_DRAW(self):
         userback = None
-        if CONFIG['user_background']:
+        if CONFIG['user_background']['path']:
             userback = self._play_obj('user_background')
 
         textnickobj = self._play_obj('user_nick')
@@ -233,7 +249,7 @@ class Coordiantor:
         if textnickobj.is_play and textuserobj.is_play:
             return False
 
-        if CONFIG['user_background']:
+        if CONFIG['user_background']['path']:
             userback.is_play = False
 
         if CONFIG['play_sound']:
@@ -364,6 +380,7 @@ class Animated(pygame.sprite.Sprite):
 class AnimatedVideo(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
+        self.cycled = False
         self.video = None
         self.is_play = False
         self.image = None
@@ -382,8 +399,12 @@ class AnimatedVideo(pygame.sprite.Sprite):
 
         success, video_image = self.video.read()
         if not success:
-            self.is_play = False
-            return
+            if self.cycled:
+                self.video.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                _, video_image = self.video.read()
+            else:
+                self.is_play = False
+                return
 
         self._set_frame(video_image)
 
@@ -416,9 +437,9 @@ class FallAnimated(AnimatedVideo):
         self.im_sub_load(path)
 
 class Background(Static):
-    def __init__(self):
+    def __init__(self, lifetime):
         super().__init__()
-        self.lifetime = 60 + CONFIG['end_delay'] * CONFIG['fps']
+        self.lifetime = 60 + lifetime * CONFIG['fps']
         self._load()
 
     def _load(self):
@@ -429,6 +450,19 @@ class Background(Static):
 class UserBackground(Static):
     def __init__(self, fname):
         super().__init__()
+        self.fname = fname
+        self.lifetime = -1
+        self._load()
+
+    def _load(self):
+        path = os.path.join('background', self.fname)
+        self.im_sub_load(path)
+        self.rect.topleft = (0, 0)
+
+class UserBackgroundAnim(AnimatedVideo):
+    def __init__(self, fname):
+        super().__init__()
+        self.cycled = True
         self.fname = fname
         self.lifetime = -1
         self._load()
@@ -466,9 +500,6 @@ class UserText(Static):
     def _load(self):
         self.rect = self.image.get_rect()
         self.rect.center = self.center
-
-    def update(self, speed: float):
-        super().update(speed)
 
 class Wish(Static):
     def __init__(self, wtype, wname):
@@ -549,15 +580,18 @@ class TwitchBot(commands.Bot):
         self.gacha_users = {}
         self.last_re = 0
         self.que = que
-        self.g_load()
+        self._load()
 
-    def g_load(self):
+    def _load(self):
         print('[TWITCH] Загружаем данные пользователей..')
         if os.path.exists(self.savefile):
             with open(self.savefile, 'rb') as sf:
                 self.gacha_users = pickle.load(sf)
         else:
             self.gacha_users = {}
+
+        command = commands.Command(CONFIG['wish_command'], self.wish)
+        self.add_command(command)
 
         print('[TWITCH] Данные загружены. Всего пользователей в базе:', len(self.gacha_users))
         print('[TWITCH] Подключаемся к чату на канал %s..' % CONFIG['work_channel'])
@@ -566,23 +600,30 @@ class TwitchBot(commands.Bot):
         print('[TWITCH] Подключено. Данные бота:', self.nick, self.user_id)
         if CONFIG['self_wish']:
             print('[TWITCH] Молитвы бота включены каждые %d сек.' % CONFIG['self_wish_every'])
-            asyncio.Task(self.send_wish(), loop=asyncio.get_event_loop())
+            asyncio.Task(self.send_autowish(), loop=asyncio.get_event_loop())
 
-    async def send_wish(self):
+    async def send_notify(self, mention, wtime):
+        ntext_c = random.choice(NOTIFY_MSG)
+        ntext = ntext_c.format(username=mention, command='!' + CONFIG['wish_command'])
+
+        await asyncio.sleep(wtime)
+        await self.connected_channels[0].send(ntext)
+
+    async def send_autowish(self):
         auto_gacha = Gacha(self.nick, '#FFFFFF')
         while True:
-            await asyncio.sleep(CONFIG['self_wish_every'])
-
             print('[TWITCH] Отправляю автосообщение..')
-            await self.connected_channels[0].send('!wish')
-            await asyncio.sleep(5)
+            await self.connected_channels[0].send(CONFIG['wish_command'])
+            await asyncio.sleep(1)
 
             wo = auto_gacha.generate_wish()
             self.que.put(wo)
 
-            anwser_text_c = random.choice(CONFIG['bot_usertext'])
-            anwser_text = anwser_text_c.format(username=self.nick, wish_count=auto_gacha.wish_count)
+            anwser_text_c = random.choice(CHATBOT_MSG)
+            anwser_text = anwser_text_c.format(username='@' + self.nick, wish_count=auto_gacha.wish_count)
+
             await self.connected_channels[0].send(anwser_text)
+            await asyncio.sleep(CONFIG['self_wish_every'])
 
     async def event_message(self, message):
         if message.echo:
@@ -590,7 +631,6 @@ class TwitchBot(commands.Bot):
 
         await self.handle_commands(message)
 
-    @commands.command()
     async def wish(self, ctx: commands.Context):
         user = ctx.author
         if user.display_name in self.gacha_users:
@@ -614,9 +654,13 @@ class TwitchBot(commands.Bot):
         if ctime - self.last_re < CONFIG['wish_global_timeout']:
             return
 
+        if CONFIG['send_notify']:
+            asyncio.Task(self.send_notify(user.mention, out_wait), loop=asyncio.get_event_loop())
+
         wo = ugacha.generate_wish()
         self.que.put(wo)
 
+        # TODO: replace with REAL sql(lite)
         with open(self.savefile, 'wb') as sf:
             pickle.dump(self.gacha_users, sf)
 
@@ -691,20 +735,24 @@ def thrbot(que):
     return tbot
 
 def write_history(nickname, wish_count, star, wtype, wish):
-    if CONFIG['history_file'] is None:
+    fpath = CONFIG['history_file']['path']
+    if not fpath:
         return
 
-    if not os.path.exists(CONFIG['history_file']):
-        with open(CONFIG['history_file'], 'w', encoding='utf-8') as fp:
+    if not os.path.exists(fpath):
+        with open(fpath, 'w', encoding='utf-8') as fp:
             fp.write('date,nickname,wish_count,star,type,wish\n')
 
     t = time.localtime()
     wdate = time.strftime("%d.%m.%Y-%H:%M:%S", t)
-    with open(CONFIG['history_file'], 'a', encoding='utf-8') as fp:
+    with open(fpath, 'a', encoding='utf-8') as fp:
         fp.write('%s,%s,%s,%s,%s,%s\n' % (wdate, nickname, wish_count, star, wtype, wish))
 
 def main():
     global mdisplay, wish_que, animations
+
+    # wo_ = GachaWish('4', "__test_mode__", '#000000', cwish_wtype='char', cwish_wmetatype='element', cwish_wmetaelem='anemo', cwish_cname='heizo', cwish_wname='Сиканоин Хэйдзо')
+    # wish_que.put(wo_)
 
     if CONFIG['test_mode']:
         nuser = '__test_mode__'
