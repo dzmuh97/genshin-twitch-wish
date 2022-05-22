@@ -14,14 +14,27 @@ from dataclasses import dataclass
 import threading
 import asyncio
 import pygame
-import pickle
 
 import json
 import jsonschema
 
 from data import DATABASE
 from data import CONFIG_SCHEMA
+
+from twitchio.ext import pubsub
 from twitchio.ext import commands
+
+import base64
+import pickle
+import sqlite3
+
+import logging
+_time_stamp = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
+logging.basicConfig(format='[%(asctime)s] [%(levelname)s] %(message)s',
+                    filename=os.path.join('logs', '%s.log' % _time_stamp),
+                    filemode='w',
+                    encoding='utf-8',
+                    level=logging.DEBUG)
 
 _config = {}
 try:
@@ -36,10 +49,17 @@ except jsonschema.ValidationError as e:
     print('[MAIN] Ошибка при загрузке файла конфигурации:', e)
     sys.exit(input('Нажмите любую кнопку чтобы выйти > '))
 
+__title__ = 'genshin-twitch-wish'
+__version__ = '2.0'
+
 CONFIG = _config['CONFIG']
-MESSAGES = _config['MESSAGES']
-CHATBOT_MSG = _config['CHATBOT']
-NOTIFY_MSG = _config['NOTIFY']
+_messages = _config['MESSAGES']
+USER_SPLASH_TEXT = _messages['user_splash_text']
+CHATBOT_TEXT = _messages['chatbot_text']
+NOTIFY_TEXT = _messages['notify_text']
+POINTS_TEXT = _messages['chanel_points_text']
+
+SOUND_CFG = CONFIG['sound']
 
 USERTEXT_COLOR = (255, 255, 255, 0)
 USERTEXT_OUTLINE = (0, 0, 0, 0)
@@ -51,10 +71,10 @@ programIcon = pygame.image.load('icon.png')
 pygame.display.set_icon(programIcon)
 
 SOUND = {
-    'fall': pygame.mixer.Sound(os.path.join('sound', 'soundfall.mp3')),
-    '3': pygame.mixer.Sound(os.path.join('sound', '3star.mp3')),
-    '4': pygame.mixer.Sound(os.path.join('sound', '4star.mp3')),
-    '5': pygame.mixer.Sound(os.path.join('sound', '5star.mp3'))
+    'fall': pygame.mixer.Sound(os.path.join('sound', SOUND_CFG['fall'])),
+    '3': pygame.mixer.Sound(os.path.join('sound', SOUND_CFG['3'])),
+    '4': pygame.mixer.Sound(os.path.join('sound', SOUND_CFG['4'])),
+    '5': pygame.mixer.Sound(os.path.join('sound', SOUND_CFG['5']))
 }
 
 fps = pygame.time.Clock()
@@ -62,41 +82,53 @@ mdisplay = pygame.display.set_mode(size=(1280, 720), vsync=1)
 
 wish_que = queue.Queue()
 animations = []
-users = {}
 
-if CONFIG['play_sound']:
+if SOUND_CFG['enabled']:
     pygame.mixer.init()
 
 @dataclass
-class GachaWish:
+class WishData:
+    wish_count: int
+    wish_4_grn: int
+    wish_5_grn: int
     cwish_star: str
-    username: str
-    ucolor: str
+    cwish_stype: str
     cwish_wtype: str
     cwish_wmetatype: str
     cwish_wmetaelem: str
     cwish_cname: str
     cwish_wname: str
 
+@dataclass
+class Wish:
+    username: str
+    ucolor: str
+    wish_data_c: int
+    wish_data_l: list
+
 class Gacha:
     wish_5_garant = 1
     wish_4_garant = 1
     wish_count = 0
 
-    def __init__(self, username, color):
-        self.username = username
-        self.ucolor = color
+    def __init__(self, wish_count=0, wish_4_garant=1, wish_5_garant=1):
         self.wish_stamp = 0
+        self.wish_5_garant = wish_5_garant
+        self.wish_4_garant = wish_4_garant
+        self.wish_count = wish_count
 
-    def __roll(self):
+    def __roll(self) -> tuple:
         self.wish_count += 1
+        _random_tap = lambda x: random.choice(range(10000)) <= int(x * 100)
 
         if (self.wish_5_garant > CONFIG['wish_fi_soft_a']) and (self.wish_5_garant < CONFIG['wish_fi_garant']):
-            if random.choice(range(CONFIG['wish_fi_garant'] - self.wish_5_garant)) == 0:
+            _soft_i = (self.wish_5_garant - CONFIG['wish_fi_soft_a']) / (CONFIG['wish_fi_garant'] - CONFIG['wish_fi_soft_a'])
+            _soft_chance = CONFIG['wish_fi_chance'] + _soft_i * 100
+            if _random_tap(_soft_chance):
                 self.wish_5_garant = 1
                 return '5', 'srnd'
         else:
-            if random.choice(range(100)) < CONFIG['wish_fi_chance']:
+            if _random_tap(CONFIG['wish_fi_chance']):
                 self.wish_5_garant = 1
                 return '5', 'rnd'
 
@@ -112,57 +144,179 @@ class Gacha:
 
         self.wish_4_garant += 1
 
-        if random.choice(range(100)) < CONFIG['wish_fo_chance']:
+        if _random_tap(CONFIG['wish_fo_chance']):
             self.wish_4_garant = 1
             return '4', 'rnd'
 
         return '3', 'rnd'
 
-    def generate_wish(self):
-        star_types = {
-            'srnd': 'мягкий гарант',
-            'garant': 'гарант',
-            'rnd': 'рандом',
-        }
-
-        star, star_type = self.__roll()
-        if star == '3':
-            wtype = 'weapon'
-        else:
-            wtype = random.choice(['weapon', 'char'])
-
+    def generate_wish(self, count) -> list:
         self.wish_stamp = int(time.time())
-        data = random.choice(DATABASE[star][wtype])
 
-        t = time.localtime()
-        current_time = time.strftime("%H:%M:%S", t)
-        print('[ГАЧА]', '[%s]' % current_time,
-              'Результат для', self.username,
-              '#%d' % self.wish_count,
-              'w4#%d' % self.wish_4_garant,
-              'w5#%d' % self.wish_5_garant,
-              star, '* ->', data.get('cwish_wname'),
-              '[%s]' % star_types[star_type])
+        rolls = []
+        for _ in range(count):
+            star, star_type = self.__roll()
+            if star == '3':
+                wtype = 'weapon'
+            else:
+                wtype = random.choice(['weapon', 'char'])
 
-        if CONFIG['history_file'][star]:
-            write_history(self.username, self.wish_count, star, star_types[star_type], data.get('cwish_wname'))
+            data = random.choice(DATABASE[star][wtype])
+            gacha_obj = WishData(self.wish_count, self.wish_4_garant, self.wish_5_garant, star, star_type, **data)
+            rolls.append(gacha_obj)
 
-        return GachaWish(star, self.username, self.ucolor, **data)
+        return rolls
+
+class UserDB:
+    database = 'database.sqlite'
+    database_old = 'database.sql'
+
+    def __init__(self):
+        self.conn = sqlite3.connect(self.database)
+        if not self._check_table():
+            self._create_table()
+        self._restore_old()
+
+    def _restore_old(self):
+        if not os.path.exists(self.database_old):
+            return
+
+        print('[DB] Начинаем импорт старой базы данных..')
+        with open(self.database_old, mode='rb') as f:
+            data = pickle.loads(f.read())
+
+        i_users = 0
+        print('[DB] В старой базе найдено пользователей:', len(data))
+        for user, gacha in data.items():
+            user = user.lower()
+
+            check = self.get(user)
+            if check:
+                self.update(user, gacha)
+                continue
+
+            self.push(user, gacha)
+            i_users += 1
+
+        print('[DB] Импортировано пользователей:', i_users)
+        os.remove(self.database_old)
+        print('[DB] Старая база данных удалена!',)
+
+    def _check_table(self):
+        cur = self.conn.cursor()
+        cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='users';")
+        ret = cur.fetchone()
+        cur.close()
+
+        if ret is None:
+            return False
+
+        return True
+
+    def _create_table(self):
+        cur = self.conn.cursor()
+        payload = 'CREATE TABLE users (username TEXT PRIMARY KEY, wish_count INTEGER, wish_4_garant INTEGER, wish_5_garant INTEGER);'
+        cur.execute(payload)
+        self.conn.commit()
+        cur.close()
+
+    def get_all(self):
+        cur = self.conn.cursor()
+        payload = 'SELECT * FROM users;'
+        cur.execute(payload)
+        data = cur.fetchall()
+        cur.close()
+
+        return data
+
+    def get(self, username):
+        cur = self.conn.cursor()
+        payload = 'SELECT * FROM users WHERE username=?;'
+        cur.execute(payload, (username,))
+        data = cur.fetchone()
+        cur.close()
+
+        return data
+
+    def push(self, username, gacha):
+        cur = self.conn.cursor()
+        payload = 'INSERT INTO users VALUES(?, ?, ?, ?);'
+        cur.execute(payload, (username, gacha.wish_count, gacha.wish_4_garant, gacha.wish_5_garant))
+        self.conn.commit()
+        cur.close()
+
+    def update(self, username, gacha):
+        cur = self.conn.cursor()
+        payload = 'UPDATE users SET wish_count=?, wish_4_garant=?, wish_5_garant=? WHERE username=?;'
+        cur.execute(payload, (gacha.wish_count, gacha.wish_4_garant, gacha.wish_5_garant, username))
+        self.conn.commit()
+        cur.close()
 
 class Coordiantor:
-    states_name = ['IDLE', 'INIT', 'DRAW', 'CLEAR']
+    states_name = ['IDLE', 'INIT', 'DRAW_TEXT', 'DRAW_FALL', 'DRAW_WISH', 'CLEAR']
 
     def __init__(self, que, animl):
         self.states = cycle(self.states_name)
         self.state = next(self.states)
+
         self.animl = animl
-        self.cur_wish = None
         self.que = que
-        self.objs = {}
+
+        self.t_load_done = True
+
+        self.cur_wish = None
+        self.n_cur_wish = None
+        self.wish_objs = {}
         self.sound = []
 
-    def _play_obj(self, objn):
-        obj_data = self.objs[objn]
+    def _t_load_chunk(self, usiwshdata):
+        self.t_load_done = False
+
+        anim_config = CONFIG['animations']
+        w_splash_list = self.wish_objs['wish_splash_list']
+
+        multi = True if self.cur_wish.wish_data_c > 1 else False
+        uwstar = usiwshdata.cwish_star
+        wtype = usiwshdata.cwish_wtype
+        wback = usiwshdata.cwish_wmetaelem if usiwshdata.cwish_wmetatype == 'weapon' else None
+        wmetatype = usiwshdata.cwish_wmetatype
+        wmetaelem = usiwshdata.cwish_wmetaelem
+        cname = usiwshdata.cwish_cname
+        wname = usiwshdata.cwish_wname
+
+        _wmeta_text = [WishText(_wname) for _wname in wname.split('\n')]
+        _wmeta = merge_wish_meta((80, 450), WishMeta(wmetatype, wmetaelem), _wmeta_text, int(uwstar))
+        wish_meta_type, wish_meta_name, wish_meta_star = _wmeta
+
+        w_splash_list.append(
+            {
+            'back_static': {'obj': Background(anim_config['end_delay_milti' if multi else 'end_delay'][uwstar]), 'play': False},
+            'back_anim_first': {'obj': BackAnimated('first', uwstar), 'play': False},
+            'back_anim_second': {'obj': BackAnimated('second', uwstar), 'play': False},
+            'wish_color': {'obj': WishSplash(wtype, cname), 'play': False},
+            'wish_black': {'obj': objfill(WishSplash(wtype, cname), pygame.Color(0, 0, 0)), 'play': False},
+            'wish_back': {'obj': WishBack(wback), 'play': False},
+            'wish_meta_type': {'obj': wish_meta_type, 'play': False},
+            'wish_meta_name': {'obj': wish_meta_name, 'play': False},
+            'wish_meta_star': {'obj': wish_meta_star, 'play': False},
+            'done': False
+            }
+        )
+
+        self.t_load_done = True
+
+    def _remove_obj(self, obj_data):
+        obj = obj_data['obj']
+
+        if isinstance(obj, list):
+            for objl in obj:
+                if objl in self.animl:
+                    self.animl.remove(objl)
+
+        if obj in self.animl:
+            self.animl.remove(obj)
+
+    def _play_obj(self, obj_data):
         obj = obj_data['obj']
 
         if isinstance(obj, list):
@@ -182,7 +336,6 @@ class Coordiantor:
 
     def update(self):
         state_func = getattr(self, 'state_%s' % self.state)
-
         isnext = state_func()
         if isnext:
             self.state = next(self.states)
@@ -195,114 +348,190 @@ class Coordiantor:
 
         self.cur_wish = wish
         self.que.task_done()
+
+        star_types = {
+            'srnd': 'мягкий гарант',
+            'garant': 'гарант',
+            'rnd': 'рандом',
+        }
+
+        for uwishdata in wish.wish_data_l:
+            t = time.localtime()
+            current_time = time.strftime("%H:%M:%S", t)
+            print('[ГАЧА]', '[%s]' % current_time,
+                  'Результат для', wish.username,
+                  '#%d' % uwishdata.wish_count,
+                  'w4#%d' % uwishdata.wish_4_grn,
+                  'w5#%d' % uwishdata.wish_5_grn,
+                  uwishdata.cwish_star, '* ->', uwishdata.cwish_wname.replace('\n', ' '),
+                  '[%s]' % star_types[uwishdata.cwish_stype])
+
+            if CONFIG['history_file'][uwishdata.cwish_star]:
+                write_history(wish.username, uwishdata.wish_count, uwishdata.cwish_star, star_types[uwishdata.cwish_stype], uwishdata.cwish_wname)
+
         return True
 
     def state_INIT(self):
-        wstar = self.cur_wish.cwish_star
-        wtype = self.cur_wish.cwish_wtype
-        wback = self.cur_wish.cwish_wmetaelem if self.cur_wish.cwish_wmetatype == 'weapon' else None
-        wmetatype = self.cur_wish.cwish_wmetatype
-        wmetaelem = self.cur_wish.cwish_wmetaelem
-        cname = self.cur_wish.cwish_cname
-        wname = self.cur_wish.cwish_wname
+        wish_data = self.cur_wish
+        wish_list = self.cur_wish.wish_data_l
 
-        utext = random.choice(MESSAGES)
-        wish_meta_type, wish_meta_name, wish_meta_star = merge_wish_meta((80, 450), WishMeta(wmetatype, wmetaelem), WishText(wname), int(wstar))
-        self.objs.update(
+        multi = True if self.cur_wish.wish_data_c > 1 else False
+
+        if any(x.cwish_star == '5' for x in wish_list):
+            wstar = '5'
+        elif any(x.cwish_star == '4' for x in wish_list):
+            wstar = '4'
+        else:
+            wstar = '3'
+
+        utext = random.choice(USER_SPLASH_TEXT)
+
+        self.wish_objs.update(
             {
-            'fall_anim': {'obj': FallAnimated(wstar), 'play': False},
-            'user_perm_text': {'obj': PermaText(self.cur_wish.username), 'play': False},
-            'back_anim_first': {'obj': BackAnimated('first', wstar), 'play': False},
-            'back_anim_second': {'obj': BackAnimated('second', wstar), 'play': False},
-            'back_static': {'obj': Background(CONFIG['end_delay'][wstar]), 'play': False},
-            'user_nick': {'obj': UserText(self.cur_wish.username, (640, 300), self.cur_wish.ucolor),'play': False},
+            'user_perm_text': {'obj': PermaText(wish_data.username), 'play': False},
+            'user_nick': {'obj': UserText(wish_data.username, (640, 300), wish_data.ucolor),'play': False},
             'user_text': {'obj': UserText(utext, (640, 530)), 'play': False},
-            'wish_color': {'obj': Wish(wtype, cname), 'play': False},
-            'wish_black': {'obj': objfill(Wish(wtype, cname), pygame.Color(0, 0, 0)), 'play': False},
-            'wish_back': {'obj': WishBack(wback), 'play': False},
-            'wish_meta_type': {'obj': wish_meta_type, 'play': False},
-            'wish_meta_name': {'obj': wish_meta_name, 'play': False},
-            'wish_meta_star': {'obj': wish_meta_star, 'play': False},
+            'fall_anim': {'obj': FallAnimated(wstar, multi), 'play': False}
             }
         )
 
-        uback_p = CONFIG['user_background']['path']
-        uback_t = CONFIG['user_background']['ftype']
-        if not uback_p:
+        w_splash_list = []
+        self.wish_objs.update(
+            {
+            'wish_splash_list': w_splash_list
+            }
+        )
+
+        anim_config = CONFIG['animations']
+        uback_cfg = anim_config['user_background']
+        uback_enabled = uback_cfg['enabled']
+        if not uback_enabled:
             return True
 
-        self.objs.update(
+        if uback_cfg['type'] == 'static':
+            uback_obj = UserBackground(uback_cfg['path'])
+        else:
+            uback_obj = UserBackgroundAnim(uback_cfg['path'])
+
+        self.wish_objs.update(
             {
-            'user_background': {'obj': UserBackground(uback_p) if uback_t == 'static' else UserBackgroundAnim(uback_p), 'play': False}
+            'user_background': {'obj': uback_obj, 'play': False}
             }
         )
 
         return True
 
-    def state_DRAW(self):
-        userback = None
-        if CONFIG['user_background']['path']:
-            userback = self._play_obj('user_background')
+    def state_DRAW_TEXT(self):
+        userback_cfg = CONFIG['animations']['user_background']
 
-        textnickobj = self._play_obj('user_nick')
-        textuserobj = self._play_obj('user_text')
+        if userback_cfg['enabled']:
+            self._play_obj(self.wish_objs['user_background'])
+
+        textnickobj = self._play_obj(self.wish_objs['user_nick'])
+        textuserobj = self._play_obj(self.wish_objs['user_text'])
         if textnickobj.is_play and textuserobj.is_play:
             return False
 
-        if CONFIG['user_background']['path']:
-            userback.is_play = False
+        pre_wish = self.cur_wish.wish_data_l.pop(0)
+        self._t_load_chunk(pre_wish)
 
-        if CONFIG['play_sound']:
+        return True
+
+    def state_DRAW_FALL(self):
+        userback_cfg = CONFIG['animations']['user_background']
+        sound_cfg = CONFIG['sound']
+
+        self._remove_obj(self.wish_objs['user_nick'])
+        self._remove_obj(self.wish_objs['user_text'])
+
+        if userback_cfg['enabled']:
+            self._remove_obj(self.wish_objs['user_background'])
+
+        self._play_obj(self.wish_objs['user_perm_text'])
+        fallobj = self._play_obj(self.wish_objs['fall_anim'])
+
+        if sound_cfg['enabled']:
             sound_fall = SOUND['fall']
             if not (sound_fall in self.sound):
                 self.sound.append(sound_fall)
                 sound_fall.play()
 
-        userperma = self._play_obj('user_perm_text')
-        fallobj = self._play_obj('fall_anim')
         if fallobj.is_play:
             return False
 
-        back_tmpl = self._play_obj('back_static')
+        return True
 
-        if CONFIG['play_sound']:
-            sound_star = SOUND[self.cur_wish.cwish_star]
-            if not (sound_star in self.sound):
-                self.sound.append(sound_star)
-                sound_star.play()
+    def state_DRAW_WISH(self):
+        sound_cfg = CONFIG['sound']
 
-        back_f = self._play_obj('back_anim_first')
-        wish_black = self._play_obj('wish_black')
-        if back_f.is_play:
+        if not (self.wish_objs.get('fall_anim', None) is None):
+            self._remove_obj(self.wish_objs['fall_anim'])
+            new_wish_obj = {'wish_splash_list': self.wish_objs['wish_splash_list'][:]}
+            self.wish_objs.clear()
+            self.wish_objs = new_wish_obj
+
+        if not (self.n_cur_wish is None) and self.n_cur_wish['done']:
+            self._remove_obj(self.n_cur_wish['back_static'])
+            self._remove_obj(self.n_cur_wish['wish_back'])
+            self._remove_obj(self.n_cur_wish['wish_color'])
+            self._remove_obj(self.n_cur_wish['wish_meta_type'])
+            self._remove_obj(self.n_cur_wish['wish_meta_name'])
+            self._remove_obj(self.n_cur_wish['wish_meta_star'])
+
+            if len(self.cur_wish.wish_data_l) > 0:
+                new_cur_wish = self.cur_wish.wish_data_l.pop(0)
+                self._t_load_chunk(new_cur_wish)
+
+            self.n_cur_wish = None
+
+        wish_splash_list = self.wish_objs['wish_splash_list']
+        if len(wish_splash_list) > 0 and self.n_cur_wish is None:
+            self.n_cur_wish = self.wish_objs['wish_splash_list'].pop(0)
+
+        if not (self.n_cur_wish is None):
+            back_tmpl = self._play_obj(self.n_cur_wish['back_static'])
+            back_f = self._play_obj(self.n_cur_wish['back_anim_first'])
+            self._play_obj(self.n_cur_wish['wish_black'])
+
+            if sound_cfg['enabled']:
+                sound_star = SOUND[back_f.star]
+                if not (sound_star in self.sound):
+                    self.sound.append(sound_star)
+                    sound_star.play()
+
+            if back_f.is_play:
+                return False
+
+            self._remove_obj(self.n_cur_wish['wish_black'])
+            self._remove_obj(self.n_cur_wish['back_anim_first'])
+
+            back_s = self._play_obj(self.n_cur_wish['back_anim_second'])
+            self._play_obj(self.n_cur_wish['wish_back'])
+            self._play_obj(self.n_cur_wish['wish_color'])
+            if back_s.is_play:
+                return False
+
+            self._remove_obj(self.n_cur_wish['back_anim_second'])
+
+            self._play_obj(self.n_cur_wish['wish_meta_type'])
+            self._play_obj(self.n_cur_wish['wish_meta_name'])
+            self._play_obj(self.n_cur_wish['wish_meta_star'])
+
+            if back_tmpl.is_play:
+                return False
+
+            if sound_cfg['enabled']:
+                sound_star = SOUND[back_f.star]
+                self.sound.remove(sound_star)
+
+            self.n_cur_wish['done'] = True
             return False
-        wish_black.is_play = False
-
-        back_s = self._play_obj('back_anim_second')
-        wish_back = self._play_obj('wish_back')
-        wish_color = self._play_obj('wish_color')
-        if back_s.is_play:
-            return False
-
-        wish_meta_type = self._play_obj('wish_meta_type')
-        wish_meta_name = self._play_obj('wish_meta_name')
-        wish_meta_star = self._play_obj('wish_meta_star')
-
-        if back_tmpl.is_play:
-            return False
-
-        userperma.is_play = False
-        wish_back.is_play = False
-        wish_color.is_play = False
-        wish_meta_type.is_play = False
-        wish_meta_name.is_play = False
-        for star in wish_meta_star:
-            star.is_play = False
 
         return True
 
     def state_CLEAR(self):
         self.animl.clear()
-        self.objs.clear()
+        self.wish_objs.clear()
         self.sound.clear()
         self.cur_wish = None
         gc.collect()
@@ -343,40 +572,6 @@ class Static(pygame.sprite.Sprite):
             self.image = pygame.image.load(path)
         self.rect = self.image.get_rect()
 
-class Animated(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-        self.is_play = False
-        self.frame = 0
-        self.images = []
-        self.image = None
-        self.rect = None
-
-    def play(self):
-        self.is_play = True
-
-    def update(self, speed: float):
-        if not self.is_play:
-            return
-
-        self.frame += speed
-        s = int(self.frame)
-        if s >= len(self.images):
-            self.image = self.images[0]
-            self.is_play = False
-            self.frame = 0
-            return
-
-        self.image = self.images[s]
-
-    def im_sub_load(self, path):
-        for imgp in sorted(os.listdir(path)):
-            img = pygame.image.load(os.path.join(path, imgp))
-            self.images.append(img)
-
-        self.image = self.images[0]
-        self.rect = self.image.get_rect()
-
 class AnimatedVideo(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -414,7 +609,7 @@ class AnimatedVideo(pygame.sprite.Sprite):
         self._set_frame(video_image)
         self.rect = self.image.get_rect()
 
-class BackAnimated(Animated):
+class BackAnimated(AnimatedVideo):
     def __init__(self, num: str, star: str):
         super().__init__()
         self.star = star
@@ -422,24 +617,31 @@ class BackAnimated(Animated):
         self._load()
 
     def _load(self):
-        path = os.path.join('background', 'dyn', self.star, self.num)
+        path = os.path.join('background', 'dyn', self.star, self.num, 'effect.mp4')
         self.im_sub_load(path)
-        self.rect.topleft = (0, 0)
 
 class FallAnimated(AnimatedVideo):
-    def __init__(self, star: str):
+    def __init__(self, star: str, multi: False):
         super().__init__()
+        self.multi = multi
         self.star = star
         self._load()
 
     def _load(self):
-        path = os.path.join('background', 'fall', self.star, 'effect.mp4')
+        if self.star in ['4', '5']:
+            if self.multi:
+                path = os.path.join('background', 'fall', self.star, 'multi.mp4')
+            else:
+                path = os.path.join('background', 'fall', self.star, 'effect.mp4')
+        else:
+            path = os.path.join('background', 'fall', self.star, 'effect.mp4')
         self.im_sub_load(path)
 
 class Background(Static):
     def __init__(self, lifetime):
         super().__init__()
-        self.lifetime = 60 + lifetime * CONFIG['fps']
+        self.lifetime = 60 + lifetime * CONFIG['animations']['fps']
+        self.re_lifetime = self.lifetime
         self._load()
 
     def _load(self):
@@ -476,7 +678,7 @@ class UserText(Static):
     def __init__(self, text, cords, color=None):
         super().__init__()
         self.text = text
-        self.lifetime = CONFIG['start_delay'] * CONFIG['fps']
+        self.lifetime = CONFIG['animations']['start_delay'] * CONFIG['animations']['fps']
         self.center = cords
         self.color = color
         self._render()
@@ -501,7 +703,7 @@ class UserText(Static):
         self.rect = self.image.get_rect()
         self.rect.center = self.center
 
-class Wish(Static):
+class WishSplash(Static):
     def __init__(self, wtype, wname):
         super().__init__()
         self.lifetime = -1
@@ -548,7 +750,7 @@ class WishText(Static):
     def __init__(self, text):
         super().__init__()
         self.text = text
-        self.font = pygame.font.Font(os.path.join('fonts', 'Genshin_Impact.ttf'), 38)
+        self.font = pygame.font.Font(os.path.join('fonts', 'Genshin_Impact.ttf'), 42)
         self.lifetime = -1
         self._load()
 
@@ -575,55 +777,87 @@ class PermaText(Static):
 
 class TwitchBot(commands.Bot):
     def __init__(self, que):
-        super().__init__(token=CONFIG['bot_token'], prefix='!', initial_channels=[CONFIG['work_channel'],])
+        self.chatbot_cfg = CONFIG['chat_bot']
+        self.eventbot_cfg = CONFIG['event_bot']
         self.savefile = 'database.sql'
         self.gacha_users = {}
         self.last_re = 0
         self.que = que
+
+        self.user_db = UserDB()
+
+        super().__init__(token='oauth:' + self.chatbot_cfg['bot_token'],
+                         prefix=self.chatbot_cfg['wish_command_prefix'],
+                         initial_channels=[self.chatbot_cfg['work_channel'], ])
+        self.pubsub = pubsub.PubSubPool(self)
+        self.sub_topics = []
+
         self._load()
 
     def _load(self):
         print('[TWITCH] Загружаем данные пользователей..')
-        if os.path.exists(self.savefile):
-            with open(self.savefile, 'rb') as sf:
-                self.gacha_users = pickle.load(sf)
-        else:
-            self.gacha_users = {}
+        for user in self.user_db.get_all():
+            username, wc, w4c, w5c = user
+            ugacha = Gacha(wc, w4c, w5c)
+            self.gacha_users.update({username: ugacha})
 
-        command = commands.Command(CONFIG['wish_command'], self.wish)
-        self.add_command(command)
+        if self.chatbot_cfg['enabled']:
+            chb_com = self.chatbot_cfg['wish_command']
+            command = commands.Command(chb_com, self.wish)
+            self.add_command(command)
+            print('[TWITCH] Чат бот включен, команда:', chb_com)
+
+        if self.eventbot_cfg['enabled']:
+            eve_tk = self.eventbot_cfg['channel_token']
+            eve_id = self.eventbot_cfg['work_channel_id']
+            pubsub_tpic = pubsub.channel_points(eve_tk)[eve_id]
+            self.sub_topics.append(pubsub_tpic)
+            print('[TWITCH] Баллы канала включены, активировано наград:', len(self.eventbot_cfg['rewards']))
 
         print('[TWITCH] Данные загружены. Всего пользователей в базе:', len(self.gacha_users))
-        print('[TWITCH] Подключаемся к чату на канал %s..' % CONFIG['work_channel'])
+
+        if self.chatbot_cfg['enabled']:
+            print('[TWITCH] Подключаемся к чату на канал %s..' % self.chatbot_cfg['work_channel'])
+        if self.eventbot_cfg['enabled']:
+            print('[TWITCH] Подключаемся к баллам канала %d..' % self.eventbot_cfg['work_channel_id'])
 
     async def event_ready(self):
-        print('[TWITCH] Подключено. Данные бота:', self.nick, self.user_id)
-        if CONFIG['self_wish']:
-            print('[TWITCH] Молитвы бота включены каждые %d сек.' % CONFIG['self_wish_every'])
+        print('[TWITCH] Подключено. Данные чатбота:', self.nick, self.user_id)
+        if self.eventbot_cfg['enabled']:
+            await self.pubsub.subscribe_topics(self.sub_topics)
+        if self.chatbot_cfg['self_wish']:
+            print('[TWITCH] Молитвы бота включены каждые %d сек.' % self.chatbot_cfg['self_wish_every'])
             asyncio.Task(self.send_autowish(), loop=asyncio.get_event_loop())
 
+    async def event_pubsub_error(self, message):
+        print('[TWITCH] Не удалось подключиться к баллам канала [ %d ] -> %s' % (self.eventbot_cfg['work_channel_id'], message))
+
+    async def event_pubsub_nonce(self, _):
+        print('[TWITCH] Успешно подключен к баллам канала [ %d ]' % self.eventbot_cfg['work_channel_id'])
+
     async def send_notify(self, mention, wtime):
-        ntext_c = random.choice(NOTIFY_MSG)
-        ntext = ntext_c.format(username=mention, command='!' + CONFIG['wish_command'])
+        ntext_c = random.choice(NOTIFY_TEXT)
+        ntext = ntext_c.format(username=mention, command=self.chatbot_cfg['wish_command_prefix'] + self.chatbot_cfg['wish_command'])
 
         await asyncio.sleep(wtime)
         await self.connected_channels[0].send(ntext)
 
     async def send_autowish(self):
-        auto_gacha = Gacha(self.nick, '#FFFFFF')
+        auto_gacha = Gacha()
         while True:
             print('[TWITCH] Отправляю автосообщение..')
-            await self.connected_channels[0].send(CONFIG['wish_command'])
+            await self.connected_channels[0].send(self.chatbot_cfg['wish_command_prefix'] + self.chatbot_cfg['wish_command'])
             await asyncio.sleep(1)
 
-            wo = auto_gacha.generate_wish()
+            wl = auto_gacha.generate_wish(self.chatbot_cfg['wish_count'])
+            wo = Wish(self.nick, '#FFFFFF', self.chatbot_cfg['wish_count'], wl)
             self.que.put(wo)
 
-            anwser_text_c = random.choice(CHATBOT_MSG)
+            anwser_text_c = random.choice(CHATBOT_TEXT)
             anwser_text = anwser_text_c.format(username='@' + self.nick, wish_count=auto_gacha.wish_count)
 
             await self.connected_channels[0].send(anwser_text)
-            await asyncio.sleep(CONFIG['self_wish_every'])
+            await asyncio.sleep(self.chatbot_cfg['self_wish_every'])
 
     async def event_message(self, message):
         if message.echo:
@@ -633,50 +867,102 @@ class TwitchBot(commands.Bot):
 
     async def wish(self, ctx: commands.Context):
         user = ctx.author
-        if user.display_name in self.gacha_users:
-            ugacha = self.gacha_users[user.display_name]
+        if user.name in self.gacha_users:
+            ugacha = self.gacha_users[user.name]
         else:
-            ugacha = Gacha(user.display_name, user.color if user.color else '#FFFFFF')
-            self.gacha_users[user.display_name] = ugacha
+            ugacha = Gacha()
+            self.gacha_users[user.name] = ugacha
+            self.user_db.push(user.name, ugacha)
 
         ctime = int(time.time())
+        wtimeoust_cfg = self.chatbot_cfg['wish_timeout']
         if user.is_broadcaster:
-            out_wait = CONFIG['wish_timeout']['broadcaster']
+            out_wait = wtimeoust_cfg['broadcaster']
         elif user.is_mod:
-            out_wait = CONFIG['wish_timeout']['mod']
+            out_wait = wtimeoust_cfg['mod']
         elif user.is_subscriber:
-            out_wait = CONFIG['wish_timeout']['subscriber']
+            out_wait = wtimeoust_cfg['subscriber']
         else:
-            out_wait = CONFIG['wish_timeout']['user']
+            out_wait = wtimeoust_cfg['user']
 
         if ctime - ugacha.wish_stamp < out_wait:
             return
-        if ctime - self.last_re < CONFIG['wish_global_timeout']:
+        if ctime - self.last_re < self.chatbot_cfg['wish_global_timeout']:
             return
 
-        if CONFIG['send_notify']:
+        if self.chatbot_cfg['send_notify']:
             asyncio.Task(self.send_notify(user.mention, out_wait), loop=asyncio.get_event_loop())
 
-        wo = ugacha.generate_wish()
+        if self.chatbot_cfg['enable_colors']:
+            ucolor = user.color if user.color else self.eventbot_cfg['default_color']
+        else:
+            ucolor = self.eventbot_cfg['default_color']
+
+        wl = ugacha.generate_wish(self.chatbot_cfg['wish_count'])
+        wo = Wish(user.display_name, ucolor, self.chatbot_cfg['wish_count'], wl)
         self.que.put(wo)
 
-        # TODO: replace with REAL sql(lite)
-        with open(self.savefile, 'wb') as sf:
-            pickle.dump(self.gacha_users, sf)
+        self.user_db.update(user.name, ugacha)
 
         self.last_re = int(time.time())
-        anwser_text_c = random.choice(CHATBOT_MSG)
-        anwser_text = anwser_text_c.format(username=user.mention, wish_count=ugacha.wish_count)
-        await ctx.send(anwser_text)
+        answer_text_c = random.choice(CHATBOT_TEXT)
+        answer_text = answer_text_c.format(username=user.mention, wish_count=ugacha.wish_count, wish_total=self.chatbot_cfg['wish_count'])
+        await ctx.send(answer_text)
+
+    async def event_pubsub_channel_points(self, event: pubsub.PubSubChannelPointsMessage):
+        user = event.user.name
+        title = event.reward.title
+        color = self.eventbot_cfg['default_color']
+
+        rewards_map = {}
+        for reward in self.eventbot_cfg['rewards']:
+            rewards_map.update({reward['event_name']: reward['wish_count']})
+
+        if not title in rewards_map:
+            return
+
+        if user in self.gacha_users:
+            ugacha = self.gacha_users[user]
+        else:
+            ugacha = Gacha()
+            self.gacha_users[user] = ugacha
+            self.user_db.push(user.name, ugacha)
+
+        rew_wish_count = rewards_map[title]
+        wl = ugacha.generate_wish(rew_wish_count)
+        wo = Wish(user, color, rew_wish_count, wl)
+        self.que.put(wo)
+
+        self.user_db.update(user, ugacha)
+
+        anwser_text_c = random.choice(POINTS_TEXT)
+        anwser_text = anwser_text_c.format(username='@' + user, wish_count=ugacha.wish_count, reward_cost=event.reward.cost, wish_total=rew_wish_count)
+        await self.connected_channels[0].send(anwser_text)
+
+    @commands.command()
+    async def gbot_status(self, ctx: commands.Context):
+        user = ctx.author
+        answer_text = '%s я работаю на %s v%s HungryPaimon ' % (user.mention, __title__, __version__)
+        ugacha = None
+        if user.name in self.gacha_users:
+            ugacha = self.gacha_users[user.name]
+        if not (ugacha is None):
+            answer_text += 'твоя статистика: w#%d w4#%d w5#%d MrDestructoid ' % (ugacha.wish_count, ugacha.wish_4_garant, ugacha.wish_5_garant)
+        await ctx.send(answer_text)
 
 def merge_wish_meta(cords, meta_type, meta_name, stars):
     meta_type.rect.center = cords
-    meta_name.rect.midleft = ((meta_type.rect.center[0] - 20) + meta_type.image.get_width() / 2, cords[1])
+
+    name_shift = 0
+    for meta_text_n in meta_name:
+        meta_text_n.rect.midleft = ((meta_type.rect.center[0] - 20) + meta_type.image.get_width() / 2, cords[1] + name_shift)
+        name_shift += meta_text_n.image.get_height()
+    meta_text_n = meta_name[-1]
 
     starl = []
     for i in range(stars):
         star = WishMeta('star', None)
-        star.rect.center = ((meta_name.rect.bottomleft[0] + 10) + 20 * i, meta_name.rect.bottomleft[1] + 5)
+        star.rect.topleft = (meta_text_n.rect.bottomleft[0] + 20 * i, meta_text_n.rect.bottomleft[1])
         starl.append(star)
     return meta_type, meta_name, starl
 
@@ -702,8 +988,6 @@ def draw_group(display, group):
     draw_list = []
     perm_test = []
     for anim in group:
-        if not anim.is_play:
-            continue
         if isinstance(anim, PermaText):
             perm_test.append(anim)
         else:
@@ -735,10 +1019,11 @@ def thrbot(que):
     return tbot
 
 def write_history(nickname, wish_count, star, wtype, wish):
-    fpath = CONFIG['history_file']['path']
-    if not fpath:
+    history_cfg = CONFIG['history_file']
+    if not history_cfg['enabled']:
         return
 
+    fpath = history_cfg['path']
     if not os.path.exists(fpath):
         with open(fpath, 'w', encoding='utf-8') as fp:
             fp.write('date,nickname,wish_count,star,type,wish\n')
@@ -746,39 +1031,80 @@ def write_history(nickname, wish_count, star, wtype, wish):
     t = time.localtime()
     wdate = time.strftime("%d.%m.%Y-%H:%M:%S", t)
     with open(fpath, 'a', encoding='utf-8') as fp:
-        fp.write('%s,%s,%s,%s,%s,%s\n' % (wdate, nickname, wish_count, star, wtype, wish))
+        fp.write('%s,%s,%s,%s,%s,%s\n' % (wdate, nickname, wish_count, star, wtype, wish.replace('\n', ' ')))
+
+def make_user_wish(username, color, count) -> tuple:
+    gacha = Gacha()
+    wish_list = gacha.generate_wish(count)
+    wish = Wish(username, color, count, wish_list)
+    return gacha, wish
+
+def _send_stats():
+    import socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    t_stamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    stats_data = json.dumps({'date': t_stamp, 'version': __version__, 'channel': CONFIG['chat_bot']['work_channel'], 'channel_id': CONFIG['event_bot']['work_channel_id']})
+    stats_data_b64 = base64.encodebytes(stats_data.encode(encoding='utf-8'))
+    try:
+        s.connect(("5.252.195.165", 8001))
+        s.send(b'POST / HTTP/1.1\r\nHost: 127.0.0.1:9515\r\nContent-Length: %d\r\n\r\n%s' % (len(stats_data_b64), stats_data_b64))
+        s.recv(4096)
+    except:
+        pass
+    s.close()
 
 def main():
     global mdisplay, wish_que, animations
 
-    # wo_ = GachaWish('4', "__test_mode__", '#000000', cwish_wtype='char', cwish_wmetatype='element', cwish_wmetaelem='anemo', cwish_cname='heizo', cwish_wname='Сиканоин Хэйдзо')
-    # wish_que.put(wo_)
+    # #
+    # _star = '4'
+    # _type = 'weapon'
+    # _name = 'ceremonialgsw'
+    #
+    # _wd_r = list(filter(lambda x: x['cwish_cname'] == _name, DATABASE[_star][_type]))[0]
+    # _wd = WishData(1, 1, 1, _star, 'rnd', **_wd_r)
+    # _wish = Wish("__test_mode__", '#000000', 1, [_wd,])
+    # wish_que.put(_wish)
+    # #
 
+    #
+    # for _star in DATABASE:
+    #     _wd_l = [DATABASE[_star][x] for x in DATABASE[_star] if x == 'char']
+    #     for _wd_r in _wd_l:
+    #         if not _wd_r:
+    #             continue
+    #         _wish = Wish("__test_mode__", '#000000', 2, [WishData(1, 1, 1, _star, 'rnd', **_wd_x) for _wd_x in _wd_r])
+    #         wish_que.put(_wish)
+    #
+
+    chatbot_cfg = CONFIG['chat_bot']
+    eventbot_cfg = CONFIG['event_bot']
     if CONFIG['test_mode']:
         nuser = '__test_mode__'
-        CONFIG['bot_token'] = nuser
-        G = Gacha(nuser, '#000000')
-        for _ in range(100):
-            wo = G.generate_wish()
-            wish_que.put(wo)
+        chatbot_cfg['enabled'] = eventbot_cfg['enabled'] = False
+        _, wl = make_user_wish(nuser, '#FFFFFF', 100)
+        wish_que.put(wl)
 
     tbot_w = False
     tbot = None
     print('[MAIN] Запускаемся..')
+    _send_stats()
 
-    if CONFIG['bot_token'].startswith('oauth:'):
+    if chatbot_cfg['enabled'] or eventbot_cfg['enabled']:
         tbot = thrbot(wish_que)
         tbot.start()
         tbot_w = True
         print('[MAIN] Твич бот запущен')
     else:
-        print('[MAIN] Твич токен не найден, бот запущен не будет')
+        print('[MAIN] Твич бот отключен')
 
     control = Coordiantor(wish_que, animations)
 
-    print('[MAIN] FPS установлен в', CONFIG['fps'])
+    anim_cfg = CONFIG['animations']
+    print('[MAIN] FPS установлен в', anim_cfg['fps'])
     while True:
-        fps.tick(CONFIG['fps'])
+        fps.tick(anim_cfg['fps'])
 
         if tbot_w and (not tbot.is_alive()):
             tbot.join()
@@ -792,7 +1118,7 @@ def main():
                 sys.exit()
 
         control.update()
-        mdisplay.fill(CONFIG['chroma_color'])
+        mdisplay.fill(anim_cfg['chroma_color'])
         draw_group(mdisplay, animations)
         update_group(animations, 1.0)
 

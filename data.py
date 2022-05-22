@@ -1,101 +1,236 @@
 CONFIG_SCHEMA = {
         "type": "object",
-        "required": ["CONFIG", "MESSAGES", "CHATBOT", "NOTIFY"],
+        "required": ["CONFIG", "MESSAGES"],
+        "additionalProperties": False,
         "properties": {
                 "CONFIG": {
                         "type": "object",
-                        "required": ["bot_token",
-                                     "work_channel",
-                                     "self_wish",
-                                     "self_wish_every",
-                                     "window_name",
-                                     "play_sound",
-                                     "wish_global_timeout",
-                                     "wish_timeout",
+                        "required": ["window_name",
+                                     "chat_bot",
+                                     "event_bot",
+                                     "animations",
+                                     "sound",
+                                     "history_file",
                                      "wish_fo_garant",
                                      "wish_fo_chance",
                                      "wish_fi_garant",
                                      "wish_fi_chance",
                                      "wish_fi_soft_a",
-                                     "test_mode",
-                                     "start_delay",
-                                     "end_delay",
-                                     "fps",
-                                     "user_background",
-                                     "chroma_color",
-                                     "history_file",
-                                     "wish_command",
-                                     "send_notify"
+                                     "test_mode"
                                      ],
+                        "additionalProperties": False,
                         "properties": {
-                                "bot_token": {"type": "string"},
-                                "work_channel": {"type": "string"},
-                                "self_wish": {"type": "boolean"},
-                                "self_wish_every": {"type": "integer"},
                                 "window_name": {"type": "string"},
-                                "play_sound": {"type": "boolean"},
-                                "wish_global_timeout": {"type": "integer"},
-                                "wish_timeout": {
+                                "chat_bot": {
                                         "type": "object",
-                                        "required": ["broadcaster", "mod", "subscriber", "user"],
+                                        "required": ["enabled",
+                                                     "bot_token",
+                                                     "work_channel",
+                                                     "wish_command",
+                                                     "wish_command_prefix",
+                                                     "wish_global_timeout",
+                                                     "wish_timeout",
+                                                     "send_notify",
+                                                     "wish_count",
+                                                     "self_wish",
+                                                     "self_wish_every",
+                                                     "enable_colors"
+                                                     ],
+                                        "additionalProperties": False,
                                         "properties": {
-                                                "broadcaster": {"type": "integer"},
-                                                "mod": {"type": "integer"},
-                                                "subscriber": {"type": "integer"},
-                                                "user": {"type": "integer"}
+                                                "enabled": {"type": "boolean"},
+                                                "bot_token": {"type": "string"},
+                                                "work_channel": {"type": "string"},
+                                                "wish_command": {"type": "string"},
+                                                "wish_command_prefix": {"type": "string"},
+                                                "wish_global_timeout": {"type": "integer"},
+                                                "wish_timeout": {
+                                                        "type": "object",
+                                                        "required": [
+                                                                "broadcaster",
+                                                                "mod",
+                                                                "subscriber",
+                                                                "user"
+                                                        ],
+                                                        "additionalProperties": False,
+                                                        "properties": {
+                                                                "broadcaster": {"type": "integer"},
+                                                                "mod": {"type": "integer"},
+                                                                "subscriber": {"type": "integer"},
+                                                                "user": {"type": "integer"}
+                                                        }
+                                                },
+                                                "send_notify": {"type": "boolean"},
+                                                "wish_count": {"type": "integer"},
+                                                "self_wish": {"type": "boolean"},
+                                                "self_wish_every": {"type": "integer"},
+                                                "enable_colors": {"type": "boolean"}
                                         }
                                 },
-                                "wish_fo_garant": {"type": "integer"},
-                                "wish_fo_chance": {"type": "integer"},
-                                "wish_fi_garant": {"type": "integer"},
-                                "wish_fi_chance": {"type": "integer"},
-                                "wish_fi_soft_a": {"type": "integer"},
-                                "test_mode": {"type": "boolean"},
-                                "start_delay": {"type": "integer"},
-                                "end_delay": {
+                                "event_bot": {
                                         "type": "object",
-                                        "required": ["3", "4", "5"],
+                                        "required": [
+                                                "enabled",
+                                                "channel_token",
+                                                "work_channel_id",
+                                                "default_color",
+                                                "rewards"
+                                        ],
+                                        "additionalProperties": False,
                                         "properties": {
-                                                "3": {"type": "integer"},
-                                                "4": {"type": "integer"},
-                                                "5": {"type": "integer"}
+                                                "enabled": {"type": "boolean"},
+                                                "channel_token": {"type": "string"},
+                                                "work_channel_id": {"type": "integer"},
+                                                "event_name": {"type": "string"},
+                                                "default_color": {"type": "string"},
+                                                "rewards": {
+                                                        "type": "array",
+                                                        "minItems": 1,
+                                                        "items": {
+                                                                "type": "object",
+                                                                "required": [
+                                                                        "event_name",
+                                                                        "wish_count"
+                                                                ],
+                                                                "additionalProperties": False,
+                                                                "properties": {
+                                                                        "event_name": {"type": "string"},
+                                                                        "wish_count": {"type": "integer"}
+                                                                }
+                                                        }
+                                                }
                                         }
                                 },
-                                "fps": {"type": "integer"},
-                                "user_background": {
+                                "animations": {
                                         "type": "object",
-                                        "required": ["path", "ftype"],
+                                        "required": [
+                                                "chroma_color",
+                                                "start_delay",
+                                                "end_delay",
+                                                "end_delay_milti",
+                                                "user_background",
+                                                "fps"
+                                        ],
+                                        "additionalProperties": False,
                                         "properties": {
-                                                "path": {"type": "string"},
-                                                "ftype": {"type": "string"}
+                                                "chroma_color": {"type": "string"},
+                                                "start_delay": {"type": "integer"},
+                                                "end_delay": {
+                                                        "type": "object",
+                                                        "required": [
+                                                                "3",
+                                                                "4",
+                                                                "5"
+                                                        ],
+                                                        "additionalProperties": False,
+                                                        "properties": {
+                                                                "3": {"type": "integer"},
+                                                                "4": {"type": "integer"},
+                                                                "5": {"type": "integer"}
+                                                        }
+                                                },
+                                                "end_delay_milti": {
+                                                        "type": "object",
+                                                        "required": [
+                                                                "3",
+                                                                "4",
+                                                                "5"
+                                                        ],
+                                                        "additionalProperties": False,
+                                                        "properties": {
+                                                                "3": {"type": "integer"},
+                                                                "4": {"type": "integer"},
+                                                                "5": {"type": "integer"}
+                                                        }
+                                                },
+                                                "user_background": {
+                                                        "type": "object",
+                                                        "required": [
+                                                                "enabled",
+                                                                "path",
+                                                                "type"
+                                                        ],
+                                                        "additionalProperties": False,
+                                                        "properties": {
+                                                                "enabled": {"type": "boolean"},
+                                                                "path": {"type": "string"},
+                                                                "type": {"type": "string"}
+                                                        }
+                                                },
+                                                "fps": {"type": "integer"}
+                                        }
+                                },
+                                "sound": {
+                                        "type": "object",
+                                        "required": [
+                                                "enabled",
+                                                "fall",
+                                                "3",
+                                                "4",
+                                                "5",
+                                        ],
+                                        "additionalProperties": False,
+                                        "properties": {
+                                                "enabled": {"type": "boolean"},
+                                                "fall": {"type": "string"},
+                                                "3": {"type": "string"},
+                                                "4": {"type": "string"},
+                                                "5": {"type": "string"},
                                         }
                                 },
                                 "history_file": {
                                         "type": "object",
-                                        "required": ["path", "3", "4", "5"],
+                                        "required": [
+                                                "enabled",
+                                                "path",
+                                                "3",
+                                                "4",
+                                                "5",
+                                        ],
+                                        "additionalProperties": False,
                                         "properties": {
+                                                "enabled": {"type": "boolean"},
                                                 "path": {"type": "string"},
                                                 "3": {"type": "boolean"},
                                                 "4": {"type": "boolean"},
                                                 "5": {"type": "boolean"}
                                         }
                                 },
-                                "chroma_color": {"type": "string"},
-                                "wish_command": {"type": "string"},
-                                "send_notify": {"type": "boolean"}
+                                "wish_fo_garant": {"type": "number"},
+                                "wish_fo_chance": {"type": "number"},
+                                "wish_fi_garant": {"type": "number"},
+                                "wish_fi_chance": {"type": "number"},
+                                "wish_fi_soft_a": {"type": "number"},
+                                "test_mode": {"type": "boolean"}
                         }
                 },
                 "MESSAGES": {
-                        "type": "array",
-                        "minItems": 1
-                },
-                "CHATBOT": {
-                        "type": "array",
-                        "minItems": 1
-                },
-                "NOTIFY": {
-                        "type": "array",
-                        "minItems": 1
+                        "type": "object",
+                        "required": [
+                                "user_splash_text",
+                                "chatbot_text",
+                                "notify_text",
+                                "chanel_points_text"
+                        ],
+                        "additionalProperties": False,
+                        "properties": {
+                                "user_splash_text": {
+                                        "type": "array",
+                                        "minItems": 1
+                                },
+                                "chatbot_text": {
+                                        "type": "array",
+                                        "minItems": 1
+                                },
+                                "notify_text": {
+                                        "type": "array",
+                                        "minItems": 1
+                                },
+                                "chanel_points_text": {
+                                        "type": "array",
+                                        "minItems": 1
+                                }
+                        }
                 }
         }
 }
@@ -105,15 +240,15 @@ DATABASE = {
                 'weapon': [
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'holodnoelezvie', 'cwish_wname': 'Холодное лезвие'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'fileynozh', 'cwish_wname': 'Филейный нож'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'temniyzhsw', 'cwish_wname': 'Тёмный железный меч'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'temniyzhsw', 'cwish_wname': 'Тёмный железный\nмеч'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'predvestnik', 'cwish_wname': 'Предвестник зари'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'swputeshest', 'cwish_wname': 'Меч путешественника'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'swvsadnik', 'cwish_wname': 'Меч небесного всадника'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'beloezhelezogsw', 'cwish_wname': 'Меч из белого железа'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'dragonbloodgsw', 'cwish_wname': 'Меч драконьей крови'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'metalten', 'cwish_wname': 'Металлическая тень'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'swputeshest', 'cwish_wname': 'Меч\nпутешественника'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'swvsadnik', 'cwish_wname': 'Меч небесного\nвсадника'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'beloezhelezogsw', 'cwish_wname': 'Меч из белого\nжелеза'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'dragonbloodgsw', 'cwish_wname': 'Меч драконьей\nкрови'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'metalten', 'cwish_wname': 'Металлическая\nтень'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'dubinapereg', 'cwish_wname': 'Дубина переговоров'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'bolshounebes', 'cwish_wname': 'Большой меч небесного всадника'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'bolshounebes', 'cwish_wname': 'Большой меч\nнебесного всадника'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'pol', 'cwish_cname': 'chernayakist', 'cwish_wname': 'Чёрная кисть'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'pol', 'cwish_cname': 'belayakist', 'cwish_wname': 'Белая кисть'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'pol', 'cwish_cname': 'alebardamilelith', 'cwish_wname': 'Алебарда Миллелита'},
@@ -122,9 +257,9 @@ DATABASE = {
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'voronbow', 'cwish_wname': 'Лук ворона'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'klatvastrelka', 'cwish_wname': 'Клятва стрелка'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'izognutbow', 'cwish_wname': 'Изогнутый лук'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'eposdrakon', 'cwish_wname': 'Эпос о драконоборцах'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'rukovodmagiya', 'cwish_wname': 'Руководство по магии'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'potustoristor', 'cwish_wname': 'Потусторонняя история'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'eposdrakon', 'cwish_wname': 'Эпос о\nдраконоборцах'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'rukovodmagiya', 'cwish_wname': 'Руководство\nпо магии'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'potustoristor', 'cwish_wname': 'Потусторонняя\nистория'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'parniynefrit', 'cwish_wname': 'Парный нефрит'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'izumrudshar', 'cwish_wname': 'Изумрудный шар'}
                 ],
@@ -132,71 +267,72 @@ DATABASE = {
         },
         '4': {
                 'weapon': [
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'chernogorsw', 'cwish_wname': 'Черногорский длинный меч'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'chernogorsw', 'cwish_wname': 'Черногорский\nдлинный меч'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'cherniysw', 'cwish_wname': 'Чёрный меч'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'ceremonialsw', 'cwish_wname': 'Церемониальный меч'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'ceremonialsw', 'cwish_wname': 'Церемониальный\nмеч'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'stalnoezh', 'cwish_wname': 'Стальное жало'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'pzloba', 'cwish_wname': 'Прототип: Злоба'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'oskzhelanie', 'cwish_wname': 'Осквернённое желание'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'oskzhelanie', 'cwish_wname': 'Осквернённое\nжелание'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'fleyta', 'cwish_wname': 'Меч-флейта'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'favoniy', 'cwish_wname': 'Меч Фавония'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'nishozhdeniesw', 'cwish_wname': 'Меч нисхождения'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'aristokratsw', 'cwish_wname': 'Меч аристократов'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'kinowarsw', 'cwish_wname': 'Киноварное веретено'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'kinowarsw', 'cwish_wname': 'Киноварное\nверетено'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'dragonroar', 'cwish_wname': 'Драконий рык'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'vspishka', 'cwish_wname': 'Вспышка во тьме'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'amenoma', 'cwish_wname': 'Амэнома Кагэути'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'chernogorgws', 'cwish_wname': 'Черногорская бритва'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'ceremonialgsw', 'cwish_wname': 'Церемониальный двуручный меч'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'parhaich', 'cwish_wname': 'Прототип: Архаичный'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'chernogorgws', 'cwish_wname': 'Черногорская\nбритва'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'ceremonialgsw', 'cwish_wname': 'Церемониальный\nдвуручный меч'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'parhaich', 'cwish_wname': 'Прототип:\nАрхаичный'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'kolokol', 'cwish_wname': 'Меч-колокол'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'swdrackost', 'cwish_wname': 'Меч драконьей кости'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'korolgsw', 'cwish_wname': 'Королевский двуручный меч'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'kasturakiri', 'cwish_wname': 'Кацурагикири Нагамаса'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'swdrackost', 'cwish_wname': 'Меч драконьей\nкости'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'korolgsw', 'cwish_wname': 'Королевский\nдвуручный меч'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'kasturakiri', 'cwish_wname': 'Кацурагикири\nНагамаса'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'kamenniygsw', 'cwish_wname': 'Каменный меч'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'zasnezhennoeser', 'cwish_wname': 'Заснеженное звёздное серебро'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'zasnezhennoeser', 'cwish_wname': 'Заснеженное\nзвёздное серебро'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'dozhderez', 'cwish_wname': 'Дождерез'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'favoniygsw', 'cwish_wname': 'Двуручный меч Фавония'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'blagorodvladyka', 'cwish_wname': 'Благодатный владыка вод'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'favoniygsw', 'cwish_wname': 'Двуручный меч\nФавония'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'blagorodvladyka', 'cwish_wname': 'Благодатный\nвладыка вод'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'belayaten', 'cwish_wname': 'Белая тень'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'akuomaku', 'cwish_wname': 'Акуомару'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'pol', 'cwish_cname': 'chernogorpika', 'cwish_wname': 'Черногорская пика'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'pol', 'cwish_cname': 'chernogorpika', 'cwish_wname': 'Черногорская\nпика'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'pol', 'cwish_cname': 'smertboy', 'cwish_wname': 'Смертельный бой'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'pol', 'cwish_cname': 'rezhushiy', 'cwish_wname': 'Режущий волны плавник'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'pol', 'cwish_cname': 'pzvezdblesk', 'cwish_wname': 'Прототип: Звёздный блеск'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'pol', 'cwish_cname': 'rezhushiy', 'cwish_wname': 'Режущий волны\nплавник'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'pol', 'cwish_cname': 'pzvezdblesk', 'cwish_wname': 'Прототип:\nЗвёздный блеск'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'pol', 'cwish_cname': 'pikapolumes', 'cwish_wname': 'Пика полумесяца'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'pol', 'cwish_cname': 'krestkitain', 'cwish_wname': 'Крест-копьё Китаин'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'pol', 'cwish_cname': 'korolewskkop', 'cwish_wname': 'Королевское копьё'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'pol', 'cwish_cname': 'krestkitain', 'cwish_wname': 'Крест-копьё\nКитаин'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'pol', 'cwish_cname': 'korolewskkop', 'cwish_wname': 'Королевское\nкопьё'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'pol', 'cwish_cname': 'favoniuskopie', 'cwish_wname': 'Копьё Фавония'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'pol', 'cwish_cname': 'drakoniyhrebet', 'cwish_wname': 'Копьё Драконьего хребта'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'pol', 'cwish_cname': 'drakoniyhrebet', 'cwish_wname': 'Копьё Драконьего\nхребта'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'pol', 'cwish_cname': 'kamennoekop', 'cwish_wname': 'Каменное копьё'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'pol', 'cwish_cname': 'grozadrakonov', 'cwish_wname': 'Гроза драконов'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'pol', 'cwish_cname': 'ulov', 'cwish_wname': 'Улов'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'chernogorbow', 'cwish_wname': 'Черногорский боевой лук'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'ceremonualbow', 'cwish_wname': 'Церемониальный лук'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'chernogorbow', 'cwish_wname': 'Черногорский\nбоевой лук'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'ceremonualbow', 'cwish_wname': 'Церемониальный\nлук'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'hishnik', 'cwish_wname': 'Хищник'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'hamaumi', 'cwish_wname': 'Хамаюми'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'sostavnoybow', 'cwish_wname': 'Составной лук'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'rzhavyi', 'cwish_wname': 'Ржавый лук'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'ppolumesac', 'cwish_wname': 'Прототип: Полумесяц'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'ppolumesac', 'cwish_wname': 'Прототип:\nПолумесяц'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'ohotnikvotme', 'cwish_wname': 'Охотник во тьме'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'odaanemonii', 'cwish_wname': 'Ода анемонии'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'lunamoun', 'cwish_wname': 'Луна Моун'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'korolevbow', 'cwish_wname': 'Королевский лук'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'zelenbow', 'cwish_wname': 'Зелёный лук'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'valsnirvany', 'cwish_wname': 'Вальс Нирваны Ночи'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'favoniybow', 'cwish_wname': 'Боевой лук Фавония'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'valsnirvany', 'cwish_wname': 'Вальс Нирваны\nНочи'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'favoniybow', 'cwish_wname': 'Боевой лук\nФавония'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'besstrunniy', 'cwish_wname': 'Бесструнный'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'chernogorcat', 'cwish_wname': 'Черногорский агат'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'ceremonmemuary', 'cwish_wname': 'Церемониальные мемуары'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'solzhemchuzh', 'cwish_wname': 'Солнечная жемчужина'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'pyzntar', 'cwish_wname': 'Прототип: Янтарь'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'plodmerzloty', 'cwish_wname': 'Плод вечной мерзлоты'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'sumekri', 'cwish_wname': 'Гаснущие\nсумерки'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'chernogorcat', 'cwish_wname': 'Черногорский\nагат'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'ceremonmemuary', 'cwish_wname': 'Церемониальные\nмемуары'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'solzhemchuzh', 'cwish_wname': 'Солнечная\nжемчужина'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'pyzntar', 'cwish_wname': 'Прототип:\nЯнтарь'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'plodmerzloty', 'cwish_wname': 'Плод вечной\nмерзлоты'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'pesnstrannika', 'cwish_wname': 'Песнь странника'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'okosoananiya', 'cwish_wname': 'Око сознания'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'okoklatvy', 'cwish_wname': 'Око клятвы'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'morskoyatlas', 'cwish_wname': 'Морской атлас'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'korolgrimuar', 'cwish_wname': 'Королевский гримуар'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'korolgrimuar', 'cwish_wname': 'Королевский\nгримуар'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'hakusin', 'cwish_wname': 'Кольцо Хакусин'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'favoniykodex', 'cwish_wname': 'Кодекс Фавония'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'dodoko', 'cwish_wname': 'Истории Додоко'},
@@ -232,17 +368,17 @@ DATABASE = {
         },
         '5': {
                 'weapon': [
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'haran', 'cwish_wname': 'Харан гэппаку фуцу'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'haran', 'cwish_wname': 'Харан гэппаку\nфуцу'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'tuman', 'cwish_wname': 'Рассекающий туман'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'nebesmech', 'cwish_wname': 'Небесный меч'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'sokol', 'cwish_wname': 'Меч Сокола'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'kromsateld', 'cwish_wname': 'Кромсатель пиков'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'klyatwa', 'cwish_wname': 'Клятва свободы'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'sw', 'cwish_cname': 'omut', 'cwish_wname': 'Драгоценный омут'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'pesnsosen', 'cwish_wname': 'Песнь разбитых сосен'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'pesnsosen', 'cwish_wname': 'Песнь разбитых\nсосен'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'nekovaniy', 'cwish_wname': 'Некованый'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'nebesnoyvel', 'cwish_wname': 'Небесное величие'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'krasnorog', 'cwish_wname': 'Краснорогий камнеруб'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'krasnorog', 'cwish_wname': 'Краснорогий\nкамнеруб'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'gsw', 'cwish_cname': 'volchuya', 'cwish_wname': 'Волчья погибель'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'pol', 'cwish_cname': 'usmiritelbed', 'cwish_wname': 'Усмиритель бед'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'pol', 'cwish_cname': 'sizushayazhatva', 'cwish_wname': 'Сияющая жатва'},
@@ -258,9 +394,9 @@ DATABASE = {
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'bow', 'cwish_cname': 'aquasimul', 'cwish_wname': 'Аква симулякрум'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'pamatopily', 'cwish_wname': 'Память о пыли'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'nebesatlas', 'cwish_wname': 'Небесный атлас'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'molitvavetram', 'cwish_wname': 'Молитва святым ветрам'},
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'molitvavetram', 'cwish_wname': 'Молитва святым\nветрам'},
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'istinakagura', 'cwish_wname': 'Истина кагура'},
-                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'vechnoyesiyanie', 'cwish_wname': 'Вечное лунное сияние'}
+                        {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'vechnoyesiyanie', 'cwish_wname': 'Вечное лунное\nсияние'}
                 ],
                 'char': [
                         {'cwish_wtype': 'char', 'cwish_wmetatype': 'element', 'cwish_wmetaelem': 'geo', 'cwish_cname': 'albedo', 'cwish_wname': 'Альбедо'},
