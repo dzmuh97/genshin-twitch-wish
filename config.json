@@ -95,15 +95,15 @@
       "{username} это твоя {wish_count} крутка! Результат смотри на стриме через несколько секунд HungryPaimon",
       "{username} делает {wish_count} крутку! Что же ему выпадет? Смотри на стриме HungryPaimon",
       "{username} решает испытать удачу {wish_count} раз! Результат на стриме через несколько секунд HungryPaimon",
-      "{username} приносит в жертву {wish_total} молитв, увеличивая свой счетчик круток до {wish_count}! Что же выпадет? HungryPaimon"
+      "{username} приносит в жертву {wishes_in_cmd} молитв, увеличивая свой счетчик круток до {wish_count}! Что же выпадет? HungryPaimon"
     ],
     "notify_text": [
       "{username} ты снова можешь сделать крутку! Напиши в чат {command} чтобы испытать удачу HungryPaimon",
       "{username} время вышло! Снова испытай удачу командой {command} HungryPaimon"
     ],
     "chanel_points_text": [
-      "Невероятно! {username} тратит {reward_cost} баллов, чтобы сделать {wish_total} круток! Теперь его счетчик круток равен {wish_count}!",
-      "{username} идет вразнос и тратит {reward_cost} баллов ради {wish_total} круток! Все ради любимой вайфу HungryPaimon Теперь у тебя сделано целых {wish_count} круток!"
+      "Невероятно! {username} тратит {reward_cost} баллов, чтобы сделать {wishes_in_cmd} круток! Теперь его счетчик круток равен {wish_count}!",
+      "{username} идет вразнос и тратит {reward_cost} баллов ради {wishes_in_cmd} круток! Все ради любимой вайфу HungryPaimon Теперь у тебя сделано целых {wish_count} круток!"
     ]
   }
 }

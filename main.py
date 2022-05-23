@@ -837,7 +837,8 @@ class TwitchBot(commands.Bot):
 
     async def send_notify(self, mention, wtime):
         ntext_c = random.choice(NOTIFY_TEXT)
-        ntext = ntext_c.format(username=mention, command=self.chatbot_cfg['wish_command_prefix'] + self.chatbot_cfg['wish_command'])
+        ntext = ntext_c.format(username=mention,
+                               command=self.chatbot_cfg['wish_command_prefix'] + self.chatbot_cfg['wish_command'])
 
         await asyncio.sleep(wtime)
         await self.connected_channels[0].send(ntext)
@@ -906,7 +907,12 @@ class TwitchBot(commands.Bot):
 
         self.last_re = int(time.time())
         answer_text_c = random.choice(CHATBOT_TEXT)
-        answer_text = answer_text_c.format(username=user.mention, wish_count=ugacha.wish_count, wish_total=self.chatbot_cfg['wish_count'])
+        answer_text = answer_text_c.format(username=user.mention,
+                                           wish_count=ugacha.wish_count,
+                                           wish_count_w4=ugacha.wish_4_garant - 1,
+                                           wish_count_w5=ugacha.wish_5_garant - 1,
+                                           wishes_in_cmd=self.chatbot_cfg['wish_count'])
+
         await ctx.send(answer_text)
 
     async def event_pubsub_channel_points(self, event: pubsub.PubSubChannelPointsMessage):
@@ -928,15 +934,21 @@ class TwitchBot(commands.Bot):
             self.gacha_users[user] = ugacha
             self.user_db.push(user.name, ugacha)
 
-        rew_wish_count = rewards_map[title]
-        wl = ugacha.generate_wish(rew_wish_count)
-        wo = Wish(user, color, rew_wish_count, wl)
+        wish_in_command = rewards_map[title]
+        wl = ugacha.generate_wish(wish_in_command)
+        wo = Wish(user, color, wish_in_command, wl)
         self.que.put(wo)
 
         self.user_db.update(user, ugacha)
 
         anwser_text_c = random.choice(POINTS_TEXT)
-        anwser_text = anwser_text_c.format(username='@' + user, wish_count=ugacha.wish_count, reward_cost=event.reward.cost, wish_total=rew_wish_count)
+        anwser_text = anwser_text_c.format(username='@' + user,
+                                           wish_count=ugacha.wish_count,
+                                           wish_count_w4=ugacha.wish_4_garant - 1,
+                                           wish_count_w5=ugacha.wish_5_garant - 1,
+                                           reward_cost=event.reward.cost,
+                                           wishes_in_cmd=wish_in_command)
+
         await self.connected_channels[0].send(anwser_text)
 
     @commands.command()
