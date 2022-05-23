@@ -1039,20 +1039,29 @@ def make_user_wish(username, color, count) -> tuple:
     wish = Wish(username, color, count, wish_list)
     return gacha, wish
 
-def _send_stats():
-    import socket
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+def send_stats():
+    if not CONFIG['send_dev_stats']:
+        return
 
-    t_stamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-    stats_data = json.dumps({'date': t_stamp, 'version': __version__, 'channel': CONFIG['chat_bot']['work_channel'], 'channel_id': CONFIG['event_bot']['work_channel_id']})
-    stats_data_b64 = base64.encodebytes(stats_data.encode(encoding='utf-8'))
-    try:
-        s.connect(("5.252.195.165", 8001))
-        s.send(b'POST / HTTP/1.1\r\nHost: 127.0.0.1:9515\r\nContent-Length: %d\r\n\r\n%s' % (len(stats_data_b64), stats_data_b64))
-        s.recv(4096)
-    except:
-        pass
-    s.close()
+    def _send_stats():
+        import socket
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        t_stamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        stats_data = json.dumps({'date': t_stamp, 'version': __version__, 'channel': CONFIG['chat_bot']['work_channel'], 'channel_id': CONFIG['event_bot']['work_channel_id']})
+        stats_data_b64 = base64.encodebytes(stats_data.encode(encoding='utf-8'))
+        try:
+            s.connect(("5.252.195.165", 8001))
+            s.send(b'POST / HTTP/1.1\r\nHost: 127.0.0.1:9515\r\nContent-Length: %d\r\n\r\n%s' % (len(stats_data_b64), stats_data_b64))
+            s.recv(4096)
+        except:
+            pass
+        s.close()
+
+    logging.debug('[STATS] Отправка статистики..')
+    t = threading.Thread(target=_send_stats, args=())
+    t.daemon = True
+    t.start()
 
 def main():
     global mdisplay, wish_que, animations
@@ -1089,13 +1098,13 @@ def main():
     tbot_w = False
     tbot = None
     print('[MAIN] Запускаемся..')
-    _send_stats()
 
     if chatbot_cfg['enabled'] or eventbot_cfg['enabled']:
         tbot = thrbot(wish_que)
         tbot.start()
         tbot_w = True
         print('[MAIN] Твич бот запущен')
+        send_stats()
     else:
         print('[MAIN] Твич бот отключен')
 

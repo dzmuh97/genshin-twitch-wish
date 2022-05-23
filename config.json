@@ -79,6 +79,7 @@
     "wish_fi_garant": 90,
     "wish_fi_chance": 1.60,
     "wish_fi_soft_a": 73,
+    "send_dev_stats": false,
     "test_mode": false
   },
   "MESSAGES": {

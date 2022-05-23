@@ -201,6 +201,7 @@ CONFIG_SCHEMA = {
                                 "wish_fi_garant": {"type": "number"},
                                 "wish_fi_chance": {"type": "number"},
                                 "wish_fi_soft_a": {"type": "number"},
+                                "send_dev_stats": {"type": "boolean"},
                                 "test_mode": {"type": "boolean"}
                         }
                 },
