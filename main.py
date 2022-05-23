@@ -905,6 +905,9 @@ class TwitchBot(commands.Bot):
 
     async def wish(self, ctx: commands.Context):
         user = ctx.author
+
+        logging.debug('[TWITCH] Получен команда wish: %s, %s, %s', user.name, user.display_name, user.color)
+
         if user.name in self.gacha_users:
             ugacha = self.gacha_users[user.name]
         else:
@@ -953,9 +956,11 @@ class TwitchBot(commands.Bot):
         await ctx.send(answer_text)
 
     async def event_pubsub_channel_points(self, event: pubsub.PubSubChannelPointsMessage):
-        user = event.user.name
+        user = event.user.name.lower()
         title = event.reward.title
         color = self.eventbot_cfg['default_color']
+
+        logging.debug('[TWITCH] Получен ивент pubsub_channel_points: %s, %s, %s', user, title, color)
 
         rewards_map = {}
         for reward in self.eventbot_cfg['rewards']:
@@ -969,7 +974,7 @@ class TwitchBot(commands.Bot):
         else:
             ugacha = Gacha()
             self.gacha_users[user] = ugacha
-            self.user_db.push(user.name, ugacha)
+            self.user_db.push(user, ugacha)
 
         wish_in_command = rewards_map[title]
         wl = ugacha.generate_wish(wish_in_command)
