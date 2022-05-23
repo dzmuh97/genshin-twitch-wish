@@ -939,20 +939,23 @@ class TwitchBot(commands.Bot):
         else:
             ucolor = self.eventbot_cfg['default_color']
 
+        try:
+            self.last_re = int(time.time())
+            answer_text_c = random.choice(CHATBOT_TEXT)
+            answer_text = answer_text_c.format(username=user.mention,
+                                               wish_count=ugacha.wish_count,
+                                               wish_count_w4=ugacha.wish_4_garant - 1,
+                                               wish_count_w5=ugacha.wish_5_garant - 1,
+                                               wishes_in_cmd=self.chatbot_cfg['wish_count'])
+        except KeyError as e:
+            print('[TWITCH] Ошибка при форматировании ответа:', e)
+            return
+
         wl = ugacha.generate_wish(self.chatbot_cfg['wish_count'])
         wo = Wish(user.display_name, ucolor, self.chatbot_cfg['wish_count'], wl)
         self.que.put(wo)
 
         self.user_db.update(user.name, ugacha)
-
-        self.last_re = int(time.time())
-        answer_text_c = random.choice(CHATBOT_TEXT)
-        answer_text = answer_text_c.format(username=user.mention,
-                                           wish_count=ugacha.wish_count,
-                                           wish_count_w4=ugacha.wish_4_garant - 1,
-                                           wish_count_w5=ugacha.wish_5_garant - 1,
-                                           wishes_in_cmd=self.chatbot_cfg['wish_count'])
-
         await ctx.send(answer_text)
 
     async def event_pubsub_channel_points(self, event: pubsub.PubSubChannelPointsMessage):
@@ -966,6 +969,8 @@ class TwitchBot(commands.Bot):
         for reward in self.eventbot_cfg['rewards']:
             rewards_map.update({reward['event_name']: reward['wish_count']})
 
+        logging.debug('[TWITCH] pubsub_channel_points rewards_map: %s', rewards_map)
+
         if not title in rewards_map:
             return
 
@@ -977,19 +982,23 @@ class TwitchBot(commands.Bot):
             self.user_db.push(user, ugacha)
 
         wish_in_command = rewards_map[title]
+        try:
+            anwser_text_c = random.choice(POINTS_TEXT)
+            anwser_text = anwser_text_c.format(username='@' + user,
+                                               wish_count=ugacha.wish_count,
+                                               wish_count_w4=ugacha.wish_4_garant - 1,
+                                               wish_count_w5=ugacha.wish_5_garant - 1,
+                                               reward_cost=event.reward.cost,
+                                               wishes_in_cmd=wish_in_command)
+        except KeyError as e:
+            print('[TWITCH] Ошибка при форматировании ответа:', e)
+            return
+
         wl = ugacha.generate_wish(wish_in_command)
         wo = Wish(user, color, wish_in_command, wl)
         self.que.put(wo)
 
         self.user_db.update(user, ugacha)
-
-        anwser_text_c = random.choice(POINTS_TEXT)
-        anwser_text = anwser_text_c.format(username='@' + user,
-                                           wish_count=ugacha.wish_count,
-                                           wish_count_w4=ugacha.wish_4_garant - 1,
-                                           wish_count_w5=ugacha.wish_5_garant - 1,
-                                           reward_cost=event.reward.cost,
-                                           wishes_in_cmd=wish_in_command)
 
         await self.connected_channels[0].send(anwser_text)
 
