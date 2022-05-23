@@ -53,7 +53,7 @@ except jsonschema.ValidationError as _e:
 
 __title__ = 'genshin-twitch-wish'
 __site__ = 'github.com/dzmuh97/genshin-twitch-wish'
-__version__ = '2.0.1'
+__version__ = '2.0.2'
 
 CONFIG = _config['CONFIG']
 _messages = _config['MESSAGES']
