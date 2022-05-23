@@ -21,6 +21,8 @@ import jsonschema
 from data import DATABASE
 from data import CONFIG_SCHEMA
 
+import twitchio
+from twitchio import http as twio_http
 from twitchio.ext import pubsub
 from twitchio.ext import commands
 
@@ -39,14 +41,14 @@ logging.basicConfig(format='[%(asctime)s] [%(levelname)s] %(message)s',
 _config = {}
 try:
     _config = json.loads(open('config.json', 'r', encoding='utf-8').read())
-except (json.JSONDecodeError, ValueError) as e:
-    print('[MAIN] Ошибка при загрузке файла конфигурации:', e)
+except (json.JSONDecodeError, ValueError) as _e:
+    print('[MAIN] Ошибка при загрузке файла конфигурации:', _e)
     sys.exit(input('Нажмите любую кнопку чтобы выйти > '))
 
 try:
     jsonschema.validate(_config, schema=CONFIG_SCHEMA)
-except jsonschema.ValidationError as e:
-    print('[MAIN] Ошибка при загрузке файла конфигурации:', e)
+except jsonschema.ValidationError as _e:
+    print('[MAIN] Ошибка при загрузке файла конфигурации:', _e)
     sys.exit(input('Нажмите любую кнопку чтобы выйти > '))
 
 __title__ = 'genshin-twitch-wish'
@@ -862,7 +864,7 @@ class TwitchBot(commands.Bot):
             await self.pubsub.subscribe_topics(self.sub_topics)
         if self.chatbot_cfg['self_wish']:
             print('[TWITCH] Молитвы бота включены каждые %d сек.' % self.chatbot_cfg['self_wish_every'])
-            asyncio.Task(self.send_autowish(), loop=asyncio.get_event_loop())
+            asyncio.Task(self.send_autowish(), loop=self.loop)
 
     async def event_pubsub_error(self, message):
         print('[TWITCH] Не удалось подключиться к баллам канала [ %d ] -> %s' % (self.eventbot_cfg['work_channel_id'], message))
@@ -927,7 +929,7 @@ class TwitchBot(commands.Bot):
             return
 
         if self.chatbot_cfg['send_notify']:
-            asyncio.Task(self.send_notify(user.mention, out_wait), loop=asyncio.get_event_loop())
+            asyncio.Task(self.send_notify(user.mention, out_wait), loop=self.loop)
 
         if self.chatbot_cfg['enable_colors']:
             ucolor = user.color if user.color else self.eventbot_cfg['default_color']
@@ -1058,6 +1060,15 @@ def bot_hande(que):
     time.sleep(5)
 
     bot = TwitchBot(que)
+    twiohttp = twio_http.TwitchHTTP(bot)
+    start_task = loop.create_task(twiohttp.validate(token=bot.chatbot_cfg['bot_token']))
+
+    try:
+        loop.run_until_complete(start_task)
+    except (twitchio.errors.AuthenticationError, twitchio.errors.HTTPException) as twe:
+        print('[TWITCH] Ошибка авторизации:', twe)
+        threading.Event().wait()
+
     bot.run()
 
 def thrbot(que):
