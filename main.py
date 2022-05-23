@@ -117,6 +117,7 @@ class Gacha:
         self.wish_5_garant = wish_5_garant
         self.wish_4_garant = wish_4_garant
         self.wish_count = wish_count
+        logging.debug('[GACHA] Создана гача с параметрами w%d w4%d w4%d', wish_count, wish_4_garant, wish_5_garant)
 
     def __roll(self) -> tuple:
         self.wish_count += 1
@@ -157,12 +158,14 @@ class Gacha:
         rolls = []
         for _ in range(count):
             star, star_type = self.__roll()
+            logging.debug('[GACHA] Результат крутки: %s %s', star, star_type)
             if star == '3':
                 wtype = 'weapon'
             else:
                 wtype = random.choice(['weapon', 'char'])
 
             data = random.choice(DATABASE[star][wtype])
+            logging.debug('[GACHA] Данные крутки: %s', data)
             gacha_obj = WishData(self.wish_count, self.wish_4_garant, self.wish_5_garant, star, star_type, **data)
             rolls.append(gacha_obj)
 
@@ -174,13 +177,17 @@ class UserDB:
 
     def __init__(self):
         self.conn = sqlite3.connect(self.database)
+        logging.debug('[DB] Создано новое подключение к базе данных')
         if not self._check_table():
+            logging.debug('[DB] Таблицы пользователей не существует, создаем..')
             self._create_table()
         self._restore_old()
 
     def _restore_old(self):
         if not os.path.exists(self.database_old):
             return
+
+        logging.debug('[DB] Начата загрузка данных из старой базы данных (<=1.3)')
 
         print('[DB] Начинаем импорт старой базы данных..')
         with open(self.database_old, mode='rb') as f:
@@ -222,6 +229,7 @@ class UserDB:
         cur.close()
 
     def get_all(self):
+        logging.debug('[DB] Вызван метод get_all')
         cur = self.conn.cursor()
         payload = 'SELECT * FROM users;'
         cur.execute(payload)
@@ -231,6 +239,7 @@ class UserDB:
         return data
 
     def get(self, username):
+        logging.debug('[DB] Вызван метод get с параметрами %s', username)
         cur = self.conn.cursor()
         payload = 'SELECT * FROM users WHERE username=?;'
         cur.execute(payload, (username,))
@@ -240,6 +249,7 @@ class UserDB:
         return data
 
     def push(self, username, gacha):
+        logging.debug('[DB] Вызван метод push с параметрами %s, %s', username, gacha)
         cur = self.conn.cursor()
         payload = 'INSERT INTO users VALUES(?, ?, ?, ?);'
         cur.execute(payload, (username, gacha.wish_count, gacha.wish_4_garant, gacha.wish_5_garant))
@@ -247,6 +257,7 @@ class UserDB:
         cur.close()
 
     def update(self, username, gacha):
+        logging.debug('[DB] Вызван метод update с параметрами %s, %s', username, gacha)
         cur = self.conn.cursor()
         payload = 'UPDATE users SET wish_count=?, wish_4_garant=?, wish_5_garant=? WHERE username=?;'
         cur.execute(payload, (gacha.wish_count, gacha.wish_4_garant, gacha.wish_5_garant, username))
@@ -270,8 +281,13 @@ class Coordiantor:
         self.wish_objs = {}
         self.sound = []
 
+        logging.debug('[PANEL] Создана новая панель управления')
+
     def _t_load_chunk(self, usiwshdata):
         self.t_load_done = False
+
+        _t = time.time()
+        logging.debug('[PANEL] Вызван метод _t_load_chunk с параметрами: %s', usiwshdata)
 
         anim_config = CONFIG['animations']
         w_splash_list = self.wish_objs['wish_splash_list']
@@ -304,6 +320,7 @@ class Coordiantor:
             }
         )
 
+        logging.debug('[PANEL] Метод _t_load_chunk загрузил данные за %s с.', time.time() - _t)
         self.t_load_done = True
 
     def _remove_obj(self, obj_data):
@@ -347,6 +364,8 @@ class Coordiantor:
         except queue.Empty:
             return False
 
+        logging.debug('[PANEL] Состояние панели: IDLE')
+
         self.cur_wish = wish
         self.que.task_done()
 
@@ -373,6 +392,9 @@ class Coordiantor:
         return True
 
     def state_INIT(self):
+        logging.debug('[PANEL] Состояние панели: INIT')
+        _t = time.time()
+
         wish_data = self.cur_wish
         wish_list = self.cur_wish.wish_data_l
 
@@ -386,6 +408,7 @@ class Coordiantor:
             wstar = '3'
 
         utext = random.choice(USER_SPLASH_TEXT)
+        logging.debug('[PANEL] Анимация падения имеет параметры: wstar=%s, multi=%s', wstar, multi)
 
         self.wish_objs.update(
             {
@@ -402,6 +425,9 @@ class Coordiantor:
             'wish_splash_list': w_splash_list
             }
         )
+
+        logging.debug('[PANEL] Начальные данные для анимации загружены за %s с.', time.time() - _t)
+        logging.debug('[PANEL] Инициализация анимации с данными: %s', self.wish_objs)
 
         anim_config = CONFIG['animations']
         uback_cfg = anim_config['user_background']
@@ -420,6 +446,7 @@ class Coordiantor:
             }
         )
 
+        logging.debug('[PANEL] Загружен пользовательский фон: %s', self.wish_objs['user_background'])
         return True
 
     def state_DRAW_TEXT(self):
@@ -531,6 +558,7 @@ class Coordiantor:
         return True
 
     def state_CLEAR(self):
+        logging.debug('[PANEL] Состояние панели: CLEAR')
         self.animl.clear()
         self.wish_objs.clear()
         self.sound.clear()
@@ -792,12 +820,14 @@ class TwitchBot(commands.Bot):
 
         self.user_db = UserDB()
 
-        super().__init__(token='oauth:' + self.chatbot_cfg['bot_token'],
-                         prefix=self.chatbot_cfg['wish_command_prefix'],
-                         initial_channels=[self.chatbot_cfg['work_channel'], ])
+        b_token, wcmd_pref, wchn = self.chatbot_cfg['bot_token'], self.chatbot_cfg['wish_command_prefix'], self.chatbot_cfg['work_channel']
+        super().__init__(token='oauth:' + b_token,
+                         prefix=wcmd_pref,
+                         initial_channels=[wchn,])
         self.pubsub = pubsub.PubSubPool(self)
         self.sub_topics = []
 
+        logging.debug('[TWITCH] Инициализация твич бота, параметры: %s, %s, %s', b_token, wcmd_pref + self.chatbot_cfg['wish_command'], wchn)
         self._load()
 
     def _load(self):
@@ -806,6 +836,7 @@ class TwitchBot(commands.Bot):
             username, wc, w4c, w5c = user
             ugacha = Gacha(wc, w4c, w5c)
             self.gacha_users.update({username: ugacha})
+        print('[TWITCH] Данные загружены. Всего пользователей в базе:', len(self.gacha_users))
 
         if self.chatbot_cfg['enabled']:
             chb_com = self.chatbot_cfg['wish_command']
@@ -819,8 +850,6 @@ class TwitchBot(commands.Bot):
             pubsub_tpic = pubsub.channel_points(eve_tk)[eve_id]
             self.sub_topics.append(pubsub_tpic)
             print('[TWITCH] Баллы канала включены, активировано наград:', len(self.eventbot_cfg['rewards']))
-
-        print('[TWITCH] Данные загружены. Всего пользователей в базе:', len(self.gacha_users))
 
         if self.chatbot_cfg['enabled']:
             print('[TWITCH] Подключаемся к чату на канал %s..' % self.chatbot_cfg['work_channel'])
