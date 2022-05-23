@@ -50,6 +50,7 @@ except jsonschema.ValidationError as e:
     sys.exit(input('Нажмите любую кнопку чтобы выйти > '))
 
 __title__ = 'genshin-twitch-wish'
+__site__ = 'github.com/dzmuh97/genshin-twitch-wish'
 __version__ = '2.0'
 
 CONFIG = _config['CONFIG']
@@ -959,7 +960,7 @@ class TwitchBot(commands.Bot):
     @commands.command()
     async def gbot_status(self, ctx: commands.Context):
         user = ctx.author
-        answer_text = '%s я работаю на %s v%s HungryPaimon ' % (user.mention, __title__, __version__)
+        answer_text = '%s я работаю на %s v%s (%s) HungryPaimon ' % (user.mention, __title__, __version__, __site__)
         ugacha = None
         if user.name in self.gacha_users:
             ugacha = self.gacha_users[user.name]
