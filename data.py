@@ -157,6 +157,20 @@ CONFIG_SCHEMA = {
                                                                 "type": {"type": "string"}
                                                         }
                                                 },
+                                                "font": {
+                                                        "type": "object",
+                                                        "required": [
+                                                                "path",
+                                                                "user_uid_size",
+                                                                "wish_name_size"
+                                                        ],
+                                                        "additionalProperties": False,
+                                                        "properties": {
+                                                                "path": {"type": "string"},
+                                                                "user_uid_size": {"type": "integer"},
+                                                                "wish_name_size": {"type": "integer"}
+                                                        }
+                                                },
                                                 "fps": {"type": "integer"}
                                         }
                                 },

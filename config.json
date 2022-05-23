@@ -58,6 +58,11 @@
         "path": "",
         "type": "static"
       },
+      "font": {
+        "path": "Genshin_Impact.ttf",
+        "user_uid_size": 48,
+        "wish_name_size": 42
+      },
       "fps": 30
     },
     "sound": {

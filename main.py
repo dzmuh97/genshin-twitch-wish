@@ -688,8 +688,9 @@ class UserText(Static):
         textobj = None
         font = None
 
+        font_config = CONFIG['animations']['font']
         for sfont in range(18, 240):
-            font = pygame.font.Font(os.path.join('fonts', 'Genshin_Impact.ttf'), sfont)
+            font = pygame.font.Font(os.path.join('fonts', font_config['path']), sfont)
             textobj = font.render(self.text, True, USERTEXT_COLOR if self.color is None else self.color).convert_alpha()
 
             if 1280 - textobj.get_width() < 30:
@@ -750,7 +751,9 @@ class WishText(Static):
     def __init__(self, text):
         super().__init__()
         self.text = text
-        self.font = pygame.font.Font(os.path.join('fonts', 'Genshin_Impact.ttf'), 42)
+
+        font_config = CONFIG['animations']['font']
+        self.font = pygame.font.Font(os.path.join('fonts', font_config['path']), font_config['wish_name_size'])
         self.lifetime = -1
         self._load()
 
@@ -764,7 +767,9 @@ class PermaText(Static):
     def __init__(self, text):
         super().__init__()
         self.text = text
-        self.font = pygame.font.Font(os.path.join('fonts', 'Genshin_Impact.ttf'), 48)
+
+        font_config = CONFIG['animations']['font']
+        self.font = pygame.font.Font(os.path.join('fonts', font_config['path']), font_config['user_uid_size'])
         self.lifetime = -1
         self._load()
 
