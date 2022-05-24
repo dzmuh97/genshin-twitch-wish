@@ -943,7 +943,7 @@ class TwitchBot(commands.Bot):
             self.last_re = int(time.time())
             answer_text_c = random.choice(CHATBOT_TEXT)
             answer_text = answer_text_c.format(username=user.mention,
-                                               wish_count=ugacha.wish_count,
+                                               wish_count=ugacha.wish_count + self.chatbot_cfg['wish_count'],
                                                wish_count_w4=ugacha.wish_4_garant - 1,
                                                wish_count_w5=ugacha.wish_5_garant - 1,
                                                wishes_in_cmd=self.chatbot_cfg['wish_count'])
@@ -985,7 +985,7 @@ class TwitchBot(commands.Bot):
         try:
             anwser_text_c = random.choice(POINTS_TEXT)
             anwser_text = anwser_text_c.format(username='@' + user,
-                                               wish_count=ugacha.wish_count,
+                                               wish_count=ugacha.wish_count + wish_in_command,
                                                wish_count_w4=ugacha.wish_4_garant - 1,
                                                wish_count_w5=ugacha.wish_5_garant - 1,
                                                reward_cost=event.reward.cost,
