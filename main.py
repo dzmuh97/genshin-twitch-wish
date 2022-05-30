@@ -33,7 +33,7 @@ import logging
 
 __title__ = 'genshin-twitch-wish'
 __site__ = 'github.com/dzmuh97/genshin-twitch-wish'
-__version__ = '2.0.2'
+__version__ = '2.0.3'
 
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 
@@ -857,6 +857,9 @@ class TwitchBot(commands.Bot):
         self.pubsub = pubsub.PubSubPool(self)
         self.sub_topics = []
 
+        self.wish_c_use = 0
+        self.wish_r_use = 0
+
         logging.debug('[TWITCH] Инициализация твич бота, параметры: %s, %s, %s', b_token,
                       wcmd_pref + self.chatbot_cfg['wish_command'], wchn)
         self._load()
@@ -977,7 +980,9 @@ class TwitchBot(commands.Bot):
                                                wish_count=ugacha.wish_count + self.chatbot_cfg['wish_count'],
                                                wish_count_w4=ugacha.wish_4_garant - 1,
                                                wish_count_w5=ugacha.wish_5_garant - 1,
-                                               wishes_in_cmd=self.chatbot_cfg['wish_count'])
+                                               wishes_in_cmd=self.chatbot_cfg['wish_count'],
+                                               user_wish_delay=out_wait,
+                                               global_wish_delay=self.chatbot_cfg['wish_global_timeout'])
         except KeyError as e:
             print('[TWITCH] Ошибка при форматировании ответа:', e)
             return
@@ -987,6 +992,7 @@ class TwitchBot(commands.Bot):
         self.que.put(wo)
 
         self.user_db.update(user.name, ugacha)
+        self.wish_c_use += 1
         await ctx.send(answer_text)
 
     async def event_pubsub_channel_points(self, event: pubsub.PubSubChannelPointsMessage):
@@ -1030,16 +1036,22 @@ class TwitchBot(commands.Bot):
         self.que.put(wo)
 
         self.user_db.update(user, ugacha)
-
+        self.wish_r_use += 1
         await self.connected_channels[0].send(anwser_text)
 
     @commands.command()
     async def gbot_status(self, ctx: commands.Context):
-        user = ctx.author
-        answer_text = '%s я работаю на %s v%s (%s) HungryPaimon ' % (user.mention, __title__, __version__, __site__)
         ugacha = None
+        user = ctx.author
+        wcmd_pref = self.chatbot_cfg['wish_command_prefix']
+        wcmd_com = self.chatbot_cfg['wish_command']
         if user.name in self.gacha_users:
             ugacha = self.gacha_users[user.name]
+
+        answer_text = '%s я работаю на %s v%s (%s) HungryPaimon ' % (user.mention, __title__, __version__, __site__)
+        answer_text += 'команд "%s" было использовано: %d, ' % (wcmd_pref + wcmd_com, self.wish_r_use)
+        answer_text += 'наград за баллы получено: %d, ' % self.wish_r_use
+
         if not (ugacha is None):
             answer_text += 'твоя статистика: w#%d w4#%d w5#%d MrDestructoid ' % (
                 ugacha.wish_count, ugacha.wish_4_garant, ugacha.wish_5_garant)
