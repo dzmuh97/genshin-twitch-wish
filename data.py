@@ -244,7 +244,8 @@ CONFIG_SCHEMA = {
                                 "chanel_points_text": {
                                         "type": "array",
                                         "minItems": 1
-                                }
+                                },
+                                "stats_message": {"type": "string"}
                         }
                 }
         }

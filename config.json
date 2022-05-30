@@ -109,6 +109,7 @@
     "chanel_points_text": [
       "Невероятно! {username} тратит {reward_cost} баллов, чтобы сделать {wishes_in_cmd} круток! Теперь его счетчик круток равен {wish_count}!",
       "{username} идет вразнос и тратит {reward_cost} баллов ради {wishes_in_cmd} круток! Все ради любимой вайфу HungryPaimon Теперь у тебя сделано целых {wish_count} круток!"
-    ]
+    ],
+    "stats_message": "{user_mention} я работаю на {proj_name} v{proj_ver} ({proj_url}) HungryPaimon команд \"{wcommand}\" было использовано: {wcommand_c}, наград за баллы получено: {rcommand_c}, всего баллов канала потрачено: {wish_points}, стоимость всех круток в примогемах: {wish_gems}, твоя статистика: w#{u_w_c} w4#{u_w4_c} w5#{u_w5_c} MrDestructoid"
   }
 }

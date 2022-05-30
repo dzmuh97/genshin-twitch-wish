@@ -12,7 +12,6 @@ from dataclasses import dataclass
 
 import threading
 import asyncio
-import pygame
 
 import json
 import jsonschema
@@ -36,6 +35,7 @@ __site__ = 'github.com/dzmuh97/genshin-twitch-wish'
 __version__ = '2.0.3'
 
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+import pygame
 
 _time_stamp = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
 logging.basicConfig(format='[%(asctime)s] [%(levelname)s] %(message)s',
@@ -63,6 +63,7 @@ USER_SPLASH_TEXT = _messages['user_splash_text']
 CHATBOT_TEXT = _messages['chatbot_text']
 NOTIFY_TEXT = _messages['notify_text']
 POINTS_TEXT = _messages['chanel_points_text']
+STATS_MESSAGE = _messages['stats_message']
 
 SOUND_CFG = CONFIG['sound']
 
@@ -75,21 +76,30 @@ pygame.display.set_caption(CONFIG['window_name'])
 programIcon = pygame.image.load('icon.png')
 pygame.display.set_icon(programIcon)
 
-SOUND = {
-    'fall': pygame.mixer.Sound(os.path.join('sound', SOUND_CFG['fall'])),
-    '3': pygame.mixer.Sound(os.path.join('sound', SOUND_CFG['3'])),
-    '4': pygame.mixer.Sound(os.path.join('sound', SOUND_CFG['4'])),
-    '5': pygame.mixer.Sound(os.path.join('sound', SOUND_CFG['5']))
-}
+try:
+    pygame.mixer.init()
+    _sound_work = True
+except pygame.error:
+    _sound_work = False
+
+if SOUND_CFG['enabled'] and (not _sound_work):
+    SOUND_CFG['enabled'] = False
+
+if SOUND_CFG['enabled']:
+    SOUND = {
+        'fall': pygame.mixer.Sound(os.path.join('sound', SOUND_CFG['fall'])),
+        '3': pygame.mixer.Sound(os.path.join('sound', SOUND_CFG['3'])),
+        '4': pygame.mixer.Sound(os.path.join('sound', SOUND_CFG['4'])),
+        '5': pygame.mixer.Sound(os.path.join('sound', SOUND_CFG['5']))
+    }
+else:
+    SOUND = {}
 
 fps = pygame.time.Clock()
 mdisplay = pygame.display.set_mode(size=(1280, 720), vsync=1)
 
 wish_que = queue.Queue()
 animations = []
-
-if SOUND_CFG['enabled']:
-    pygame.mixer.init()
 
 
 @dataclass
@@ -859,6 +869,7 @@ class TwitchBot(commands.Bot):
 
         self.wish_c_use = 0
         self.wish_r_use = 0
+        self.wish_r_sum = 0
 
         logging.debug('[TWITCH] Инициализация твич бота, параметры: %s, %s, %s', b_token,
                       wcmd_pref + self.chatbot_cfg['wish_command'], wchn)
@@ -902,6 +913,13 @@ class TwitchBot(commands.Bot):
         print('[TWITCH] Не удалось подключиться к баллам канала [ %d ] -> %s' % (
             self.eventbot_cfg['work_channel_id'], message))
 
+    # Patched TwitchIO function from twitchio/ext/pubsub/websocket.py
+    # async def _send_topics(self, topics: List[Topic], type="LISTEN"):
+    #     for tok, _topics in groupby(topics, key=lambda val: val.token):
+    #         nonce = ("%032x" % uuid.uuid4().int)[:8]
+    #         payload = {"type": type, "nonce": nonce, "data": {"topics": [x.present for x in _topics], "auth_token": tok}}
+    #         logger.debug(f"Sending {type} payload with nonce '{nonce}': {payload}")
+    #         await self.send(payload)
     async def event_pubsub_nonce(self, _):
         print('[TWITCH] Успешно подключен к баллам канала [ %d ]' % self.eventbot_cfg['work_channel_id'])
 
@@ -1035,26 +1053,45 @@ class TwitchBot(commands.Bot):
         wo = Wish(user, color, wish_in_command, wl)
         self.que.put(wo)
 
-        self.user_db.update(user, ugacha)
         self.wish_r_use += 1
+        self.wish_r_sum += event.reward.cost
+        self.user_db.update(user, ugacha)
         await self.connected_channels[0].send(anwser_text)
 
     @commands.command()
     async def gbot_status(self, ctx: commands.Context):
-        ugacha = None
         user = ctx.author
         wcmd_pref = self.chatbot_cfg['wish_command_prefix']
         wcmd_com = self.chatbot_cfg['wish_command']
+
         if user.name in self.gacha_users:
             ugacha = self.gacha_users[user.name]
+            uwish_count = ugacha.wish_count
+            uwish_4_garant = ugacha.wish_4_garant
+            uwish_5_garant = ugacha.wish_5_garant
+        else:
+            uwish_count = 0
+            uwish_4_garant = 0
+            uwish_5_garant = 0
 
-        answer_text = '%s я работаю на %s v%s (%s) HungryPaimon ' % (user.mention, __title__, __version__, __site__)
-        answer_text += 'команд "%s" было использовано: %d, ' % (wcmd_pref + wcmd_com, self.wish_r_use)
-        answer_text += 'наград за баллы получено: %d, ' % self.wish_r_use
+        primogems = (self.wish_c_use + self.wish_r_use) * 160
+        try:
+            answer_text = STATS_MESSAGE.format(user_mention=user.mention,
+                                               proj_name=__title__,
+                                               proj_ver=__version__,
+                                               proj_url=__site__,
+                                               wcommand=wcmd_pref + wcmd_com,
+                                               wcommand_c=self.wish_c_use,
+                                               rcommand_c=self.wish_r_use,
+                                               wish_points=self.wish_r_sum,
+                                               wish_gems=primogems,
+                                               u_w_c=uwish_count,
+                                               u_w4_c=uwish_4_garant,
+                                               u_w5_c=uwish_5_garant)
+        except KeyError as e:
+            print('[TWITCH] Ошибка при форматировании ответа:', e)
+            return
 
-        if not (ugacha is None):
-            answer_text += 'твоя статистика: w#%d w4#%d w5#%d MrDestructoid ' % (
-                ugacha.wish_count, ugacha.wish_4_garant, ugacha.wish_5_garant)
         await ctx.send(answer_text)
 
 
