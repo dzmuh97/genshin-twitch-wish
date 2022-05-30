@@ -5,13 +5,13 @@
 Бот написан на Python и использует PyGame для вывода анимации, TwitchIO для взаимодействия с чатом и наградами на трансляции.
 
 После запуска нужно добавить захват окна в OBS:
-![Окно захвата](https://sun9-8.userapi.com/impf/pAESgu_LD0KJp2P7ABr8u2renAdz9HBMxy60HQ/Sxxgzt6h_Ao.jpg?size=724x511&quality=96&sign=1ff1d15cac089fd88ff3fb4f176af17f&type=album)
+![Окно захвата](https://media.discordapp.net/attachments/706496930414592080/980878746200453120/Sxxgzt6h_Ao.jpg)
 
 И настроить фильтр для корректной работы прозрачности окна:
-![Окно фильтра](https://sun9-1.userapi.com/s/v1/if2/1HahxRWaJBF1kzE3BaChFSsMspC-LWBOcPf-kcj_f9g52D-Ia53P2osjQkR4F4wZXmfmu2-Gaavy5D7rU78ilhnS.jpg?size=861x757&quality=96&type=album)
+![Окно фильтра](https://media.discordapp.net/attachments/706496930414592080/980878745659375726/1HahxRWaJBF1kzE3BaChFSsMspC-LWBOcPf-kcj_f9g52D-Ia53P2osjQkR4F4wZXmfmu2-Gaavy5D7rU78ilhnS.jpg)
 
 В чате бот реагирует на команду из файла конфигурации **wish_command**. Примеры работы:
-![Пример работы бота](https://sun9-63.userapi.com/impf/VUBcsjyNwLuwAvcEcP4bflMsJz0JYtLOTm0gXQ/dCB9_I5UULE.jpg?size=1604x743&quality=96&sign=82f96fda9e09b62b29dd2935eee65953&type=album)
+![Пример работы бота](https://media.discordapp.net/attachments/706496930414592080/980878745894260806/dCB9_I5UULE.jpg)
 
 База предметов и персонажей актуальная для патча 2.8. Бот не использует систему баннеров, вместо этого при каждой молитве есть одинаковый шанс на выпадение любого доступного предмета или персонажа.
 
