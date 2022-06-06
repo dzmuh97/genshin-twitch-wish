@@ -355,6 +355,10 @@ DATABASE = {
                         {'cwish_wtype': 'weapon', 'cwish_wmetatype': 'weapon', 'cwish_wmetaelem': 'cat', 'cwish_cname': 'vinoipesni', 'cwish_wname': 'Вино и песни'}
                 ],
                 'char': [
+                        {'cwish_wtype': 'char', 'cwish_wmetatype': 'element', 'cwish_wmetaelem': 'hydro', 'cwish_cname': 'barbruh_skin', 'cwish_wname': 'Летний блеск'},
+                        {'cwish_wtype': 'char', 'cwish_wmetatype': 'element', 'cwish_wmetaelem': 'anemo', 'cwish_cname': 'jean_skin', 'cwish_wname': 'Сон морского\nбриза'},
+                        {'cwish_wtype': 'char', 'cwish_wmetatype': 'element', 'cwish_wmetaelem': 'geo', 'cwish_cname': 'nina_skin', 'cwish_wname': 'Флёр орхидеи'},
+                        {'cwish_wtype': 'char', 'cwish_wmetatype': 'element', 'cwish_wmetaelem': 'electro', 'cwish_cname': 'keka_skin', 'cwish_wname': 'Яркая лёгкость'},
                         {'cwish_wtype': 'char', 'cwish_wmetatype': 'element', 'cwish_wmetaelem': 'pyro', 'cwish_cname': 'amber', 'cwish_wname': 'Эмбер'},
                         {'cwish_wtype': 'char', 'cwish_wmetatype': 'element', 'cwish_wmetaelem': 'hydro', 'cwish_cname': 'barbara', 'cwish_wname': 'Барбара'},
                         {'cwish_wtype': 'char', 'cwish_wmetatype': 'element', 'cwish_wmetaelem': 'electro', 'cwish_cname': 'beidou', 'cwish_wname': 'Бэй Доу'},
