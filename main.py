@@ -341,13 +341,20 @@ class Coordiantor:
         _wmeta = merge_wish_meta((80, 450), WishMeta(wmetatype, wmetaelem), _wmeta_text, int(uwstar))
         wish_meta_type, wish_meta_name, wish_meta_star = _wmeta
 
+        wish_cords_normal = (640, 360)
+        wish_cords_shadow = (645, 375)
+        wish_color = WishSplash(wtype, cname, wish_cords_normal)
+        wish_black = objfill(WishSplash(wtype, cname, wish_cords_normal), pygame.Color(0, 0, 0))
+        wish_black_shift = objfill(WishSplash(wtype, cname, wish_cords_shadow), pygame.Color(0, 0, 0))
+
         self.cur_draw_objs.update(
             {
                 'back_static': Background(anim_config['end_delay_milti' if multi else 'end_delay'][uwstar]),
                 'back_anim_first': BackAnimated('first', uwstar),
                 'back_anim_second': BackAnimated('second', uwstar),
-                'wish_color': WishSplash(wtype, cname),
-                'wish_black': objfill(WishSplash(wtype, cname), pygame.Color(0, 0, 0)),
+                'wish_color': wish_color,
+                'wish_black': wish_black,
+                'wish_black_shift': wish_black_shift,
                 'wish_back': WishBack(cwdata.cwish_wmetaelem) if cwdata.cwish_wmetatype == 'weapon' else None,
                 'wish_meta_type': wish_meta_type,
                 'wish_meta_name': wish_meta_name,
@@ -362,6 +369,7 @@ class Coordiantor:
                 'back_anim_second': False,
                 'wish_color': False,
                 'wish_black': False,
+                'wish_black_shift': False,
                 'wish_back': False,
                 'wish_meta_type': False,
                 'wish_meta_name': False,
@@ -565,6 +573,8 @@ class Coordiantor:
 
             if self.cur_wish_data.cwish_wmetatype == 'weapon':
                 self._purge_obj('wish_back')
+
+            self._purge_obj('wish_black_shift')
             self._purge_obj('wish_color')
 
             if self._iter_wdata():
@@ -592,6 +602,8 @@ class Coordiantor:
         back_s = self._play_obj('back_anim_second')
         if self.cur_wish_data.cwish_wmetatype == 'weapon':
             self._play_obj('wish_back')
+            self._play_obj('wish_black_shift')
+
         self._play_obj('wish_color')
 
         if back_s.is_play:
@@ -783,17 +795,17 @@ class UserText(StaticImage):
 
 
 class WishSplash(StaticImage):
-    def __init__(self, wtype, wname):
+    def __init__(self, wtype, wname, cords):
         super().__init__()
         self.lifetime = -1
         self.wtype = wtype
         self.wname = wname
         self._load()
+        self.rect.center = cords
 
     def _load(self):
         path = os.path.join('images', self.wtype, '%s.png' % self.wname)
         self.im_sub_load(path)
-        self.rect.center = (640, 360)
 
 
 class WishBack(StaticImage):
@@ -1123,7 +1135,7 @@ def merge_wish_meta(cords: Tuple[int, int],
     starl = list()
     for i in range(stars):
         star = WishMeta('star', None)
-        star.rect.topleft = (meta_text_n.rect.bottomleft[0] + 20 * i, meta_text_n.rect.bottomleft[1])
+        star.rect.topleft = (meta_text_n.rect.bottomleft[0] + 30 * i, meta_text_n.rect.bottomleft[1] + 5)
         starl.append(star)
 
     return meta_type, meta_name, starl
@@ -1253,8 +1265,8 @@ def main():
 
     # #
     # _star = '4'
-    # _type = 'weapon'
-    # _name = 'ceremonialgsw'
+    # _type = 'char'
+    # _name = 'ningguang'
     #
     # _wd_r = list(filter(lambda x: x['cwish_cname'] == _name, DATABASE[_star][_type]))[0]
     # _wd = WishData(1, 1, 1, _star, 'rnd', **_wd_r)
