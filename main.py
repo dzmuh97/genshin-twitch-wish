@@ -1119,6 +1119,23 @@ class TwitchBot(commands.Bot):
 
         await ctx.send(answer_text)
 
+    @commands.command()
+    async def gbot_sound(self, ctx: commands.Context) -> None:
+        global _sound_work
+
+        user = ctx.author
+        sound_cfg = CONFIG['sound']
+
+        if user.is_mod or user.is_broadcaster:
+            if _sound_work:
+                sound_cfg['enabled'] = not sound_cfg['enabled']
+                pygame.mixer.stop()
+
+            sound_text = 'включен' if sound_cfg['enabled'] else 'выключен'
+            answer_text = '@%s звук: %s' % (user.mention, sound_text)
+
+            await ctx.send(answer_text)
+
 
 def merge_wish_meta(cords: Tuple[int, int],
                     meta_type: StaticImage,
