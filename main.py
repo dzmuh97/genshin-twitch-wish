@@ -873,23 +873,25 @@ class PermaText(StaticImage):
 
 
 class TwitchBot(commands.Bot):
-    def __init__(self, que):
+    gacha_users: Dict[str, Gacha] = {}
+    sub_topics: List[pubsub.Topic] = []
+    user_db: Optional[UserDB] = None
+
+    def __init__(self, que: queue.Queue):
         self.chatbot_cfg = CONFIG['chat_bot']
         self.eventbot_cfg = CONFIG['event_bot']
-        self.savefile = 'database.sql'
-        self.gacha_users = {}
-        self.last_re = 0
-        self.que = que
 
+        self.que = que
         self.user_db = UserDB()
 
         b_token = self.chatbot_cfg['bot_token']
         wcmd_pref = self.chatbot_cfg['wish_command_prefix']
         wchn = self.chatbot_cfg['work_channel']
         super().__init__(token='oauth:' + b_token, prefix=wcmd_pref, initial_channels=[wchn, ])
-        self.pubsub = pubsub.PubSubPool(self)
-        self.sub_topics = []
 
+        self.pubsub = pubsub.PubSubPool(self)
+
+        self.last_wish_time = 0
         self.wish_c_use = 0
         self.wish_r_use = 0
         self.wish_r_sum = 0
@@ -898,7 +900,7 @@ class TwitchBot(commands.Bot):
                       wcmd_pref + self.chatbot_cfg['wish_command'], wchn)
         self._load()
 
-    def _load(self):
+    def _load(self) -> None:
         print('[TWITCH] Загружаем данные пользователей..')
         for user in self.user_db.get_all():
             username, wc, w4c, w5c = user
@@ -924,7 +926,7 @@ class TwitchBot(commands.Bot):
         if self.eventbot_cfg['enabled']:
             print('[TWITCH] Подключаемся к баллам канала %d..' % self.eventbot_cfg['work_channel_id'])
 
-    async def event_ready(self):
+    async def event_ready(self) -> None:
         print('[TWITCH] Подключено. Данные чатбота:', self.nick, self.user_id)
         if self.eventbot_cfg['enabled']:
             await self.pubsub.subscribe_topics(self.sub_topics)
@@ -932,7 +934,7 @@ class TwitchBot(commands.Bot):
             print('[TWITCH] Молитвы бота включены каждые %d сек.' % self.chatbot_cfg['self_wish_every'])
             asyncio.Task(self.send_autowish(), loop=self.loop)
 
-    async def event_pubsub_error(self, message):
+    async def event_pubsub_error(self, message: dict) -> None:
         print('[TWITCH] Не удалось подключиться к баллам канала [ %d ] -> %s' % (
             self.eventbot_cfg['work_channel_id'], message))
 
@@ -943,10 +945,10 @@ class TwitchBot(commands.Bot):
     #         payload = {"type": type, "nonce": nonce, "data": {"topics": [x.present for x in _topics], "auth_token": tok}}
     #         logger.debug(f"Sending {type} payload with nonce '{nonce}': {payload}")
     #         await self.send(payload)
-    async def event_pubsub_nonce(self, _):
+    async def event_pubsub_nonce(self, _) -> None:
         print('[TWITCH] Успешно подключен к баллам канала [ %d ]' % self.eventbot_cfg['work_channel_id'])
 
-    async def send_notify(self, mention, wtime):
+    async def send_notify(self, mention: str, wtime: int) -> None:
         ntext_c = random.choice(NOTIFY_TEXT)
         ntext = ntext_c.format(username=mention,
                                command=self.chatbot_cfg['wish_command_prefix'] + self.chatbot_cfg['wish_command'])
@@ -954,7 +956,7 @@ class TwitchBot(commands.Bot):
         await asyncio.sleep(wtime)
         await self.connected_channels[0].send(ntext)
 
-    async def send_autowish(self):
+    async def send_autowish(self) -> None:
         auto_gacha = Gacha()
         while True:
             print('[TWITCH] Отправляю автосообщение..')
@@ -972,13 +974,13 @@ class TwitchBot(commands.Bot):
             await self.connected_channels[0].send(anwser_text)
             await asyncio.sleep(self.chatbot_cfg['self_wish_every'])
 
-    async def event_message(self, message):
+    async def event_message(self, message: twitchio.Message) -> None:
         if message.echo:
             return
 
         await self.handle_commands(message)
 
-    async def wish(self, ctx: commands.Context):
+    async def wish(self, ctx: commands.Context) -> None:
         user = ctx.author
 
         logging.debug('[TWITCH] Получен команда wish: %s, %s, %s', user.name, user.display_name, user.color)
@@ -1003,7 +1005,7 @@ class TwitchBot(commands.Bot):
 
         if ctime - ugacha.wish_stamp < out_wait:
             return
-        if ctime - self.last_re < self.chatbot_cfg['wish_global_timeout']:
+        if ctime - self.last_wish_time < self.chatbot_cfg['wish_global_timeout']:
             return
 
         if self.chatbot_cfg['send_notify']:
@@ -1015,7 +1017,7 @@ class TwitchBot(commands.Bot):
             ucolor = self.eventbot_cfg['default_color']
 
         try:
-            self.last_re = int(time.time())
+            self.last_wish_time = int(time.time())
             answer_text_c = random.choice(CHATBOT_TEXT)
             answer_text = answer_text_c.format(username=user.mention,
                                                wish_count=ugacha.wish_count + self.chatbot_cfg['wish_count'],
@@ -1036,7 +1038,7 @@ class TwitchBot(commands.Bot):
         self.wish_c_use += 1
         await ctx.send(answer_text)
 
-    async def event_pubsub_channel_points(self, event: pubsub.PubSubChannelPointsMessage):
+    async def event_pubsub_channel_points(self, event: pubsub.PubSubChannelPointsMessage) -> None:
         user = event.user.name.lower()
         title = event.reward.title
         color = self.eventbot_cfg['default_color']
@@ -1082,7 +1084,7 @@ class TwitchBot(commands.Bot):
         await self.connected_channels[0].send(anwser_text)
 
     @commands.command()
-    async def gbot_status(self, ctx: commands.Context):
+    async def gbot_status(self, ctx: commands.Context) -> None:
         user = ctx.author
         wcmd_pref = self.chatbot_cfg['wish_command_prefix']
         wcmd_com = self.chatbot_cfg['wish_command']
@@ -1263,16 +1265,16 @@ def send_stats() -> None:
 def main():
     global mdisplay, wish_que, animations
 
-    # #
+    #
     # _star = '4'
     # _type = 'char'
-    # _name = 'ningguang'
+    # _name = 'keka_skin'
     #
     # _wd_r = list(filter(lambda x: x['cwish_cname'] == _name, DATABASE[_star][_type]))[0]
     # _wd = WishData(1, 1, 1, _star, 'rnd', **_wd_r)
     # _wish = Wish("__test_mode__", '#000000', 1, [_wd,])
     # wish_que.put(_wish)
-    # #
+    #
 
     #
     # for _star in DATABASE:
