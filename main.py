@@ -309,6 +309,7 @@ class Coordiantor:
         self.animl = animl
         self.que = que
 
+        self.que_process = True
         logging.debug('[PANEL] Создана новая панель управления')
 
     def _iter_wdata(self) -> bool:
@@ -427,6 +428,9 @@ class Coordiantor:
             self.state = next(self.states)
 
     def state_idle(self) -> bool:
+        if not self.que_process:
+            return False
+
         try:
             wish: Wish = self.que.get(block=False)
         except queue.Empty:
@@ -877,12 +881,13 @@ class TwitchBot(commands.Bot):
     sub_topics: List[pubsub.Topic] = []
     user_db: Optional[UserDB] = None
 
-    def __init__(self, que: queue.Queue):
+    def __init__(self, que: queue.Queue, control: Coordiantor):
         self.chatbot_cfg = CONFIG['chat_bot']
         self.eventbot_cfg = CONFIG['event_bot']
 
         self.que = que
         self.user_db = UserDB()
+        self.wcontrol = control
 
         b_token = self.chatbot_cfg['bot_token']
         wcmd_pref = self.chatbot_cfg['wish_command_prefix']
@@ -1132,7 +1137,18 @@ class TwitchBot(commands.Bot):
                 pygame.mixer.stop()
 
             sound_text = 'включен' if sound_cfg['enabled'] else 'выключен'
-            answer_text = '@%s звук: %s' % (user.mention, sound_text)
+            answer_text = '%s звук: %s' % (user.mention, sound_text)
+
+            await ctx.send(answer_text)
+
+    @commands.command()
+    async def gbot_pause(self, ctx: commands.Context) -> None:
+        user = ctx.author
+        if user.is_mod or user.is_broadcaster:
+            self.wcontrol.que_process = not self.wcontrol.que_process
+
+            sound_text = 'включена' if self.wcontrol.que_process else 'выключена'
+            answer_text = '%s обработка команд: %s' % (user.mention, sound_text)
 
             await ctx.send(answer_text)
 
@@ -1202,14 +1218,14 @@ def update_group(group: List[BaseDrawClass], speed: float) -> None:
         anim.update(speed)
 
 
-def bot_hande(que: queue.Queue) -> None:
+def bot_hande(que: queue.Queue, control: Coordiantor) -> None:
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
     print('[TWITCH] Ждем 5 секунд перед запуском..')
     time.sleep(5)
 
-    bot = TwitchBot(que)
+    bot = TwitchBot(que, control)
     twiohttp = twio_http.TwitchHTTP(bot)
     start_task = loop.create_task(twiohttp.validate(token=bot.chatbot_cfg['bot_token']))
 
@@ -1222,8 +1238,8 @@ def bot_hande(que: queue.Queue) -> None:
     bot.run()
 
 
-def thrbot(que: queue.Queue) -> threading.Thread:
-    tbot = threading.Thread(target=bot_hande, args=(que,))
+def thrbot(que: queue.Queue, control: Coordiantor) -> threading.Thread:
+    tbot = threading.Thread(target=bot_hande, args=(que, control))
     tbot.daemon = True
     return tbot
 
@@ -1315,16 +1331,16 @@ def main():
     tbot = None
     print('[MAIN] Запускаемся..')
 
+    control = Coordiantor(wish_que, animations)
+
     if chatbot_cfg['enabled'] or eventbot_cfg['enabled']:
-        tbot = thrbot(wish_que)
+        tbot = thrbot(wish_que, control)
         tbot.start()
         tbot_w = True
         print('[MAIN] Твич бот запущен')
         send_stats()
     else:
         print('[MAIN] Твич бот отключен')
-
-    control = Coordiantor(wish_que, animations)
 
     anim_cfg = CONFIG['animations']
     print('[MAIN] FPS установлен в', anim_cfg['fps'])
@@ -1334,7 +1350,7 @@ def main():
         if tbot_w and (not tbot.is_alive()):
             tbot.join()
             print('[MAIN] Твич бот умер по причине ^, перезапускаем..')
-            tbot = thrbot(wish_que)
+            tbot = thrbot(wish_que, control)
             tbot.start()
 
         for event in pygame.event.get():
