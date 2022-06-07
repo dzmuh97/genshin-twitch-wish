@@ -494,7 +494,8 @@ class Coordiantor:
                 'user_perm_text': False,
                 'user_nick': False,
                 'user_text': False,
-                'fall_anim': False
+                'fall_anim': False,
+                'user_background': False
             }
 
         logging.debug('[PANEL] Начальные данные для анимации загружены за %s с.', time.time() - _t)
