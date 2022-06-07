@@ -32,7 +32,7 @@ import logging
 
 __title__ = 'genshin-twitch-wish'
 __site__ = 'github.com/dzmuh97/genshin-twitch-wish'
-__version__ = '2.0.3'
+__version__ = '2.0.4'
 
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
