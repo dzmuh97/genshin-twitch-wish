@@ -898,7 +898,9 @@ class TwitchBot(commands.Bot):
 
         self.last_wish_time = 0
         self.wish_c_use = 0
+        self.wish_c_primo = 0
         self.wish_r_use = 0
+        self.wish_r_primo = 0
         self.wish_r_sum = 0
 
         logging.debug('[TWITCH] Инициализация твич бота, параметры: %s, %s, %s', b_token,
@@ -988,7 +990,7 @@ class TwitchBot(commands.Bot):
     async def wish(self, ctx: commands.Context) -> None:
         user = ctx.author
 
-        logging.debug('[TWITCH] Получен команда wish: %s, %s, %s', user.name, user.display_name, user.color)
+        logging.debug('[TWITCH] Получена команда wish: %s, %s, %s', user.name, user.display_name, user.color)
 
         if user.name in self.gacha_users:
             ugacha = self.gacha_users[user.name]
@@ -1021,26 +1023,31 @@ class TwitchBot(commands.Bot):
         else:
             ucolor = self.eventbot_cfg['default_color']
 
+        wish_in_command = self.chatbot_cfg['wish_count']
+        wl = ugacha.generate_wish(wish_in_command)
+        wo = Wish(user.display_name, ucolor, wish_in_command, wl)
+
         try:
             self.last_wish_time = int(time.time())
             answer_text_c = random.choice(CHATBOT_TEXT)
             answer_text = answer_text_c.format(username=user.mention,
-                                               wish_count=ugacha.wish_count + self.chatbot_cfg['wish_count'],
+                                               wish_count=ugacha.wish_count,
                                                wish_count_w4=ugacha.wish_4_garant - 1,
                                                wish_count_w5=ugacha.wish_5_garant - 1,
-                                               wishes_in_cmd=self.chatbot_cfg['wish_count'],
+                                               wishes_in_cmd=wish_in_command,
                                                user_wish_delay=out_wait,
-                                               global_wish_delay=self.chatbot_cfg['wish_global_timeout'])
+                                               global_wish_delay=self.chatbot_cfg['wish_global_timeout'],
+                                               que_num=self.que.qsize() + 1)
         except KeyError as e:
             print('[TWITCH] Ошибка при форматировании ответа:', e)
             return
 
-        wl = ugacha.generate_wish(self.chatbot_cfg['wish_count'])
-        wo = Wish(user.display_name, ucolor, self.chatbot_cfg['wish_count'], wl)
         self.que.put(wo)
 
-        self.user_db.update(user.name, ugacha)
         self.wish_c_use += 1
+        self.wish_c_primo += wish_in_command * 160
+
+        self.user_db.update(user.name, ugacha)
         await ctx.send(answer_text)
 
     async def event_pubsub_channel_points(self, event: pubsub.PubSubChannelPointsMessage) -> None:
@@ -1067,24 +1074,28 @@ class TwitchBot(commands.Bot):
             self.user_db.push(user, ugacha)
 
         wish_in_command = rewards_map[title]
+        wl = ugacha.generate_wish(wish_in_command)
+        wo = Wish(user, color, wish_in_command, wl)
+
         try:
             anwser_text_c = random.choice(POINTS_TEXT)
             anwser_text = anwser_text_c.format(username='@' + user,
-                                               wish_count=ugacha.wish_count + wish_in_command,
+                                               wish_count=ugacha.wish_count,
                                                wish_count_w4=ugacha.wish_4_garant - 1,
                                                wish_count_w5=ugacha.wish_5_garant - 1,
                                                reward_cost=event.reward.cost,
-                                               wishes_in_cmd=wish_in_command)
+                                               wishes_in_cmd=wish_in_command,
+                                               que_num=self.que.qsize() + 1)
         except KeyError as e:
             print('[TWITCH] Ошибка при форматировании ответа:', e)
             return
 
-        wl = ugacha.generate_wish(wish_in_command)
-        wo = Wish(user, color, wish_in_command, wl)
         self.que.put(wo)
 
         self.wish_r_use += 1
         self.wish_r_sum += event.reward.cost
+        self.wish_r_primo += wish_in_command * 160
+
         self.user_db.update(user, ugacha)
         await self.connected_channels[0].send(anwser_text)
 
@@ -1104,7 +1115,7 @@ class TwitchBot(commands.Bot):
             uwish_4_garant = 0
             uwish_5_garant = 0
 
-        primogems = (self.wish_c_use + self.wish_r_use) * 160
+        primogems = self.wish_r_primo + self.wish_c_primo
         try:
             answer_text = STATS_MESSAGE.format(user_mention=user.mention,
                                                proj_name=__title__,
@@ -1117,7 +1128,8 @@ class TwitchBot(commands.Bot):
                                                wish_gems=primogems,
                                                u_w_c=uwish_count,
                                                u_w4_c=uwish_4_garant,
-                                               u_w5_c=uwish_5_garant)
+                                               u_w5_c=uwish_5_garant,
+                                               user_primo=uwish_count * 160)
         except KeyError as e:
             print('[TWITCH] Ошибка при форматировании ответа:', e)
             return
