@@ -51,6 +51,15 @@ logging.basicConfig(format='[%(asctime)s] [%(levelname)s] %(message)s',
                     encoding='utf-8',
                     level=logging.DEBUG)
 
+
+def _err_logger(msg: str) -> None:
+    message_strip = msg.strip()
+    if (message_strip != '\n') and (len(message_strip) > 0):
+        logging.error(message_strip)
+
+
+logging.write = _err_logger
+
 _config = {}
 try:
     _config = json.loads(open('config.json', 'r', encoding='utf-8').read())
@@ -291,7 +300,7 @@ class UserDB:
 
 
 class Coordinator:
-    states: Generator[str] = cycle(['idle', 'init', 'draw_text', 'draw_fall', 'draw_wish', 'clear'])
+    states: Generator[str, None, None] = cycle(['idle', 'init', 'draw_text', 'draw_fall', 'draw_wish', 'clear'])
     current_wish: Optional[Wish] = None
     current_wish_data: Optional[WishData] = None
     current_draw_objs: DrawData = {}
@@ -1392,4 +1401,5 @@ def main():
 
 
 if __name__ == '__main__':
+    sys.stderr = logging
     main()
