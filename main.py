@@ -58,20 +58,25 @@ def _err_logger(msg: str) -> None:
         logging.error(message_strip)
 
 
+def _config_check(json_file: str, schema: Dict) -> Dict:
+    try:
+        config = json.loads(open(json_file, 'r', encoding='utf-8').read())
+    except (json.JSONDecodeError, ValueError) as json_error:
+        print('[MAIN] Ошибка при загрузке файла конфигурации (%s) : %s' % (json_file, json_error))
+        sys.exit(input('Нажмите любую кнопку чтобы выйти > '))
+
+    try:
+        jsonschema.validate(config, schema=schema)
+    except jsonschema.ValidationError as json_error:
+        print('[MAIN] Ошибка при проверке файла конфигурации (%s) : %s' % (json_file, json_error))
+        sys.exit(input('Нажмите любую кнопку чтобы выйти > '))
+
+    return config
+
+
 logging.write = _err_logger
 
-_config = {}
-try:
-    _config = json.loads(open('config.json', 'r', encoding='utf-8').read())
-except (json.JSONDecodeError, ValueError) as _e:
-    print('[MAIN] Ошибка при загрузке файла конфигурации:', _e)
-    sys.exit(input('Нажмите любую кнопку чтобы выйти > '))
-
-try:
-    jsonschema.validate(_config, schema=CONFIG_SCHEMA)
-except jsonschema.ValidationError as _e:
-    print('[MAIN] Ошибка при загрузке файла конфигурации:', _e)
-    sys.exit(input('Нажмите любую кнопку чтобы выйти > '))
+_config = _config_check('config.json', CONFIG_SCHEMA)
 
 CONFIG = _config['CONFIG']
 _messages = _config['MESSAGES']
@@ -976,8 +981,8 @@ class TwitchBot(commands.Bot):
         notify_text_raw = random.choice(NOTIFY_TEXT)
         try:
             notify_text = notify_text_raw.format(username=mention, command=self.chatbot_wish_command)
-        except KeyError as e:
-            print('[TWITCH] Ошибка при форматировании ответа:', e)
+        except KeyError as format_error:
+            print('[TWITCH] Ошибка при форматировании ответа:', format_error)
             return
 
         await asyncio.sleep(wtime)
@@ -1057,8 +1062,8 @@ class TwitchBot(commands.Bot):
                                                  user_wish_delay=user_timeout,
                                                  global_wish_delay=self.chatbot_cfg['wish_global_timeout'],
                                                  que_num=self.wish_que.qsize() + 1)
-        except KeyError as e:
-            print('[TWITCH] Ошибка при форматировании ответа:', e)
+        except KeyError as format_error:
+            print('[TWITCH] Ошибка при форматировании ответа:', format_error)
             return
 
         self.wish_que.put(wish)
@@ -1105,8 +1110,8 @@ class TwitchBot(commands.Bot):
                                                  reward_cost=event.reward.cost,
                                                  wishes_in_cmd=wishes_in_command,
                                                  que_num=self.wish_que.qsize() + 1)
-        except KeyError as e:
-            print('[TWITCH] Ошибка при форматировании ответа:', e)
+        except KeyError as format_error:
+            print('[TWITCH] Ошибка при форматировании ответа:', format_error)
             return
 
         self.wish_que.put(wish)
@@ -1147,8 +1152,8 @@ class TwitchBot(commands.Bot):
                                                u_w4_c=uwish_4_garant,
                                                u_w5_c=uwish_5_garant,
                                                user_primo=uwish_count * 160)
-        except KeyError as e:
-            print('[TWITCH] Ошибка при форматировании ответа:', e)
+        except KeyError as format_error:
+            print('[TWITCH] Ошибка при форматировании ответа:', format_error)
             return
 
         await ctx.send(answer_text)
@@ -1267,8 +1272,8 @@ def bot_handle(wish_que: queue.Queue, control: Coordinator) -> None:
 
     try:
         loop.run_until_complete(start_task)
-    except (twitchio.errors.AuthenticationError, twitchio.errors.HTTPException) as twe:
-        print('[TWITCH] Ошибка авторизации:', twe)
+    except (twitchio.errors.AuthenticationError, twitchio.errors.HTTPException) as twitch_error:
+        print('[TWITCH] Ошибка авторизации:', twitch_error)
         threading.Event().wait()
 
     bot.run()
