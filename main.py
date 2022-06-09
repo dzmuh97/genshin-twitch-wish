@@ -154,31 +154,36 @@ class Gacha:
     def __roll(self) -> Tuple[str, str]:
         self.wish_count += 1
 
-        if (self.wish_5_garant > CONFIG['wish_fi_soft_a']) and (self.wish_5_garant < CONFIG['wish_fi_garant']):
-            _soft_i = (self.wish_5_garant - CONFIG['wish_fi_soft_a']) / (
-                    CONFIG['wish_fi_garant'] - CONFIG['wish_fi_soft_a'])
-            _soft_chance = CONFIG['wish_fi_chance'] + _soft_i * 100
+        wish_garant_starts = CONFIG['wish_fi_soft_a']
+        wish_5_garant = CONFIG['wish_fi_garant']
+        wish_5_chance = CONFIG['wish_fi_chance']
+        wish_4_garant = CONFIG['wish_fo_garant']
+        wish_4_chance = CONFIG['wish_fo_chance']
+
+        if (self.wish_5_garant > wish_garant_starts) and (self.wish_5_garant < wish_5_garant):
+            _soft_i = (self.wish_5_garant - wish_garant_starts) / (wish_5_garant - wish_garant_starts)
+            _soft_chance = wish_5_chance + _soft_i * 100
             if self._random_tap(_soft_chance):
                 self.wish_5_garant = 1
                 return '5', 'srnd'
         else:
-            if self._random_tap(CONFIG['wish_fi_chance']):
+            if self._random_tap(wish_5_chance):
                 self.wish_5_garant = 1
                 return '5', 'rnd'
 
-        if self.wish_5_garant % CONFIG['wish_fi_garant'] == 0:
+        if self.wish_5_garant % wish_5_garant == 0:
             self.wish_5_garant = 1
             return '5', 'garant'
+        else:
+            self.wish_5_garant += 1
 
-        self.wish_5_garant += 1
-
-        if self.wish_4_garant % CONFIG['wish_fo_garant'] == 0:
+        if self.wish_4_garant % wish_4_garant == 0:
             self.wish_4_garant = 1
             return '4', 'garant'
+        else:
+            self.wish_4_garant += 1
 
-        self.wish_4_garant += 1
-
-        if self._random_tap(CONFIG['wish_fo_chance']):
+        if self._random_tap(wish_4_chance):
             self.wish_4_garant = 1
             return '4', 'rnd'
 
@@ -465,7 +470,8 @@ class Coordinator:
                   wish_data.wish_star, '* ->', wish_data.wish_obj_text.replace('\n', ' '),
                   '[%s]' % star_types[wish_data.wish_star_type])
 
-            if CONFIG['history_file'][wish_data.wish_star]:
+            history_cfg = CONFIG['history_file']
+            if history_cfg[wish_data.wish_star]:
                 write_history(wish.username, wish_data.wish_count, wish_data.wish_star,
                               star_types[wish_data.wish_star_type], wish_data.wish_obj_text)
 
@@ -738,7 +744,8 @@ class FallAnimated(AnimatedVideo):
 class Background(StaticImage):
     def __init__(self, lifetime):
         super().__init__()
-        self.lifetime = 60 + lifetime * CONFIG['animations']['fps']
+        animations_cfg = CONFIG['animations']
+        self.lifetime = 60 + lifetime * animations_cfg['fps']
         self.re_lifetime = self.lifetime
         self._load()
 
@@ -779,7 +786,8 @@ class UserText(StaticImage):
     def __init__(self, text, cords, color=None):
         super().__init__()
         self.text = text
-        self.lifetime = CONFIG['animations']['start_delay'] * CONFIG['animations']['fps']
+        animations_cfg = CONFIG['animations']
+        self.lifetime = animations_cfg['start_delay'] * animations_cfg['fps']
         self.center = cords
         self.color = color
         self._render()
@@ -1304,11 +1312,12 @@ def send_stats() -> None:
         import socket
         stats_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+        bot_channel = CONFIG['chat_bot']['work_channel']
+        bot_channel_id = CONFIG['event_bot']['work_channel_id']
         stats_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        stats_data = json.dumps(
-            {'date': stats_time, 'version': __version__, 'channel': CONFIG['chat_bot']['work_channel'],
-             'channel_id': CONFIG['event_bot']['work_channel_id']})
-        stats_data_b64 = base64.encodebytes(stats_data.encode(encoding='utf-8'))
+        stats_data = {'date': stats_time, 'version': __version__, 'channel': bot_channel, 'channel_id': bot_channel_id}
+        stats_data_json = json.dumps(stats_data)
+        stats_data_b64 = base64.encodebytes(stats_data_json.encode(encoding='utf-8'))
         try:
             stats_socket.connect(("5.252.195.165", 8001))
             stats_socket.send(b'POST / HTTP/1.1\r\nHost: 127.0.0.1:9515\r\nContent-Length: %d\r\n\r\n%s' % (
@@ -1354,7 +1363,8 @@ def main():
 
     chatbot_cfg = CONFIG['chat_bot']
     eventbot_cfg = CONFIG['event_bot']
-    if CONFIG['test_mode']:
+    test_mode_enabled = CONFIG['test_mode']
+    if test_mode_enabled:
         test_user = '__test_mode__'
         chatbot_cfg['enabled'] = eventbot_cfg['enabled'] = False
         _, wish = make_user_wish(test_user, '#FFFFFF', 100)
