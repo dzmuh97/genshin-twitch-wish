@@ -1370,7 +1370,7 @@ def main():
     eventbot_cfg = CONFIG['event_bot']
     test_mode_enabled = CONFIG['test_mode']
     if test_mode_enabled:
-        test_user = '__test_mode__'
+        test_user = os.getlogin()
         chatbot_cfg['enabled'] = eventbot_cfg['enabled'] = False
         _, wish = make_user_wish(test_user, '#FFFFFF', 100)
         wish_que.put(wish)
