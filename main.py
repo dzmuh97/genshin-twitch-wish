@@ -37,7 +37,7 @@ __version__ = '2.0.4.1'
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
 
-from typing import Union, Tuple, List, Dict, Optional, Generator
+from typing import Union, Tuple, List, Dict, Optional
 
 DbUserTuple = Tuple[str, int, int, int]
 BaseDrawClass = Union['StaticImage', 'AnimatedVideo']
@@ -310,7 +310,7 @@ class UserDB:
 
 
 class Coordinator:
-    states: Generator[str, None, None] = cycle(['idle', 'init', 'draw_text', 'draw_fall', 'draw_wish', 'clear'])
+    states_list: List[str] = ['idle', 'init', 'draw_usertext', 'draw_fall', 'draw_wishes', 'clear']
     current_wish: Optional[Wish] = None
     current_wish_data: Optional[WishData] = None
     current_draw_objs: DrawData = {}
@@ -318,13 +318,22 @@ class Coordinator:
     used_sound: List[pygame.mixer.Sound] = []
 
     def __init__(self, wish_que: queue.Queue, animl: List[BaseDrawClass]):
+        self.sound_cfg = CONFIG['sound']
+        self.animation_cfg = CONFIG['animations']
+
+        self.states = cycle(self.states_list)
         self.current_state = next(self.states)
 
         self.animations_list = animl
         self.wish_que = wish_que
 
         self.que_processing = True
-        logging.debug('[PANEL] Создана новая панель управления')
+        logging.debug('[PANEL] Создана новая панель управления анимациями')
+
+    def _load_chunk_check(self):
+        if self.current_wish_data is None:
+            self._iter_wdata()
+            self._load_chunk()
 
     def _iter_wdata(self) -> bool:
         if len(self.current_wish.wish_data_list) > 0:
@@ -341,8 +350,6 @@ class Coordinator:
 
         _t = time.time()
         logging.debug('[PANEL] Вызван метод _t_load_chunk с параметрами: %s', wish_data)
-
-        animation_cfg = CONFIG['animations']
 
         is_multi_star = True if self.current_wish.wish_data_count > 1 else False
         wish_stars = wish_data.wish_star
@@ -363,7 +370,7 @@ class Coordinator:
         wish_black = fill_object(WishSplash(wish_type, wish_name, wish_cords_normal), pygame.Color(0, 0, 0))
         wish_black_shift = fill_object(WishSplash(wish_type, wish_name, wish_cords_shadow), pygame.Color(0, 0, 0))
 
-        background_delay = animation_cfg['end_delay_milti' if is_multi_star else 'end_delay'][wish_stars]
+        background_delay = self.animation_cfg['end_delay_milti' if is_multi_star else 'end_delay'][wish_stars]
 
         self.current_draw_objs.update(
             {
@@ -439,8 +446,17 @@ class Coordinator:
         return obj
 
     def update(self) -> None:
-        state_func = getattr(self, 'state_%s' % self.current_state)
-        is_next = state_func()
+        state_config = self.animation_cfg['draw_states']
+
+        current_state_name = 'state_%s' % self.current_state
+        state_func = getattr(self, current_state_name)
+
+        state_activated = state_config.get(self.current_state, True)
+        if state_activated:
+            is_next = state_func()
+        else:
+            is_next = True
+
         if is_next:
             self.current_state = next(self.states)
 
@@ -519,8 +535,7 @@ class Coordinator:
         logging.debug('[PANEL] Начальные данные для анимации загружены за %s с.', time.time() - _t)
         logging.debug('[PANEL] Инициализация анимации с данными: %s', self.current_draw_objs)
 
-        animation_cfg = CONFIG['animations']
-        background_cfg = animation_cfg['user_background']
+        background_cfg = self.animation_cfg['user_background']
         background_enabled = background_cfg['enabled']
         if not background_enabled:
             return True
@@ -539,8 +554,8 @@ class Coordinator:
         logging.debug('[PANEL] Загружен пользовательский фон: %s', self.current_draw_objs['user_background'])
         return True
 
-    def state_draw_text(self) -> bool:
-        userback_cfg = CONFIG['animations']['user_background']
+    def state_draw_usertext(self) -> bool:
+        userback_cfg = self.animation_cfg['user_background']
 
         if userback_cfg['enabled']:
             self._play_obj('user_background')
@@ -550,14 +565,13 @@ class Coordinator:
         if textnickobj.is_play and textuserobj.is_play:
             return False
 
-        self._iter_wdata()
-        self._load_chunk()
-
+        self._load_chunk_check()
         return True
 
     def state_draw_fall(self) -> bool:
-        userback_cfg = CONFIG['animations']['user_background']
-        sound_cfg = CONFIG['sound']
+        userback_cfg = self.animation_cfg['user_background']
+
+        self._load_chunk_check()
 
         self._purge_obj('user_nick')
         self._purge_obj('user_text')
@@ -567,7 +581,7 @@ class Coordinator:
         self._play_obj('user_perm_text')
         fallobj = self._play_obj('fall_anim')
 
-        if sound_cfg['enabled']:
+        if self.sound_cfg['enabled']:
             sound_fall = SOUND['fall']
             if not (sound_fall in self.used_sound):
                 self.used_sound.append(sound_fall)
@@ -578,13 +592,15 @@ class Coordinator:
 
         return True
 
-    def state_draw_wish(self) -> bool:
-        sound_cfg = CONFIG['sound']
+    def state_draw_wishes(self) -> bool:
         self._purge_obj('fall_anim')
+
+        self._load_chunk_check()
+        self._play_obj('user_perm_text')
 
         back_tmpl = self._play_obj('back_static')
         if not back_tmpl.is_play:
-            if sound_cfg['enabled']:
+            if self.sound_cfg['enabled']:
                 sound_star = SOUND[self.current_wish_data.wish_star]
                 self.used_sound.remove(sound_star)
 
@@ -610,7 +626,7 @@ class Coordinator:
         back_f = self._play_obj('back_anim_first')
         self._play_obj('wish_black')
 
-        if sound_cfg['enabled']:
+        if self.sound_cfg['enabled']:
             sound_star = SOUND[self.current_wish_data.wish_star]
             if not (sound_star in self.used_sound):
                 self.used_sound.append(sound_star)

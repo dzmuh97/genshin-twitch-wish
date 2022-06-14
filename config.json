@@ -42,6 +42,11 @@
     },
     "animations": {
       "chroma_color": "#00FF00",
+      "draw_states": {
+        "draw_usertext":  true,
+        "draw_fall":  true,
+        "draw_wishes":  true
+      },
       "start_delay": 4,
       "end_delay": {
         "3": 6,

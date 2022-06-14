@@ -105,6 +105,7 @@ CONFIG_SCHEMA = {
                                         "type": "object",
                                         "required": [
                                                 "chroma_color",
+                                                "draw_states",
                                                 "start_delay",
                                                 "end_delay",
                                                 "end_delay_milti",
@@ -114,6 +115,20 @@ CONFIG_SCHEMA = {
                                         "additionalProperties": False,
                                         "properties": {
                                                 "chroma_color": {"type": "string"},
+                                                "draw_states": {
+                                                        "type": "object",
+                                                        "required": [
+                                                                "draw_usertext",
+                                                                "draw_fall",
+                                                                "draw_wishes"
+                                                        ],
+                                                        "additionalProperties": False,
+                                                        "properties": {
+                                                                "draw_usertext": {"type": "boolean"},
+                                                                "draw_fall": {"type": "boolean"},
+                                                                "draw_wishes": {"type": "boolean"}
+                                                        }
+                                                },
                                                 "start_delay": {"type": "integer"},
                                                 "end_delay": {
                                                         "type": "object",
