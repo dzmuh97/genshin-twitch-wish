@@ -44,6 +44,10 @@ BaseDrawClass = Union['StaticImage', 'AnimatedVideo']
 DrawDataChunk = Union[BaseDrawClass, List[BaseDrawClass]]
 DrawData = Dict[str, DrawDataChunk]
 
+os.chdir(os.path.dirname(sys.argv[0]))
+if not os.path.exists('logs'):
+    os.makedirs('logs')
+
 _time_stamp = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
 logging.basicConfig(format='[%(asctime)s] [%(levelname)s] %(message)s',
                     filename=os.path.join('logs', '%s.log' % _time_stamp),
