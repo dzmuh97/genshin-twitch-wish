@@ -983,13 +983,6 @@ class TwitchBot(commands.Bot):
         print('[TWITCH] Не удалось подключиться к баллам канала [ %d ] -> %s' % (
             self.eventbot_cfg['work_channel_id'], message))
 
-    # Patched TwitchIO function from twitchio/ext/pubsub/websocket.py
-    # async def _send_topics(self, topics: List[Topic], type="LISTEN"):
-    #     for tok, _topics in groupby(topics, key=lambda val: val.token):
-    #         nonce = ("%032x" % uuid.uuid4().int)[:8]
-    #         payload = {"type": type, "nonce": nonce, "data": {"topics": [x.present for x in _topics], "auth_token": tok}}
-    #         logger.debug(f"Sending {type} payload with nonce '{nonce}': {payload}")
-    #         await self.send(payload)
     async def event_pubsub_nonce(self, _) -> None:
         print('[TWITCH] Успешно подключен к баллам канала [ %d ]' % self.eventbot_cfg['work_channel_id'])
 
