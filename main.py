@@ -10,21 +10,24 @@ import cv2
 from itertools import cycle
 from dataclasses import dataclass
 
-import threading
 import asyncio
+import requests
+import threading
 
 import json
 import jsonschema
 
 from data import DATABASE
-from data import CONFIG_SCHEMA
+from data import CONFIG_SCHEMA, AUTH_SCHEMA
+
+import network
+from network import do_background_work, interactive_auth
 
 import twitchio
 from twitchio import http as twio_http
 from twitchio.ext import pubsub
 from twitchio.ext import commands
 
-import base64
 import pickle
 import sqlite3
 
@@ -81,9 +84,20 @@ def _config_check(json_file: str, schema: Dict) -> Dict:
 logging.write = _err_logger
 
 _config = _config_check('config.json', CONFIG_SCHEMA)
-
 CONFIG = _config['CONFIG']
 _messages = _config['MESSAGES']
+
+_test_mode = CONFIG['test_mode']
+if not _test_mode:
+    interactive_auth()
+    if not os.path.exists('auth.json'):
+        sys.exit()
+    _auth_config = _config_check('auth.json', AUTH_SCHEMA)
+else:
+    _auth_config = {'chat_bot': {}, 'event_bot': {}}
+
+AUTH_CHAT_BOT = _auth_config['chat_bot']
+AUTH_EVENT_BOT = _auth_config['event_bot']
 
 USER_SPLASH_TEXT = _messages['user_splash_text']
 CHATBOT_TEXT = _messages['chatbot_text']
@@ -332,7 +346,7 @@ class Coordinator:
         self.wish_que = wish_que
 
         self.que_processing = True
-        logging.debug('[PANEL] Создана новая панель управления анимациями')
+        logging.debug('[PANEL] Создана новая панель управления анимации')
 
     def _load_chunk_check(self):
         if self.current_wish_data is None:
@@ -930,9 +944,11 @@ class TwitchBot(commands.Bot):
         self.user_db = UserDB()
         self.coordinator = coordinator
 
-        chat_bot_token = self.chatbot_cfg['bot_token']
+        chat_bot_token = AUTH_CHAT_BOT['bot_token']
+        work_channel = AUTH_CHAT_BOT['work_channel']
+
         command_prefix = self.chatbot_cfg['wish_command_prefix']
-        work_channel = self.chatbot_cfg['work_channel']
+
         super().__init__(token='oauth:' + chat_bot_token, prefix=command_prefix, initial_channels=[work_channel, ])
 
         self.chatbot_wish_command = self.chatbot_cfg['wish_command_prefix'] + self.chatbot_cfg['wish_command']
@@ -947,7 +963,10 @@ class TwitchBot(commands.Bot):
 
         logging.debug('[TWITCH] Инициализация твич бота, параметры: %s, %s, %s', chat_bot_token,
                       command_prefix + self.chatbot_cfg['wish_command'], work_channel)
+
+    def run(self):
         self._load()
+        super().run()
 
     def _load(self) -> None:
         print('[TWITCH] Загружаем данные пользователей..')
@@ -964,16 +983,16 @@ class TwitchBot(commands.Bot):
             print('[TWITCH] Чат бот включен, команда:', chat_wish_command)
 
         if self.eventbot_cfg['enabled']:
-            event_token = self.eventbot_cfg['channel_token']
-            event_channel = self.eventbot_cfg['work_channel_id']
+            event_token = AUTH_EVENT_BOT['channel_token']
+            event_channel = AUTH_EVENT_BOT['work_channel_id']
             pubsub_topic = pubsub.channel_points(event_token)[event_channel]
             self.sub_topics.append(pubsub_topic)
             print('[TWITCH] Баллы канала включены, активировано наград:', len(self.eventbot_cfg['rewards']))
 
         if self.chatbot_cfg['enabled']:
-            print('[TWITCH] Подключаемся к чату на канал %s..' % self.chatbot_cfg['work_channel'])
+            print('[TWITCH] Подключаемся к чату на канал %s..' % AUTH_CHAT_BOT['work_channel'])
         if self.eventbot_cfg['enabled']:
-            print('[TWITCH] Подключаемся к баллам канала %d..' % self.eventbot_cfg['work_channel_id'])
+            print('[TWITCH] Подключаемся к баллам канала %d..' % AUTH_EVENT_BOT['work_channel_id'])
 
     async def event_ready(self) -> None:
         print('[TWITCH] Подключено. Данные чатбота:', self.nick, self.user_id)
@@ -983,12 +1002,13 @@ class TwitchBot(commands.Bot):
             print('[TWITCH] Молитвы бота включены каждые %d сек.' % self.chatbot_cfg['self_wish_every'])
             asyncio.Task(self.send_autowish(), loop=self.loop)
 
-    async def event_pubsub_error(self, message: dict) -> None:
-        print('[TWITCH] Не удалось подключиться к баллам канала [ %d ] -> %s' % (
-            self.eventbot_cfg['work_channel_id'], message))
+    @staticmethod
+    async def event_pubsub_error(message: dict) -> None:
+        print('[TWITCH] Не удалось подключиться к баллам канала [ %d ] -> %s' % (AUTH_EVENT_BOT['work_channel_id'], message))
 
-    async def event_pubsub_nonce(self, _) -> None:
-        print('[TWITCH] Успешно подключен к баллам канала [ %d ]' % self.eventbot_cfg['work_channel_id'])
+    @staticmethod
+    async def event_pubsub_nonce(_) -> None:
+        print('[TWITCH] Успешно подключен к баллам канала [ %d ]' % AUTH_EVENT_BOT['work_channel_id'])
 
     async def send_notify(self, mention: str, wtime: int) -> None:
         notify_text_raw = random.choice(NOTIFY_TEXT)
@@ -1272,22 +1292,80 @@ def update_group(animation_group: List[BaseDrawClass], speed: float) -> None:
         animation.update(speed)
 
 
+def update_auth() -> None:
+    with open('auth.json', 'r', encoding='utf-8') as authf:
+        jdata = json.load(authf)
+
+    jdata.update({'chat_bot': AUTH_CHAT_BOT})
+    jdata.update({'event_bot': AUTH_EVENT_BOT})
+
+    with open('auth.json', 'w', encoding='utf-8') as authf:
+        json.dump(jdata, authf)
+
+
+def refresh_bot_token(ref_token: str) -> bool:
+    try:
+        twitch_user_data_raw = requests.post(network.URL_TOKEN_REF, json={'ref_token': ref_token})
+        twitch_user_data = twitch_user_data_raw.json()
+    except requests.RequestException as gate_error:
+        print('[AUTH] Не удалось обновить токен:', gate_error)
+        return False
+
+    token_error = twitch_user_data.get('error')
+    if not (token_error is None):
+        print('[AUTH] Не удалось обновить токен:', token_error)
+        return False
+
+    config_chat_bot_token_ref = AUTH_CHAT_BOT['bot_token_ref']
+    if config_chat_bot_token_ref == ref_token:
+        bot_token_new = twitch_user_data['access_token']
+        bot_token_ref_new = twitch_user_data['refresh_token']
+        AUTH_CHAT_BOT['bot_token'] = bot_token_new
+        AUTH_CHAT_BOT['bot_token_ref'] = bot_token_ref_new
+
+    config_event_bot_ref = AUTH_EVENT_BOT['channel_token_ref']
+    if config_event_bot_ref == ref_token:
+        channel_token_new = twitch_user_data['access_token']
+        channel_token_ref_new = twitch_user_data['refresh_token']
+        AUTH_EVENT_BOT['channel_token'] = channel_token_new
+        AUTH_EVENT_BOT['channel_token_ref'] = channel_token_ref_new
+
+    update_auth()
+    return True
+
+
 def bot_handle(wish_que: queue.Queue, control: Coordinator) -> None:
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    print('[TWITCH] Ждем 5 секунд перед запуском..')
-    time.sleep(5)
+    time.sleep(3)   # Prevent overload Twitch API
 
     bot = TwitchBot(wish_que, control)
     twiohttp = twio_http.TwitchHTTP(bot)
-    start_task = loop.create_task(twiohttp.validate(token=bot.chatbot_cfg['bot_token']))
 
-    try:
-        loop.run_until_complete(start_task)
-    except (twitchio.errors.AuthenticationError, twitchio.errors.HTTPException) as twitch_error:
-        print('[TWITCH] Ошибка авторизации:', twitch_error)
-        threading.Event().wait()
+    check_tokens = (AUTH_CHAT_BOT['bot_token'], AUTH_EVENT_BOT['channel_token'])
+    check_tokens_ref = (AUTH_CHAT_BOT['bot_token_ref'], AUTH_EVENT_BOT['channel_token_ref'])
+
+    print('[TWITCH] Проверяем данные ботов..')
+    for token_t in zip(check_tokens, check_tokens_ref):
+        current_token, current_token_ref = token_t
+        check_task = loop.create_task(twiohttp.validate(token=current_token))
+
+        try:
+            loop.run_until_complete(check_task)
+        except (twitchio.errors.AuthenticationError, twitchio.errors.HTTPException) as twitch_error:
+            print('[TWITCH] Ошибка авторизации:', twitch_error)
+            if not refresh_bot_token(current_token_ref):
+                threading.Event().wait()
+            return
+
+        event_bot_channel_id = AUTH_EVENT_BOT['work_channel_id']
+        event_bot_token_ref = AUTH_EVENT_BOT['channel_token_ref']
+        if (event_bot_channel_id == 0) and (current_token_ref == event_bot_token_ref):
+            AUTH_EVENT_BOT['work_channel_id'] = twiohttp.user_id
+            update_auth()
+
+        time.sleep(3)
 
     bot.run()
 
@@ -1319,36 +1397,6 @@ def make_user_wish(username: str, color: str, count: int) -> Tuple[Gacha, Wish]:
     wish_data_list = gacha.generate_wish(count)
     wish = Wish(username, color, count, wish_data_list)
     return gacha, wish
-
-
-def send_stats() -> None:
-    if not CONFIG['send_dev_stats']:
-        return
-
-    # noinspection PyBroadException
-    def _send_stats() -> None:
-        import socket
-        stats_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        bot_channel = CONFIG['chat_bot']['work_channel']
-        bot_channel_id = CONFIG['event_bot']['work_channel_id']
-        stats_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        stats_data = {'date': stats_time, 'version': __version__, 'channel': bot_channel, 'channel_id': bot_channel_id}
-        stats_data_json = json.dumps(stats_data)
-        stats_data_b64 = base64.encodebytes(stats_data_json.encode(encoding='utf-8'))
-        try:
-            stats_socket.connect(("5.252.195.165", 8001))
-            stats_socket.send(b'POST / HTTP/1.1\r\nHost: 127.0.0.1:9515\r\nContent-Length: %d\r\n\r\n%s' % (
-                len(stats_data_b64), stats_data_b64))
-            stats_socket.recv(4096)
-        except Exception:
-            pass
-        stats_socket.close()
-
-    logging.debug('[STATS] Отправка статистики..')
-    stats_thread = threading.Thread(target=_send_stats, args=())
-    stats_thread.daemon = True
-    stats_thread.start()
 
 
 def main():
@@ -1399,7 +1447,10 @@ def main():
         twitch_bot_thread.start()
         twitch_bot_start = True
         print('[MAIN] Твич бот запущен')
-        send_stats()
+        if CONFIG['send_dev_stats']:
+            chat_bot_work_channel = AUTH_CHAT_BOT['work_channel']
+            event_bot_work_channel_id = AUTH_EVENT_BOT['work_channel_id']
+            do_background_work(chat_bot_work_channel, event_bot_work_channel_id, __version__)
     else:
         print('[MAIN] Твич бот отключен')
 
@@ -1410,7 +1461,7 @@ def main():
 
         if twitch_bot_start and (not twitch_bot_thread.is_alive()):
             twitch_bot_thread.join()
-            print('[MAIN] Твич бот умер по причине ^, перезапускаем..')
+            print('[MAIN] Твич бот умер, перезапускаем..')
             twitch_bot_thread = create_bot_thread(wish_que, coordinator)
             twitch_bot_thread.start()
 

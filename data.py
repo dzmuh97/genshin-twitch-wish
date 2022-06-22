@@ -24,8 +24,6 @@ CONFIG_SCHEMA = {
                                 "chat_bot": {
                                         "type": "object",
                                         "required": ["enabled",
-                                                     "bot_token",
-                                                     "work_channel",
                                                      "wish_command",
                                                      "wish_command_prefix",
                                                      "wish_global_timeout",
@@ -39,8 +37,6 @@ CONFIG_SCHEMA = {
                                         "additionalProperties": False,
                                         "properties": {
                                                 "enabled": {"type": "boolean"},
-                                                "bot_token": {"type": "string"},
-                                                "work_channel": {"type": "string"},
                                                 "wish_command": {"type": "string"},
                                                 "wish_command_prefix": {"type": "string"},
                                                 "wish_global_timeout": {"type": "integer"},
@@ -71,16 +67,12 @@ CONFIG_SCHEMA = {
                                         "type": "object",
                                         "required": [
                                                 "enabled",
-                                                "channel_token",
-                                                "work_channel_id",
                                                 "default_color",
                                                 "rewards"
                                         ],
                                         "additionalProperties": False,
                                         "properties": {
                                                 "enabled": {"type": "boolean"},
-                                                "channel_token": {"type": "string"},
-                                                "work_channel_id": {"type": "integer"},
                                                 "event_name": {"type": "string"},
                                                 "default_color": {"type": "string"},
                                                 "rewards": {
@@ -261,6 +253,34 @@ CONFIG_SCHEMA = {
                                         "minItems": 1
                                 },
                                 "stats_message": {"type": "string"}
+                        }
+                }
+        }
+}
+
+AUTH_SCHEMA = {
+        "type": "object",
+        "required": ["chat_bot", "event_bot"],
+        "additionalProperties": False,
+        "properties": {
+                "chat_bot": {
+                        "type": "object",
+                        "required": ["bot_token", "bot_token_ref", "work_channel"],
+                        "additionalProperties": False,
+                        "properties": {
+                                "bot_token": {"type": "string"},
+                                "bot_token_ref": {"type": "string"},
+                                "work_channel": {"type": "string"},
+                        }
+                },
+                "event_bot": {
+                        "type": "object",
+                        "required": ["channel_token", "channel_token_ref", "work_channel_id"],
+                        "additionalProperties": False,
+                        "properties": {
+                                "channel_token": {"type": "string"},
+                                "channel_token_ref": {"type": "string"},
+                                "work_channel_id": {"type": "integer"},
                         }
                 }
         }

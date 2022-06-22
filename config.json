@@ -3,8 +3,6 @@
     "window_name": "Genshin Twitch Wish Simulator",
     "chat_bot": {
       "enabled": true,
-      "bot_token": "токен для чат бота здесь",
-      "work_channel": "канал куда подключаться",
       "wish_command": "wish",
       "wish_command_prefix": "!",
       "wish_global_timeout": 1,
@@ -22,8 +20,6 @@
     },
     "event_bot": {
       "enabled": true,
-      "channel_token": "токен для баллов канала здесь",
-      "work_channel_id": 0,
       "default_color": "#FFFFFF",
       "rewards": [
         {
