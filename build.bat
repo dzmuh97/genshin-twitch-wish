@@ -1,4 +1,4 @@
-pyinstaller --onefile --icon=icon.ico --name TwitchGenshinWishSim main.py
+pyinstaller --noupx --onefile --icon=icon.ico --name TwitchGenshinWishSim main.py
 copy dist\TwitchGenshinWishSim.exe pack\
 copy config.json pack\
 copy icon.png pack\
