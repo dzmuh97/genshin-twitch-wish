@@ -1,16 +1,19 @@
-import sys
 import os
+import sys
 
-import random
-import queue
-import time
 import gc
 import cv2
+import time
+import queue
+import base64
+import random
 
 from itertools import cycle
 from dataclasses import dataclass
 
 import asyncio
+import aiohttp
+
 import requests
 import threading
 
@@ -19,6 +22,9 @@ import jsonschema
 
 from data import DATABASE
 from data import CONFIG_SCHEMA, AUTH_SCHEMA
+from data import HTML_HISTORY_TEMPLATE_HEADER, HTML_HISTORY_TEMPLATE_HEAD_TABLE_ROW_STATS, HTML_HISTORY_TEMPLATE_HEAD_TABLE_STATS_PRE
+from data import HTML_HISTORY_TEMPLATE_HEAD_TABLE_ROW_STARS, HTML_HISTORY_TEMPLATE_HEAD_TABLE_END, HTML_HISTORY_TEMPLATE_MAIN_TABLE_ROW
+from data import HTML_HISTORY_TEMPLATE_END
 
 import network
 from network import do_background_work, interactive_auth
@@ -1047,7 +1053,7 @@ class TwitchBot(commands.Bot):
 
     async def wish(self, ctx: commands.Context) -> None:
         user = ctx.author
-        logging.debug('[TWITCH] Получена команда wish: %s, %s, %s', user.name, user.display_name, user.color)
+        logging.debug('[TWITCH] Получена команда wish: %s, %s', user.name, user.color)
 
         if user.name in self.gacha_users:
             user_gacha = self.gacha_users[user.name]
@@ -1082,7 +1088,7 @@ class TwitchBot(commands.Bot):
 
         wishes_in_command = self.chatbot_cfg['wish_count']
         wish_data_list = user_gacha.generate_wish(wishes_in_command)
-        wish = Wish(user.display_name, ucolor, wishes_in_command, wish_data_list)
+        wish = Wish(user.name, ucolor, wishes_in_command, wish_data_list)
 
         try:
             self.last_wish_time = int(time.time())
@@ -1219,6 +1225,45 @@ class TwitchBot(commands.Bot):
 
             await ctx.send(answer_text)
 
+    @commands.command()
+    async def gbot_history(self, ctx: commands.Context) -> None:
+        user = ctx.author
+        code, html_history = render_html_history(user.name)
+
+        errors_map = {
+            1: '%s у стримера выключена запись истории молитв :(' % user.mention,
+            2: '%s истории молитв еще нет, попробуй позже :(' % user.mention,
+            3: '%s тебя еще нет в истории молитв, попробуй позже :(' % user.mention
+        }
+
+        if code < 0:
+            error_response = errors_map[abs(code)]
+            await ctx.send(error_response)
+            return
+
+        channel_id = AUTH_EVENT_BOT['work_channel_id']
+        html_history_b64 = base64.urlsafe_b64encode(html_history.encode(encoding='utf-8')).decode(encoding='utf-8')
+        json_data = {'user_id': user.id, 'channel_id': channel_id, 'html': html_history_b64}
+
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with session.post(network.URL_HISTORY, json=json_data) as post_data:
+                    response = await post_data.json()
+            except aiohttp.ClientError as history_error:
+                print('[TWITCH] Ошибка получения файла истории:', history_error)
+                error_response = '%s не удалось загрузить историю, попробуй позже :(' % user.mention
+                await ctx.send(error_response)
+                return
+
+        if not ('url' in response):
+            error_response = '%s Не удалось создать ссылку, попробуйте позже :(' % user.mention
+            await ctx.send(error_response)
+            return
+
+        history_url = response['url']
+        response = '%s твоя история молитв: %s' % (user.mention, history_url)
+        await ctx.send(response)
+
 
 def merge_wish_meta(cords: Tuple[int, int],
                     wish_type: StaticImage,
@@ -1343,15 +1388,16 @@ def bot_handle(wish_que: queue.Queue, control: Coordinator) -> None:
     bot = TwitchBot(wish_que, control)
     twiohttp = twio_http.TwitchHTTP(bot)
 
-    check_tokens = (AUTH_CHAT_BOT['bot_token'], AUTH_EVENT_BOT['channel_token'])
-    check_tokens_ref = (AUTH_CHAT_BOT['bot_token_ref'], AUTH_EVENT_BOT['channel_token_ref'])
+    check_tokens = (AUTH_EVENT_BOT['channel_token'], AUTH_CHAT_BOT['bot_token'])
+    check_tokens_ref = (AUTH_EVENT_BOT['channel_token_ref'], AUTH_CHAT_BOT['bot_token_ref'])
 
     print('[TWITCH] Проверяем данные ботов..')
     for token_t in zip(check_tokens, check_tokens_ref):
         current_token, current_token_ref = token_t
-        check_task = loop.create_task(twiohttp.validate(token=current_token))
 
         try:
+            twiohttp.nick = None  # force get data from twitch
+            check_task = loop.create_task(twiohttp.validate(token=current_token))
             loop.run_until_complete(check_task)
         except (twitchio.errors.AuthenticationError, twitchio.errors.HTTPException) as twitch_error:
             print('[TWITCH] Ошибка авторизации:', twitch_error)
@@ -1376,9 +1422,105 @@ def create_bot_thread(wish_que: queue.Queue, control: Coordinator) -> threading.
     return bot_thread
 
 
-def write_history(nickname: str, wish_count: int, star: str, wtype: str, wish: str) -> None:
+def render_html_history(filter_nick: str) -> Tuple[int, str]:
     history_cfg = CONFIG['history_file']
-    if not history_cfg['enabled']:
+    history_enabled = history_cfg['enabled']
+    if not history_enabled:
+        return -1, ''
+
+    history_path = history_cfg['path']
+    if not os.path.exists(history_path):
+        return -2, ''
+
+    style_map = {
+        '3': 'star3',
+        '4': 'star4',
+        '5': 'star5',
+    }
+
+    wishes_map = {
+        '3': 1,
+        '4': 1,
+        '5': 1
+    }
+
+    total = 0
+    total_5 = 0
+    total_4 = 0
+    total_3 = 0
+
+    html_result = ''
+    html_result += HTML_HISTORY_TEMPLATE_HEADER
+
+    html_main_table = ''
+
+    with open(history_path, 'r', encoding='utf-8') as fp:
+        for line_num, history_line in enumerate(fp):
+            if line_num == 0:  # skip header
+                continue
+
+            history_data = history_line.strip().split(',')
+            wdate, nickname, _, star, wish_type, wish_name = history_data
+
+            if filter_nick != nickname.lower():
+                continue
+
+            wish_style = style_map[star]
+
+            if star == '3':
+                total_3 += 1
+
+            if star == '4':
+                total_4 += 1
+
+            if star == '5':
+                total_5 += 1
+
+            table_row = HTML_HISTORY_TEMPLATE_MAIN_TABLE_ROW.format(
+                wish_date=wdate.replace('-', ' '),
+                wish_user=nickname,
+                wish_count='1' if star == '3' else wishes_map[star],
+                wish_type=wish_type,
+                wish_style_color=wish_style,
+                wish_name=wish_name
+            )
+            html_main_table += table_row
+
+            for wish_star in wishes_map:
+                wishes_map[wish_star] += 1
+
+            wishes_map[star] = 1
+            total += 1
+
+    if total == 0:
+        return -3, ''
+
+    total_gems = total * 160
+    html_result += HTML_HISTORY_TEMPLATE_HEAD_TABLE_ROW_STATS.format(
+        total_wish=total,
+        total_gems=total_gems
+    )
+    html_result += HTML_HISTORY_TEMPLATE_HEAD_TABLE_STATS_PRE
+    html_result += HTML_HISTORY_TEMPLATE_HEAD_TABLE_ROW_STARS.format(
+        total_wish3=total_3,
+        total_wish4=total_4,
+        total_wish5=total_5
+    )
+    html_result += HTML_HISTORY_TEMPLATE_HEAD_TABLE_END
+    html_result += html_main_table
+    html_result += HTML_HISTORY_TEMPLATE_END
+
+    return 0, html_result
+
+
+def write_history(nickname: str, wish_count: int, star: str, wtype: str, wish: str) -> None:
+    test_mode_enabled = CONFIG['test_mode']
+    if test_mode_enabled:
+        return
+
+    history_cfg = CONFIG['history_file']
+    history_enabled = history_cfg['enabled']
+    if not history_enabled:
         return
 
     history_path = history_cfg['path']
@@ -1420,6 +1562,12 @@ def main():
     #         _wish = Wish("__test_mode__", '#000000', 2, [WishData(1, 1, 1, _star, 'rnd', **_wd_x) for _wd_x in _wd_r])
     #         wish_que.put(_wish)
     #
+
+    # code, text = render_html_history('local')
+    # print(code)
+    # with open('_test.html', 'w', encoding='utf-8') as f:
+    #     f.write(text)
+    # sys.exit()
 
     fps = pygame.time.Clock()
     main_display = pygame.display.set_mode(size=(1280, 720), vsync=1)

@@ -27,6 +27,8 @@ URL_VERSION = 'https://genshinwishgate.pw/version'
 URL_CODE = 'https://genshinwishgate.pw/code_gate'
 URL_TOKEN = 'https://genshinwishgate.pw/token_gate/'
 URL_TOKEN_REF = 'https://genshinwishgate.pw/refresh'
+URL_HISTORY = 'https://genshinwishgate.pw/history'
+# URL_HISTORY = 'http://localhost:5555/history'
 
 
 def _get_version(local_version) -> None:
@@ -114,7 +116,7 @@ def interactive_auth() -> None:
 
         browser_url = TWITCH_CODE_URL + '?' + parse.urlencode(web_data)
 
-        bot_type_text = 'чат-бот' if bot_type == 'chat' else 'баллы канала'
+        bot_type_text = 'чат-бот' if bot_type == 'chat' else 'аккаунт стримера для баллов канала'
         warn_text = ('\nСейчас будет открыта новая вкладка в вашем стандартном браузере\n'
                      'В ней будет запрос на доступ к аккаунту бота\n\n'
                      'Обязательно проверьте следующе:\n'

@@ -2,5 +2,6 @@ opencv-python==4.5.5.64
 pygame==2.1.2
 jsonschema==4.6.0
 requests==2.27.1
+aiohttp==3.8.1
 charset_normalizer==2.0.12
 twitchio==2.3.0

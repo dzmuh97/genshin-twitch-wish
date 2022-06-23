@@ -482,3 +482,120 @@ DATABASE = {
                 ]
         }
 }
+
+HTML_HISTORY_TEMPLATE_HEADER = '''<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Genshin Twitch Wish Simulator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/4.2.0/mdb.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #25294a;
+        }
+
+        .star3 {
+            color: #4e7cff;
+        }
+
+        .star4 {
+            color: #d28fd6;
+        }
+
+        .star5 {
+            color: #ffb13f;
+        }
+
+        thead {
+            color: #cbd5e0;
+        }
+
+        .stats_table_data {
+            font-size: 80px;
+            font-weight: 900;
+            font-family: 'Montserrat', sans-serif;
+            line-height: 50px;
+        }
+
+        .star_table_data {
+            font-size: 30px;
+            font-weight: 900;
+            font-family: 'Montserrat', sans-serif;
+            line-height: 15px;
+        }
+
+        .main_table_data {
+            line-height: 12px;
+        }
+    </style>
+</head>
+<body>
+<div class="row justify-content-center">
+<div class="col-auto">
+    <table class="table table-sm table-borderless text-center text-white border-light">
+      <thead>
+        <tr>
+            <th scope="col" class="fw-bold">Всего молитв</th>
+            <th scope="col" class="fw-bold">Примогемов потрачено</th>
+        </tr>
+      </thead>
+      <tbody>
+'''
+
+HTML_HISTORY_TEMPLATE_HEAD_TABLE_ROW_STATS = '''
+        <tr class="stats_table_data">
+            <td>{total_wish}</td>
+            <td>{total_gems}</td>
+        </tr>
+'''
+
+HTML_HISTORY_TEMPLATE_HEAD_TABLE_STATS_PRE = '''</tbody>
+    </table>
+    <table class="table table-sm table-borderless text-center text-white border-light">
+      <thead>
+        <tr>
+            <th scope="col" class="fw-bold">Всего 3★</th>
+            <th scope="col" class="fw-bold">Всего 4★</th>
+            <th scope="col" class="fw-bold">Всего 5★</th>
+        </tr>
+      </thead>
+      <tbody>
+'''
+
+HTML_HISTORY_TEMPLATE_HEAD_TABLE_ROW_STARS = '''<tr class="star_table_data">
+            <td class="star3">{total_wish3}</td>
+            <td class="star4">{total_wish4}</td>
+            <td class="star5">{total_wish5}</td>
+        </tr>
+'''
+
+HTML_HISTORY_TEMPLATE_HEAD_TABLE_END = '''</tbody>
+    </table>
+    <table class="table table-sm table-borderless text-center text-white border-light">
+      <thead>
+        <tr>
+            <th scope="col" class="fw-bold">Дата</th>
+            <th scope="col" class="fw-bold">Ник</th>
+            <th scope="col" class="fw-bold">Молитва</th>
+            <th scope="col" class="fw-bold">Гарант</th>
+            <th scope="col" class="fw-bold">Название</th>
+        </tr>
+      </thead>
+      <tbody class="main_table_data">
+'''
+
+HTML_HISTORY_TEMPLATE_MAIN_TABLE_ROW = '''
+<tr><td>{wish_date}</td><td>{wish_user}</td><td>{wish_count}</td><td>{wish_type}</td><td class="{wish_style_color}">{wish_name}</td></tr>
+'''
+
+HTML_HISTORY_TEMPLATE_END = '''
+      </tbody>
+    </table>
+</div>
+</div>
+</body>
+</html>
+'''
