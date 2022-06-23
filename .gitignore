@@ -6,6 +6,10 @@ dist
 logs
 pack
 
+auth.json
+database.sqlite
+users_wish_history.csv
+
 upx.exe
 *.spec
 *.zip
