@@ -74,8 +74,8 @@
       "5": "5star.mp3"
     },
     "history_file": {
-      "enabled": false,
-      "path": "",
+      "enabled": true,
+      "path": "users_wish_history.csv",
       "3": true,
       "4": true,
       "5": true
