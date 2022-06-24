@@ -53,7 +53,10 @@ BaseDrawClass = Union['StaticImage', 'AnimatedVideo']
 DrawDataChunk = Union[BaseDrawClass, List[BaseDrawClass]]
 DrawData = Dict[str, DrawDataChunk]
 
-os.chdir(os.path.dirname(sys.argv[0]))
+_script_path = os.path.realpath(__file__)
+_script_dir = os.path.dirname(_script_path)
+
+os.chdir(_script_dir)
 if not os.path.exists('logs'):
     os.makedirs('logs')
 
