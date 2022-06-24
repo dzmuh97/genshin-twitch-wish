@@ -163,15 +163,12 @@ class Wish:
 
 
 class Gacha:
-    last_wish_time = 0
-    wish_5_garant = 1
-    wish_4_garant = 1
-    wish_count = 0
-
     def __init__(self, wish_count: int = 0, wish_4_garant: int = 1, wish_5_garant: int = 1):
         self.wish_5_garant = wish_5_garant
         self.wish_4_garant = wish_4_garant
         self.wish_count = wish_count
+        self.last_wish_time = 0
+        self.wish_count = 0
         logging.debug('[GACHA] Создана гача с параметрами w%d w4%d w4%d', wish_count, wish_4_garant, wish_5_garant)
 
     @staticmethod
@@ -332,14 +329,14 @@ class UserDB:
 
 
 class Coordinator:
-    states_list: List[str] = ['idle', 'init', 'draw_usertext', 'draw_fall', 'draw_wishes', 'clear']
-    current_wish: Optional[Wish] = None
-    current_wish_data: Optional[WishData] = None
-    current_draw_objs: DrawData = {}
-    current_draw_objs_played: Dict[str, bool] = {}
-    used_sound: List[pygame.mixer.Sound] = []
-
     def __init__(self, wish_que: queue.Queue, animl: List[BaseDrawClass]):
+        self.states_list: List[str] = ['idle', 'init', 'draw_usertext', 'draw_fall', 'draw_wishes', 'clear']
+        self.current_wish: Optional[Wish] = None
+        self.current_wish_data: Optional[WishData] = None
+        self.current_draw_objs: DrawData = {}
+        self.current_draw_objs_played: Dict[str, bool] = {}
+        self.used_sound: List[pygame.mixer.Sound] = []
+
         self.sound_cfg = CONFIG['sound']
         self.animation_cfg = CONFIG['animations']
 
@@ -944,11 +941,11 @@ class FrontText(StaticImage):
 
 
 class TwitchBot(commands.Bot):
-    gacha_users: Dict[str, Gacha] = {}
-    sub_topics: List[pubsub.Topic] = []
-    user_db: Optional[UserDB] = None
-
     def __init__(self, wish_que: queue.Queue, coordinator: Coordinator):
+        self.gacha_users: Dict[str, Gacha] = {}
+        self.sub_topics: List[pubsub.Topic] = []
+        self.user_db: Optional[UserDB] = None
+
         self.chatbot_cfg = CONFIG['chat_bot']
         self.eventbot_cfg = CONFIG['event_bot']
 
