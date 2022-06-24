@@ -127,7 +127,7 @@ def interactive_auth() -> None:
 
         input(warn_text)
         webbrowser.open(browser_url, new=2)
-        input('\n[AUTH] Подтвердите доступ в открывшемся окне и нажмите ENTER когда закроете окно браузера [ENTER]: ')
+        input('\n[AUTH] Подтвердите доступ в открывшемся окне и нажмите ENTER когда закроете окно браузера: ')
 
         try:
             twitch_user_data_raw = requests.get(URL_TOKEN + state)
@@ -164,7 +164,7 @@ def interactive_auth() -> None:
         if auth_type == 'solo':
             break
 
-        input('[AUTH] Все прошло хорошо, аккаунт настроен. Нажмите ENTER чтобы перейти к следующему: ')
+        input('[AUTH] Все прошло хорошо, аккаунт настроен. Нажмите ENTER чтобы продолжить: ')
 
     with open('auth.json', 'w', encoding='utf-8') as auth_f:
         json.dump(auth_data, auth_f)
