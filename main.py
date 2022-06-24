@@ -70,7 +70,7 @@ BaseDrawClass = Union['StaticImage', 'AnimatedVideo']
 DrawDataChunk = Union[BaseDrawClass, List[BaseDrawClass]]
 DrawData = Dict[str, DrawDataChunk]
 
-_script_path = os.path.realpath(__file__)
+_script_path = os.path.realpath(sys.argv[0])
 _script_dir = os.path.dirname(_script_path)
 
 os.chdir(_script_dir)
@@ -188,7 +188,6 @@ class Gacha:
         self.wish_4_garant = wish_4_garant
         self.wish_count = wish_count
         self.last_wish_time = 0
-        self.wish_count = 0
         logging.debug('[GACHA] Создана гача с параметрами w%d w4%d w4%d', wish_count, wish_4_garant, wish_5_garant)
 
     @staticmethod
@@ -1076,14 +1075,16 @@ class TwitchBot(commands.Bot):
 
     async def wish(self, ctx: commands.Context) -> None:
         user = ctx.author
-        logging.debug('[TWITCH] Получена команда wish: %s, %s', user.name, user.color)
+        username = user.name
 
-        if user.name in self.gacha_users:
-            user_gacha = self.gacha_users[user.name]
+        logging.debug('[TWITCH] Получена команда wish: %s, %s', username, user.color)
+
+        if username in self.gacha_users:
+            user_gacha = self.gacha_users[username]
         else:
             user_gacha = Gacha()
-            self.gacha_users[user.name] = user_gacha
-            self.user_db.push(user.name, user_gacha)
+            self.gacha_users[username] = user_gacha
+            self.user_db.push(username, user_gacha)
 
         current_time = int(time.time())
         wtimeoust_cfg = self.chatbot_cfg['wish_timeout']
@@ -1111,7 +1112,7 @@ class TwitchBot(commands.Bot):
 
         wishes_in_command = self.chatbot_cfg['wish_count']
         wish_data_list = user_gacha.generate_wish(wishes_in_command)
-        wish = Wish(user.name, ucolor, wishes_in_command, wish_data_list)
+        wish = Wish(username, ucolor, wishes_in_command, wish_data_list)
 
         try:
             self.last_wish_time = int(time.time())
@@ -1133,15 +1134,15 @@ class TwitchBot(commands.Bot):
         self.wish_c_use += 1
         self.wish_c_primo += wishes_in_command * 160
 
-        self.user_db.update(user.name, user_gacha)
+        self.user_db.update(username, user_gacha)
         await ctx.send(answer_text)
 
     async def event_pubsub_channel_points(self, event: pubsub.PubSubChannelPointsMessage) -> None:
-        user = event.user.name.lower()
+        username = event.user.name.lower()
         reward_title = event.reward.title
         user_color = self.eventbot_cfg['default_color']
 
-        logging.debug('[TWITCH] Получен ивент pubsub_channel_points: %s, %s, %s', user, reward_title, user_color)
+        logging.debug('[TWITCH] Получен ивент pubsub_channel_points: %s, %s, %s', username, reward_title, user_color)
 
         rewards_map = {}
         for reward in self.eventbot_cfg['rewards']:
@@ -1152,20 +1153,20 @@ class TwitchBot(commands.Bot):
         if not (reward_title in rewards_map):
             return
 
-        if user in self.gacha_users:
-            user_gacha = self.gacha_users[user]
+        if username in self.gacha_users:
+            user_gacha = self.gacha_users[username]
         else:
             user_gacha = Gacha()
-            self.gacha_users[user] = user_gacha
-            self.user_db.push(user, user_gacha)
+            self.gacha_users[username] = user_gacha
+            self.user_db.push(username, user_gacha)
 
         wishes_in_command = rewards_map[reward_title]
         wish_data_list = user_gacha.generate_wish(wishes_in_command)
-        wish = Wish(user, user_color, wishes_in_command, wish_data_list)
+        wish = Wish(username, user_color, wishes_in_command, wish_data_list)
 
         try:
             anwser_text_raw = random.choice(POINTS_TEXT)
-            anwser_text = anwser_text_raw.format(username='@' + user,
+            anwser_text = anwser_text_raw.format(username='@' + username,
                                                  wish_count=user_gacha.wish_count,
                                                  wish_count_w4=user_gacha.wish_4_garant - 1,
                                                  wish_count_w5=user_gacha.wish_5_garant - 1,
@@ -1182,7 +1183,7 @@ class TwitchBot(commands.Bot):
         self.wish_r_sum += event.reward.cost
         self.wish_r_primo += wishes_in_command * 160
 
-        self.user_db.update(user, user_gacha)
+        self.user_db.update(username, user_gacha)
         await self.connected_channels[0].send(anwser_text)
 
     @commands.command()
