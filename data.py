@@ -1,260 +1,254 @@
 CONFIG_SCHEMA = {
         "type": "object",
-        "required": ["CONFIG", "MESSAGES"],
+        "required": ["window_name",
+                     "chat_bot",
+                     "event_bot",
+                     "animations",
+                     "sound",
+                     "history_file",
+                     "wish_fo_garant",
+                     "wish_fo_chance",
+                     "wish_fi_garant",
+                     "wish_fi_chance",
+                     "wish_fi_soft_a",
+                     "test_mode"
+                     ],
         "additionalProperties": False,
         "properties": {
-                "CONFIG": {
+                "window_name": {"type": "string"},
+                "chat_bot": {
                         "type": "object",
-                        "required": ["window_name",
-                                     "chat_bot",
-                                     "event_bot",
-                                     "animations",
-                                     "sound",
-                                     "history_file",
-                                     "wish_fo_garant",
-                                     "wish_fo_chance",
-                                     "wish_fi_garant",
-                                     "wish_fi_chance",
-                                     "wish_fi_soft_a",
-                                     "test_mode"
+                        "required": ["enabled",
+                                     "wish_command",
+                                     "wish_command_prefix",
+                                     "wish_global_timeout",
+                                     "wish_timeout",
+                                     "send_notify",
+                                     "wish_count",
+                                     "self_wish",
+                                     "self_wish_every",
+                                     "enable_colors"
                                      ],
                         "additionalProperties": False,
                         "properties": {
-                                "window_name": {"type": "string"},
-                                "chat_bot": {
-                                        "type": "object",
-                                        "required": ["enabled",
-                                                     "wish_command",
-                                                     "wish_command_prefix",
-                                                     "wish_global_timeout",
-                                                     "wish_timeout",
-                                                     "send_notify",
-                                                     "wish_count",
-                                                     "self_wish",
-                                                     "self_wish_every",
-                                                     "enable_colors"
-                                                     ],
-                                        "additionalProperties": False,
-                                        "properties": {
-                                                "enabled": {"type": "boolean"},
-                                                "wish_command": {"type": "string"},
-                                                "wish_command_prefix": {"type": "string"},
-                                                "wish_global_timeout": {"type": "integer"},
-                                                "wish_timeout": {
-                                                        "type": "object",
-                                                        "required": [
-                                                                "broadcaster",
-                                                                "mod",
-                                                                "subscriber",
-                                                                "user"
-                                                        ],
-                                                        "additionalProperties": False,
-                                                        "properties": {
-                                                                "broadcaster": {"type": "integer"},
-                                                                "mod": {"type": "integer"},
-                                                                "subscriber": {"type": "integer"},
-                                                                "user": {"type": "integer"}
-                                                        }
-                                                },
-                                                "send_notify": {"type": "boolean"},
-                                                "wish_count": {"type": "integer"},
-                                                "self_wish": {"type": "boolean"},
-                                                "self_wish_every": {"type": "integer"},
-                                                "enable_colors": {"type": "boolean"}
-                                        }
-                                },
-                                "event_bot": {
+                                "enabled": {"type": "boolean"},
+                                "wish_command": {"type": "string"},
+                                "wish_command_prefix": {"type": "string"},
+                                "wish_global_timeout": {"type": "integer"},
+                                "wish_timeout": {
                                         "type": "object",
                                         "required": [
-                                                "enabled",
-                                                "default_color",
-                                                "rewards"
+                                                "broadcaster",
+                                                "mod",
+                                                "subscriber",
+                                                "user"
                                         ],
                                         "additionalProperties": False,
                                         "properties": {
-                                                "enabled": {"type": "boolean"},
-                                                "event_name": {"type": "string"},
-                                                "default_color": {"type": "string"},
-                                                "rewards": {
-                                                        "type": "array",
-                                                        "minItems": 1,
-                                                        "items": {
-                                                                "type": "object",
-                                                                "required": [
-                                                                        "event_name",
-                                                                        "wish_count"
-                                                                ],
-                                                                "additionalProperties": False,
-                                                                "properties": {
-                                                                        "event_name": {"type": "string"},
-                                                                        "wish_count": {"type": "integer"}
-                                                                }
-                                                        }
+                                                "broadcaster": {"type": "integer"},
+                                                "mod": {"type": "integer"},
+                                                "subscriber": {"type": "integer"},
+                                                "user": {"type": "integer"}
+                                        }
+                                },
+                                "send_notify": {"type": "boolean"},
+                                "wish_count": {"type": "integer"},
+                                "self_wish": {"type": "boolean"},
+                                "self_wish_every": {"type": "integer"},
+                                "enable_colors": {"type": "boolean"}
+                        }
+                },
+                "event_bot": {
+                        "type": "object",
+                        "required": [
+                                "enabled",
+                                "default_color",
+                                "rewards"
+                        ],
+                        "additionalProperties": False,
+                        "properties": {
+                                "enabled": {"type": "boolean"},
+                                "event_name": {"type": "string"},
+                                "default_color": {"type": "string"},
+                                "rewards": {
+                                        "type": "array",
+                                        "minItems": 1,
+                                        "items": {
+                                                "type": "object",
+                                                "required": [
+                                                        "event_name",
+                                                        "wish_count"
+                                                ],
+                                                "additionalProperties": False,
+                                                "properties": {
+                                                        "event_name": {"type": "string"},
+                                                        "wish_count": {"type": "integer"}
                                                 }
                                         }
-                                },
-                                "animations": {
+                                }
+                        }
+                },
+                "animations": {
+                        "type": "object",
+                        "required": [
+                                "chroma_color",
+                                "draw_states",
+                                "start_delay",
+                                "end_delay",
+                                "end_delay_milti",
+                                "user_background",
+                                "fps"
+                        ],
+                        "additionalProperties": False,
+                        "properties": {
+                                "chroma_color": {"type": "string"},
+                                "draw_states": {
                                         "type": "object",
                                         "required": [
-                                                "chroma_color",
-                                                "draw_states",
-                                                "start_delay",
-                                                "end_delay",
-                                                "end_delay_milti",
-                                                "user_background",
-                                                "fps"
+                                                "draw_usertext",
+                                                "draw_fall",
+                                                "draw_wishes"
                                         ],
                                         "additionalProperties": False,
                                         "properties": {
-                                                "chroma_color": {"type": "string"},
-                                                "draw_states": {
-                                                        "type": "object",
-                                                        "required": [
-                                                                "draw_usertext",
-                                                                "draw_fall",
-                                                                "draw_wishes"
-                                                        ],
-                                                        "additionalProperties": False,
-                                                        "properties": {
-                                                                "draw_usertext": {"type": "boolean"},
-                                                                "draw_fall": {"type": "boolean"},
-                                                                "draw_wishes": {"type": "boolean"}
-                                                        }
-                                                },
-                                                "start_delay": {"type": "integer"},
-                                                "end_delay": {
-                                                        "type": "object",
-                                                        "required": [
-                                                                "3",
-                                                                "4",
-                                                                "5"
-                                                        ],
-                                                        "additionalProperties": False,
-                                                        "properties": {
-                                                                "3": {"type": "integer"},
-                                                                "4": {"type": "integer"},
-                                                                "5": {"type": "integer"}
-                                                        }
-                                                },
-                                                "end_delay_milti": {
-                                                        "type": "object",
-                                                        "required": [
-                                                                "3",
-                                                                "4",
-                                                                "5"
-                                                        ],
-                                                        "additionalProperties": False,
-                                                        "properties": {
-                                                                "3": {"type": "integer"},
-                                                                "4": {"type": "integer"},
-                                                                "5": {"type": "integer"}
-                                                        }
-                                                },
-                                                "user_background": {
-                                                        "type": "object",
-                                                        "required": [
-                                                                "enabled",
-                                                                "path",
-                                                                "type"
-                                                        ],
-                                                        "additionalProperties": False,
-                                                        "properties": {
-                                                                "enabled": {"type": "boolean"},
-                                                                "path": {"type": "string"},
-                                                                "type": {"type": "string"}
-                                                        }
-                                                },
-                                                "font": {
-                                                        "type": "object",
-                                                        "required": [
-                                                                "path",
-                                                                "user_uid_size",
-                                                                "wish_name_size"
-                                                        ],
-                                                        "additionalProperties": False,
-                                                        "properties": {
-                                                                "path": {"type": "string"},
-                                                                "user_uid_size": {"type": "integer"},
-                                                                "wish_name_size": {"type": "integer"}
-                                                        }
-                                                },
-                                                "fps": {"type": "integer"}
+                                                "draw_usertext": {"type": "boolean"},
+                                                "draw_fall": {"type": "boolean"},
+                                                "draw_wishes": {"type": "boolean"}
                                         }
                                 },
-                                "sound": {
+                                "start_delay": {"type": "integer"},
+                                "end_delay": {
                                         "type": "object",
                                         "required": [
-                                                "enabled",
-                                                "fall",
                                                 "3",
                                                 "4",
-                                                "5",
+                                                "5"
                                         ],
                                         "additionalProperties": False,
                                         "properties": {
-                                                "enabled": {"type": "boolean"},
-                                                "fall": {"type": "string"},
-                                                "3": {"type": "string"},
-                                                "4": {"type": "string"},
-                                                "5": {"type": "string"},
+                                                "3": {"type": "integer"},
+                                                "4": {"type": "integer"},
+                                                "5": {"type": "integer"}
                                         }
                                 },
-                                "history_file": {
+                                "end_delay_milti": {
+                                        "type": "object",
+                                        "required": [
+                                                "3",
+                                                "4",
+                                                "5"
+                                        ],
+                                        "additionalProperties": False,
+                                        "properties": {
+                                                "3": {"type": "integer"},
+                                                "4": {"type": "integer"},
+                                                "5": {"type": "integer"}
+                                        }
+                                },
+                                "user_background": {
                                         "type": "object",
                                         "required": [
                                                 "enabled",
                                                 "path",
-                                                "3",
-                                                "4",
-                                                "5",
+                                                "type"
                                         ],
                                         "additionalProperties": False,
                                         "properties": {
                                                 "enabled": {"type": "boolean"},
                                                 "path": {"type": "string"},
-                                                "3": {"type": "boolean"},
-                                                "4": {"type": "boolean"},
-                                                "5": {"type": "boolean"}
+                                                "type": {"type": "string"}
                                         }
                                 },
-                                "wish_fo_garant": {"type": "number"},
-                                "wish_fo_chance": {"type": "number"},
-                                "wish_fi_garant": {"type": "number"},
-                                "wish_fi_chance": {"type": "number"},
-                                "wish_fi_soft_a": {"type": "number"},
-                                "send_dev_stats": {"type": "boolean"},
-                                "test_mode": {"type": "boolean"}
+                                "font": {
+                                        "type": "object",
+                                        "required": [
+                                                "path",
+                                                "user_uid_size",
+                                                "wish_name_size"
+                                        ],
+                                        "additionalProperties": False,
+                                        "properties": {
+                                                "path": {"type": "string"},
+                                                "user_uid_size": {"type": "integer"},
+                                                "wish_name_size": {"type": "integer"}
+                                        }
+                                },
+                                "fps": {"type": "integer"}
                         }
                 },
-                "MESSAGES": {
+                "sound": {
                         "type": "object",
                         "required": [
-                                "user_splash_text",
-                                "chatbot_text",
-                                "notify_text",
-                                "chanel_points_text"
+                                "enabled",
+                                "fall",
+                                "3",
+                                "4",
+                                "5",
                         ],
                         "additionalProperties": False,
                         "properties": {
-                                "user_splash_text": {
-                                        "type": "array",
-                                        "minItems": 1
-                                },
-                                "chatbot_text": {
-                                        "type": "array",
-                                        "minItems": 1
-                                },
-                                "notify_text": {
-                                        "type": "array",
-                                        "minItems": 1
-                                },
-                                "chanel_points_text": {
-                                        "type": "array",
-                                        "minItems": 1
-                                },
-                                "stats_message": {"type": "string"}
+                                "enabled": {"type": "boolean"},
+                                "fall": {"type": "string"},
+                                "3": {"type": "string"},
+                                "4": {"type": "string"},
+                                "5": {"type": "string"},
                         }
-                }
+                },
+                "history_file": {
+                        "type": "object",
+                        "required": [
+                                "enabled",
+                                "path",
+                                "3",
+                                "4",
+                                "5",
+                        ],
+                        "additionalProperties": False,
+                        "properties": {
+                                "enabled": {"type": "boolean"},
+                                "path": {"type": "string"},
+                                "3": {"type": "boolean"},
+                                "4": {"type": "boolean"},
+                                "5": {"type": "boolean"}
+                        }
+                },
+                "wish_fo_garant": {"type": "number"},
+                "wish_fo_chance": {"type": "number"},
+                "wish_fi_garant": {"type": "number"},
+                "wish_fi_chance": {"type": "number"},
+                "wish_fi_soft_a": {"type": "number"},
+                "send_dev_stats": {"type": "boolean"},
+                "test_mode": {"type": "boolean"}
+        }
+}
+
+MESSAGES_SCHEMA = {
+        "type": "object",
+        "required": [
+                "user_splash_text",
+                "chatbot_text",
+                "notify_text",
+                "chanel_points_text"
+        ],
+        "additionalProperties": False,
+        "properties": {
+                "user_splash_text": {
+                        "type": "array",
+                        "minItems": 1
+                },
+                "chatbot_text": {
+                        "type": "array",
+                        "minItems": 1
+                },
+                "notify_text": {
+                        "type": "array",
+                        "minItems": 1
+                },
+                "chanel_points_text": {
+                        "type": "array",
+                        "minItems": 1
+                },
+                "stats_message": {"type": "string"}
         }
 }
 

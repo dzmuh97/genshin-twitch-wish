@@ -21,7 +21,7 @@ import json
 import jsonschema
 
 from data import DATABASE
-from data import CONFIG_SCHEMA, AUTH_SCHEMA
+from data import CONFIG_SCHEMA, AUTH_SCHEMA, MESSAGES_SCHEMA
 from data import HTML_HISTORY_TEMPLATE_HEADER, HTML_HISTORY_TEMPLATE_HEAD_TABLE_ROW_STATS, HTML_HISTORY_TEMPLATE_HEAD_TABLE_STATS_PRE
 from data import HTML_HISTORY_TEMPLATE_HEAD_TABLE_ROW_STARS, HTML_HISTORY_TEMPLATE_HEAD_TABLE_END, HTML_HISTORY_TEMPLATE_MAIN_TABLE_ROW
 from data import HTML_HISTORY_TEMPLATE_END
@@ -89,10 +89,14 @@ def _config_check(json_file: str, schema: Dict) -> Dict:
 
 logging.write = _err_logger
 
-_config = _config_check('config.json', CONFIG_SCHEMA)
-CONFIG = _config['CONFIG']
-_messages = _config['MESSAGES']
+_messages = _config_check('messages.json', MESSAGES_SCHEMA)
+USER_SPLASH_TEXT = _messages['user_splash_text']
+CHATBOT_TEXT = _messages['chatbot_text']
+NOTIFY_TEXT = _messages['notify_text']
+POINTS_TEXT = _messages['chanel_points_text']
+STATS_MESSAGE = _messages['stats_message']
 
+CONFIG = _config_check('config.json', CONFIG_SCHEMA)
 _test_mode = CONFIG['test_mode']
 if not _test_mode:
     interactive_auth()
@@ -104,12 +108,6 @@ else:
 
 AUTH_CHAT_BOT = _auth_config['chat_bot']
 AUTH_EVENT_BOT = _auth_config['event_bot']
-
-USER_SPLASH_TEXT = _messages['user_splash_text']
-CHATBOT_TEXT = _messages['chatbot_text']
-NOTIFY_TEXT = _messages['notify_text']
-POINTS_TEXT = _messages['chanel_points_text']
-STATS_MESSAGE = _messages['stats_message']
 
 SOUND_CFG = CONFIG['sound']
 

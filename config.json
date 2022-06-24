@@ -1,116 +1,89 @@
 {
-  "CONFIG": {
-    "window_name": "Genshin Twitch Wish Simulator",
-    "chat_bot": {
-      "enabled": true,
-      "wish_command": "wish",
-      "wish_command_prefix": "!",
-      "wish_global_timeout": 1,
-      "wish_timeout": {
-        "broadcaster": 600,
-        "mod": 600,
-        "subscriber": 600,
-        "user": 600
-      },
-      "send_notify": false,
-      "wish_count": 1,
-      "self_wish": false,
-      "self_wish_every": 60,
-      "enable_colors": true
+  "window_name": "Genshin Twitch Wish Simulator",
+  "chat_bot": {
+    "enabled": true,
+    "wish_command": "wish",
+    "wish_command_prefix": "!",
+    "wish_global_timeout": 1,
+    "wish_timeout": {
+      "broadcaster": 600,
+      "mod": 600,
+      "subscriber": 600,
+      "user": 600
     },
-    "event_bot": {
-      "enabled": true,
-      "default_color": "#FFFFFF",
-      "rewards": [
-        {
-          "event_name": "Одна крутка",
-          "wish_count": 1
-        },
-        {
-          "event_name": "Много круток",
-          "wish_count": 5
-        },
-        {
-          "event_name": "Очень много круток",
-          "wish_count": 10
-        }
-      ]
-    },
-    "animations": {
-      "chroma_color": "#00FF00",
-      "draw_states": {
-        "draw_usertext":  true,
-        "draw_fall":  true,
-        "draw_wishes":  true
-      },
-      "start_delay": 4,
-      "end_delay": {
-        "3": 6,
-        "4": 10,
-        "5": 14
-      },
-      "end_delay_milti": {
-        "3": 1,
-        "4": 7,
-        "5": 14
-      },
-      "user_background": {
-        "enabled": false,
-        "path": "",
-        "type": "static"
-      },
-      "font": {
-        "path": "Genshin_Impact.ttf",
-        "user_uid_size": 48,
-        "wish_name_size": 42
-      },
-      "fps": 30
-    },
-    "sound": {
-      "enabled": true,
-      "fall": "soundfall.mp3",
-      "3": "3star.mp3",
-      "4": "4star.mp3",
-      "5": "5star.mp3"
-    },
-    "history_file": {
-      "enabled": true,
-      "path": "users_wish_history.csv",
-      "3": true,
-      "4": true,
-      "5": true
-    },
-    "wish_fo_garant": 10,
-    "wish_fo_chance": 13.00,
-    "wish_fi_garant": 90,
-    "wish_fi_chance": 1.60,
-    "wish_fi_soft_a": 73,
-    "send_dev_stats": true,
-    "test_mode": true
+    "send_notify": false,
+    "wish_count": 1,
+    "self_wish": false,
+    "self_wish_every": 60,
+    "enable_colors": true
   },
-  "MESSAGES": {
-    "user_splash_text": [
-      "тратит {wishes_in_cmd} круток в баннер!",
-      "решает испытать удачу в {wish_count} раз!",
-      "тратит {gems_in_cmd} гемов в баннер!",
-      "молится архонтам на удачу!",
-      "хочет поменять гемы на вайфу!",
-      "надеется на китайский рандом!"
-    ],
-    "chatbot_text": [
-      "{username} это твоя {wish_count} крутка! Результат смотри на стриме через несколько секунд HungryPaimon Твоя позиция в очереди: {que_num}",
-      "{username} делает {wish_count} крутку! Что же ему выпадет? Смотри на стриме HungryPaimon Твоя позиция в очереди: {que_num}",
-      "{username} решает испытать удачу {wish_count} раз! Результат на стриме через несколько секунд HungryPaimon Твоя позиция в очереди: {que_num}",
-      "{username} приносит в жертву {wishes_in_cmd} молитв, увеличивая свой счетчик круток до {wish_count}! Что же выпадет? HungryPaimon Твоя позиция в очереди: {que_num}"
-    ],
-    "notify_text": [
-      "{username} ты снова можешь сделать крутку! Напиши в чат {command} чтобы испытать удачу HungryPaimon",
-      "{username} время вышло! Снова испытай удачу командой {command} HungryPaimon"
-    ],
-    "chanel_points_text": [
-      "Невероятно! {username} тратит {reward_cost} баллов, чтобы сделать {wishes_in_cmd} круток! Теперь его счетчик круток равен {wish_count}! Твоя позиция в очереди: {que_num}",
-      "{username} идет вразнос и тратит {reward_cost} баллов ради {wishes_in_cmd} круток! Все ради любимой вайфу HungryPaimon Теперь у тебя сделано целых {wish_count} круток! Твоя позиция в очереди: {que_num}"
-    ],
-    "stats_message": "{user_mention} я работаю на {proj_name} v{proj_ver} ({proj_url}) HungryPaimon Статистика за стрим: команд \"{wcommand}\" было использовано: {wcommand_c}, наград за баллы получено: {rcommand_c}, всего баллов потрачено: {wish_points}, стоимость всех молитв в примогемах: {wish_gems} Твоя статистика: всего молитв: {u_w_c}, последняя 4* была {u_w4_c} молитв назад, последняя 5* была {u_w5_c} молитв назад, все твои молитвы стоят {user_primo} примогемов MrDestructoid"
-  }
+  "event_bot": {
+    "enabled": true,
+    "default_color": "#FFFFFF",
+    "rewards": [
+      {
+        "event_name": "Одна крутка",
+        "wish_count": 1
+      },
+      {
+        "event_name": "Много круток",
+        "wish_count": 5
+      },
+      {
+        "event_name": "Очень много круток",
+        "wish_count": 10
+      }
+    ]
+  },
+  "animations": {
+    "chroma_color": "#00FF00",
+    "draw_states": {
+      "draw_usertext": true,
+      "draw_fall": true,
+      "draw_wishes": true
+    },
+    "start_delay": 4,
+    "end_delay": {
+      "3": 6,
+      "4": 10,
+      "5": 14
+    },
+    "end_delay_milti": {
+      "3": 1,
+      "4": 7,
+      "5": 14
+    },
+    "user_background": {
+      "enabled": false,
+      "path": "",
+      "type": "static"
+    },
+    "font": {
+      "path": "Genshin_Impact.ttf",
+      "user_uid_size": 48,
+      "wish_name_size": 42
+    },
+    "fps": 30
+  },
+  "sound": {
+    "enabled": true,
+    "fall": "soundfall.mp3",
+    "3": "3star.mp3",
+    "4": "4star.mp3",
+    "5": "5star.mp3"
+  },
+  "history_file": {
+    "enabled": true,
+    "path": "users_wish_history.csv",
+    "3": true,
+    "4": true,
+    "5": true
+  },
+  "wish_fo_garant": 10,
+  "wish_fo_chance": 13.00,
+  "wish_fi_garant": 90,
+  "wish_fi_chance": 1.60,
+  "wish_fi_soft_a": 73,
+  "send_dev_stats": true,
+  "test_mode": true
 }
