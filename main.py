@@ -1,3 +1,18 @@
+__ascii__ = r'''
+   ___             _    _        _____        _ _      _     __      ___    _      ___ _           _      _           
+  / __|___ _ _  __| |_ (_)_ _   |_   _|_ __ _(_) |_ __| |_   \ \    / (_)__| |_   / __(_)_ __ _  _| |__ _| |_ ___ _ _ 
+ | (_ / -_) ' \(_-< ' \| | ' \    | | \ V  V / |  _/ _| ' \   \ \/\/ /| (_-< ' \  \__ \ | '  \ || | / _` |  _/ _ \ '_|
+  \___\___|_||_/__/_||_|_|_||_|   |_|  \_/\_/|_|\__\__|_||_|   \_/\_/ |_/__/_||_| |___/_|_|_|_\_,_|_\__,_|\__\___/_|  
+  
+ https://github.com/dzmuh97/genshin-twitch-wish
+'''
+
+__title__ = 'genshin-twitch-wish'
+__site__ = 'github.com/dzmuh97/genshin-twitch-wish'
+__version__ = '2.1.0'
+
+print(__ascii__)
+
 import os
 import sys
 
@@ -38,10 +53,6 @@ import pickle
 import sqlite3
 
 import logging
-
-__title__ = 'genshin-twitch-wish'
-__site__ = 'github.com/dzmuh97/genshin-twitch-wish'
-__version__ = '2.1.0'
 
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
