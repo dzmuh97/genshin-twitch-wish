@@ -536,8 +536,16 @@ class Coordinator:
         else:
             wish_stars = '3'
 
-        user_text = random.choice(USER_SPLASH_TEXT)
-        logging.debug('[PANEL] Анимация падения имеет параметры: wstar=%s, multi=%s', wish_stars, is_multi_star)
+        user_wishes_in_cmd = len(wish_data.wish_data_list)
+        user_wish_count = wish_data.wish_data_list[-1].wish_count
+        user_gems_in_cmd = user_wishes_in_cmd * 160
+
+        user_text_raw = random.choice(USER_SPLASH_TEXT)
+        user_text = user_text_raw.format(wishes_in_cmd=user_wishes_in_cmd,
+                                         wish_count=user_wish_count,
+                                         gems_in_cmd=user_gems_in_cmd)
+
+        logging.debug('[PANEL] Анимация падения имеет параметры: wish_stars=%s, multi=%s', wish_stars, is_multi_star)
 
         self.current_draw_objs = \
             {
