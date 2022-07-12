@@ -1566,12 +1566,18 @@ def make_user_wish(username: str, color: str, count: int) -> Tuple[Gacha, Wish]:
 
 
 def main():
+    fps = pygame.time.Clock()
+    main_display = pygame.display.set_mode(size=(1280, 720), vsync=1)
+
+    wish_que = queue.Queue()
+    animation_group = []
+
     #
-    # _star = '4'
+    # _star = '5'
     # _type = 'char'
-    # _name = 'keka_skin'
+    # _name = 'aloy'
     #
-    # _wd_r = list(filter(lambda x: x['cwish_cname'] == _name, DATABASE[_star][_type]))[0]
+    # _wd_r = list(filter(lambda x: x['wish_obj_name'] == _name, DATABASE[_star][_type]))[0]
     # _wd = WishData(1, 1, 1, _star, 'rnd', **_wd_r)
     # _wish = Wish("__test_mode__", '#000000', 1, [_wd,])
     # wish_que.put(_wish)
@@ -1587,17 +1593,13 @@ def main():
     #         wish_que.put(_wish)
     #
 
+    #
     # code, text = render_html_history('local')
     # print(code)
     # with open('_test.html', 'w', encoding='utf-8') as f:
     #     f.write(text)
     # sys.exit()
-
-    fps = pygame.time.Clock()
-    main_display = pygame.display.set_mode(size=(1280, 720), vsync=1)
-
-    wish_que = queue.Queue()
-    animation_group = []
+    #
 
     chatbot_cfg = CONFIG['chat_bot']
     eventbot_cfg = CONFIG['event_bot']
