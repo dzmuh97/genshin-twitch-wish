@@ -8,18 +8,19 @@
     "надеется на китайский рандом!"
   ],
   "chatbot_text": [
-    "{username} это твоя {wish_count} крутка! Результат смотри на стриме через несколько секунд HungryPaimon Твоя позиция в очереди: {que_num}",
-    "{username} делает {wish_count} крутку! Что же ему выпадет? Смотри на стриме HungryPaimon Твоя позиция в очереди: {que_num}",
-    "{username} решает испытать удачу {wish_count} раз! Результат на стриме через несколько секунд HungryPaimon Твоя позиция в очереди: {que_num}",
-    "{username} приносит в жертву {wishes_in_cmd} молитв, увеличивая свой счетчик круток до {wish_count}! Что же выпадет? HungryPaimon Твоя позиция в очереди: {que_num}"
+    "{username} это твоя {wish_count} крутка, результат смотри на стриме через несколько секунд! Твоя позиция в очереди: {que_num} HungryPaimon",
+    "{username} делает {wish_count} крутку! Что же ему выпадет? Смотри на стриме! Позиция в очереди: {que_num} HungryPaimon",
+    "{username} решает испытать удачу {wish_count} раз! Результат на стриме через несколько секунд! Позиция в очереди: {que_num} HungryPaimon",
+    "{username} приносит в жертву {wishes_in_cmd} молитв, увеличивая свой счетчик круток до {wish_count}! Что же выпадет? Позиция в очереди: {que_num} HungryPaimon"
   ],
   "notify_text": [
     "{username} ты снова можешь сделать крутку! Напиши в чат {command} чтобы испытать удачу HungryPaimon",
     "{username} время вышло! Снова испытай удачу командой {command} HungryPaimon"
   ],
   "chanel_points_text": [
-    "Невероятно! {username} тратит {reward_cost} баллов, чтобы сделать {wishes_in_cmd} круток! Теперь его счетчик круток равен {wish_count}! Твоя позиция в очереди: {que_num}",
-    "{username} идет вразнос и тратит {reward_cost} баллов ради {wishes_in_cmd} круток! Все ради любимой вайфу HungryPaimon Теперь у тебя сделано целых {wish_count} круток! Твоя позиция в очереди: {que_num}"
+    "Невероятно! {username} тратит {reward_cost} баллов, чтобы сделать {wishes_in_cmd} круток! Теперь его счетчик круток равен {wish_count}! Позиция в очереди: {que_num} HungryPaimon",
+    "{username} идет вразнос и тратит {reward_cost} баллов ради {wishes_in_cmd} круток! Все ради любимой вайфу! Теперь у тебя сделано целых {wish_count} круток! Твоя позиция в очереди: {que_num} HungryPaimon"
   ],
-  "stats_message": "{user_mention} я работаю на {proj_name} v{proj_ver} ({proj_url}) HungryPaimon Статистика за стрим: команд \"{wcommand}\" было использовано: {wcommand_c}, наград за баллы получено: {rcommand_c}, всего баллов потрачено: {wish_points}, стоимость всех молитв в примогемах: {wish_gems} Твоя статистика: всего молитв: {u_w_c}, последняя 4* была {u_w4_c} молитв назад, последняя 5* была {u_w5_c} молитв назад, все твои молитвы стоят {user_primo} примогемов MrDestructoid"
+  "status_message": "{user_mention} я работаю на {proj_name} v{proj_ver} ({proj_url}) HungryPaimon",
+  "stats_message": "{user_mention} статистика за стрим: команд \"{wcommand}\" было использовано: {wcommand_c}, наград за баллы получено: {rcommand_c}, всего баллов потрачено: {wish_points}, стоимость всех молитв в примогемах: {wish_gems} Твоя статистика: всего молитв: {u_w_c}, гарант 4★: {u_w4_c}, гарант 5★: {u_w5_c}, все твои молитвы стоят {user_primo} примогемов HungryPaimon"
 }

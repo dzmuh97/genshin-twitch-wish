@@ -248,7 +248,8 @@ MESSAGES_SCHEMA = {
                         "type": "array",
                         "minItems": 1
                 },
-                "stats_message": {"type": "string"}
+                "stats_message": {"type": "string"},
+                "status_message": {"type": "string"},
         }
 }
 

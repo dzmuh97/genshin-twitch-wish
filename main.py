@@ -115,6 +115,7 @@ CHATBOT_TEXT = _messages['chatbot_text']
 NOTIFY_TEXT = _messages['notify_text']
 POINTS_TEXT = _messages['chanel_points_text']
 STATS_MESSAGE = _messages['stats_message']
+STATUS_MESSAGE = _messages['status_message']
 
 CONFIG = _config_check('config.json', CONFIG_SCHEMA)
 _test_mode = CONFIG['test_mode']
@@ -1187,7 +1188,7 @@ class TwitchBot(commands.Bot):
         await self.connected_channels[0].send(anwser_text)
 
     @commands.command()
-    async def gbot_status(self, ctx: commands.Context) -> None:
+    async def gbot_stats(self, ctx: commands.Context) -> None:
         user = ctx.author
 
         if user.name in self.gacha_users:
@@ -1203,9 +1204,6 @@ class TwitchBot(commands.Bot):
         primogems = self.wish_r_primo + self.wish_c_primo
         try:
             answer_text = STATS_MESSAGE.format(user_mention=user.mention,
-                                               proj_name=__title__,
-                                               proj_ver=__version__,
-                                               proj_url=__site__,
                                                wcommand=self.chatbot_wish_command,
                                                wcommand_c=self.wish_c_use,
                                                rcommand_c=self.wish_r_use,
@@ -1215,6 +1213,21 @@ class TwitchBot(commands.Bot):
                                                u_w4_c=uwish_4_garant,
                                                u_w5_c=uwish_5_garant,
                                                user_primo=uwish_count * 160)
+        except KeyError as format_error:
+            print('[TWITCH] Ошибка при форматировании ответа:', format_error)
+            return
+
+        await ctx.send(answer_text)
+
+    @commands.command()
+    async def gbot_status(self, ctx: commands.Context) -> None:
+        user = ctx.author
+
+        try:
+            answer_text = STATUS_MESSAGE.format(user_mention=user.mention,
+                                               proj_name=__title__,
+                                               proj_ver=__version__,
+                                               proj_url=__site__)
         except KeyError as format_error:
             print('[TWITCH] Ошибка при форматировании ответа:', format_error)
             return
