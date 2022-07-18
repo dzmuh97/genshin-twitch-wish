@@ -23,7 +23,7 @@ import queue
 import base64
 import random
 
-from itertools import cycle
+from itertools import cycle, zip_longest
 from dataclasses import dataclass
 
 import asyncio
@@ -134,6 +134,7 @@ SOUND_CFG = CONFIG['sound']
 
 USERTEXT_COLOR = pygame.Color(255, 255, 255, 0)
 USERTEXT_OUTLINE = pygame.Color(0, 0, 0, 0)
+WISH_BLACK_COLOR = pygame.Color(0, 0, 0)
 
 pygame.init()
 pygame.display.set_caption(CONFIG['window_name'])
@@ -398,16 +399,98 @@ class Coordinator:
         wish_name = wish_data.wish_obj_name
         wish_text = wish_data.wish_obj_text
 
-        wish_sign = WishMeta(wish_meta_type, wish_meta_element)
-        _wish_meta_text = [WishText(_wname) for _wname in wish_text.split('\n')]
-        _wish_meta = merge_wish_meta((80, 450), wish_sign, _wish_meta_text, int(wish_stars))
-        wish_meta_type, wish_meta_name, wish_meta_star = _wish_meta
+        wish_meta_cords = (100, 450)
+        wish_meta_cords_shift = (40, 450)
 
-        wish_cords_normal = (640, 360)
-        wish_cords_shadow = (645, 375)
-        wish_color = WishSplash(wish_type, wish_name, wish_cords_normal)
-        wish_black = fill_object(WishSplash(wish_type, wish_name, wish_cords_normal), pygame.Color(0, 0, 0))
-        wish_black_shift = fill_object(WishSplash(wish_type, wish_name, wish_cords_shadow), pygame.Color(0, 0, 0))
+        wish_meta_kwargs = {
+            'apply_trans': True,
+            'trans_perc': 0,
+            'trans_coef': 15,
+            'apply_shift': True,
+            'shift_cords': wish_meta_cords_shift,
+            'shift_type': 'midleft',
+            'shift_speed': -7,
+            'shift_speed_coef': 0.3
+        }
+
+        wish_sign = WishMeta(wish_meta_type, wish_meta_element)
+        _wish_meta_text = [_wname for _wname in wish_text.split('\n')]
+        wish_meta = merge_wish_meta(wish_meta_cords, wish_meta_kwargs, wish_sign, _wish_meta_text, int(wish_stars))
+
+        wish_args = (wish_type, wish_name)
+
+        wish_shift_x_offset = 40
+        wish_shadow_x_offset = 5
+        wish_shadow_y_offset = 15
+
+        _x, _y = 640, 360
+        _x_s, _y_s = _x + wish_shadow_x_offset, _y + wish_shadow_y_offset
+
+        wish_cords_normal = (_x, _y)
+        wish_cords_normal_shift = (_x + wish_shift_x_offset, _y)
+
+        wish_cords_shadow = (_x_s, _y_s)
+        wish_cords_shadow_shift = (_x_s + wish_shift_x_offset, _y_s)
+
+        wish_pack_shift_speed = 7
+        wish_pack_shift_speed_coef = 0.7
+
+        wish_black_kwargs = {
+            'apply_res': True,
+            'res_perc': 800,
+            'res_coef': 60,
+            'res_speed': 1.7,
+            'apply_black': True
+        }
+
+        wish_back_kwargs = {
+            'apply_trans': True,
+            'trans_perc': -30,
+            'trans_coef': 10,
+            'apply_shift': True,
+            'shift_cords': wish_cords_normal_shift,
+            'shift_speed': wish_pack_shift_speed,
+            'shift_speed_coef': wish_pack_shift_speed_coef
+        }
+
+        wish_color_black_kwargs = {
+            'apply_black': True,
+            'apply_shift': True,
+            'shift_cords': wish_cords_normal_shift,
+            'shift_speed': wish_pack_shift_speed,
+            'shift_speed_coef': wish_pack_shift_speed_coef
+        }
+
+        wish_color_kwargs = {
+            'apply_trans': True,
+            'trans_perc': 0,
+            'trans_coef': 15,
+            'apply_shift': True,
+            'shift_cords': wish_cords_normal_shift,
+            'shift_speed': wish_pack_shift_speed,
+            'shift_speed_coef': wish_pack_shift_speed_coef
+        }
+
+        wish_shadow_kwargs = {
+            'apply_black': True,
+            'apply_trans': True,
+            'trans_perc': 0,
+            'trans_coef': 20,
+            'apply_shift': True,
+            'shift_cords': wish_cords_shadow_shift,
+            'shift_speed': wish_pack_shift_speed,
+            'shift_speed_coef': wish_pack_shift_speed_coef
+        }
+
+        if wish_data.wish_meta_type == 'weapon':
+            wish_back = WishBack(wish_data.wish_meta_element, wish_cords_normal, **wish_back_kwargs)
+        else:
+            wish_back = None
+
+        wish_black = WishSplash(*wish_args, wish_cords_normal, **wish_black_kwargs)
+        wish_color_black = WishSplash(*wish_args, wish_cords_normal, **wish_color_black_kwargs)
+        wish_color = WishSplash(*wish_args, wish_cords_normal, **wish_color_kwargs)
+        wish_shadow = WishSplash(*wish_args, wish_cords_shadow, **wish_shadow_kwargs)
 
         background_delay = self.animation_cfg['end_delay_milti' if is_multi_star else 'end_delay'][wish_stars]
 
@@ -417,12 +500,11 @@ class Coordinator:
                 'back_anim_first': BackAnimated('first', wish_stars),
                 'back_anim_second': BackAnimated('second', wish_stars),
                 'wish_color': wish_color,
+                'wish_color_black': wish_color_black,
                 'wish_black': wish_black,
-                'wish_black_shift': wish_black_shift,
-                'wish_back': WishBack(wish_data.wish_meta_element) if wish_data.wish_meta_type == 'weapon' else None,
-                'wish_meta_type': wish_meta_type,
-                'wish_meta_name': wish_meta_name,
-                'wish_meta_star': wish_meta_star
+                'wish_shadow': wish_shadow,
+                'wish_back': wish_back,
+                'wish_meta': wish_meta,
             }
         )
 
@@ -432,12 +514,11 @@ class Coordinator:
                 'back_anim_first': False,
                 'back_anim_second': False,
                 'wish_color': False,
+                'wish_color_black': False,
                 'wish_black': False,
-                'wish_black_shift': False,
+                'wish_shadow': False,
                 'wish_back': False,
-                'wish_meta_type': False,
-                'wish_meta_name': False,
-                'wish_meta_star': False
+                'wish_meta': False,
             }
         )
 
@@ -652,15 +733,14 @@ class Coordinator:
                 self.used_sound.remove(sound_star)
 
             self._purge_obj('back_static')
-
-            self._purge_obj('wish_meta_type')
-            self._purge_obj('wish_meta_name')
-            self._purge_obj('wish_meta_star')
+            self._purge_obj('wish_meta')
 
             if self.current_wish_data.wish_meta_type == 'weapon':
                 self._purge_obj('wish_back')
 
-            self._purge_obj('wish_black_shift')
+            self._purge_obj('wish_shadow')
+
+            self._purge_obj('wish_color_black')
             self._purge_obj('wish_color')
 
             if self._iter_wdata():
@@ -688,19 +768,17 @@ class Coordinator:
         back_s = self._play_obj('back_anim_second')
         if self.current_wish_data.wish_meta_type == 'weapon':
             self._play_obj('wish_back')
-            self._play_obj('wish_black_shift')
+            self._play_obj('wish_shadow')
 
+        self._play_obj('wish_color_black')
         self._play_obj('wish_color')
+
+        self._play_obj('wish_meta')
 
         if back_s.is_play:
             return False
 
         self._hide_obj('back_anim_second')
-
-        self._play_obj('wish_meta_type')
-        self._play_obj('wish_meta_name')
-        self._play_obj('wish_meta_star')
-
         return False
 
     def state_clear(self) -> bool:
@@ -715,30 +793,151 @@ class Coordinator:
 
 
 class StaticImage(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self,
+                 apply_trans: bool = False,
+                 trans_coef: int = 1,
+                 trans_perc: int = 255,
+
+                 apply_res: bool = False,
+                 res_coef: int = 1,
+                 res_perc: int = 0,
+                 res_speed: float = 0,
+
+                 apply_shift: bool = False,
+                 shift_speed: float = 1.0,
+                 shift_speed_coef: float = 0.0,
+                 shift_cords: Tuple[int, int] = (0, 0),
+                 shift_type: str = 'center',
+
+                 apply_black: bool = False
+                 ):
         super().__init__()
         self.lifetime = 0
-        self.is_play = False
+        self.speed = 1
+
+        self._apply_trans = apply_trans
+        self._trans_coef = trans_coef
+        self._trans_perc = trans_perc
+
+        self._resized_buffer = []
+        self._apply_res = apply_res
+        self._res_speed = res_speed
+        self._res_coef = res_coef
+        self._res_perc = res_perc
+
+        self._shift_ranges = []
+        self._apply_shift = apply_shift
+        self._shift_speed = shift_speed
+        self._shift_speed_coef = shift_speed_coef
+        self._shift_cords = shift_cords
+        self._shift_type = shift_type
+        self._shift_created = False
+
+        self._apply_black = apply_black
+
         self.image = None
+        self.image_copy = None
+
+        self.is_play = False
+
         self.rect = None
+        self.rect_copy = None
 
     def play(self):
         self.is_play = True
 
-    def update(self, speed: float):
+    @staticmethod
+    def _var_range(start: int, stop: int, step: float, step_change: float):
+        if step < 0:
+            step_sign = -1
+            while_sign = '<'
+            if_sign = '>'
+        else:
+            step_sign = 1
+            while_sign = '>'
+            if_sign = '<'
+
+        while eval(f'{stop} - {start} {while_sign} 0'):
+            yield int(start)
+            start += step
+            step = step_sign * (abs(step) - step_change)
+            if eval(f'{step} {if_sign} {step_sign}'):
+                step = step_sign
+        else:
+            yield stop
+
+    def update(self):
         if not self.is_play:
             return
+
+        if (self._trans_perc < 255) and self._apply_trans:
+            self._trans_perc += self.speed * self._trans_coef
+
+            _local_trans_perc = self._trans_perc
+            if _local_trans_perc < 0:
+                _local_trans_perc = 0
+
+            self.image.set_alpha(_local_trans_perc)
+
+        if len(self._resized_buffer) > 0 and self._apply_res:
+            self.image = self._resized_buffer.pop(0)
+            self.rect = self.image.get_rect()
+            self.rect.center = self.rect_copy.center
+
+        if self._apply_shift:
+            if not self._shift_created:
+                rect_orig = getattr(self.rect, self._shift_type)
+                rect_x, rect_y = rect_orig
+                shift_x, shift_y = self._shift_cords
+
+                x_range = list(self._var_range(rect_x, shift_x, self._shift_speed, self._shift_speed_coef))
+                y_range = list(self._var_range(rect_y, shift_y, self._shift_speed, self._shift_speed_coef))
+
+                last_value = x_range[-1] if len(x_range) < len(y_range) else y_range[-1]
+                self._shift_ranges = list(zip_longest(x_range, y_range, fillvalue=last_value))
+                self._shift_created = True
+
+            if len(self._shift_ranges) > 0:
+                shift_cords = self._shift_ranges.pop(0)
+                setattr(self.rect, self._shift_type, shift_cords)
 
         if self.lifetime < 0:
             return
 
-        self.lifetime -= speed
+        self.lifetime -= self.speed
         if self.lifetime <= 0:
             self.is_play = False
 
+    def im_sub_load_process(self):
+        if self._apply_black:
+            self.image = fill_surface(self.image, WISH_BLACK_COLOR)
+
+        if self._apply_trans:
+            self.image.set_alpha(self._trans_perc if self._trans_perc >= 0 else 0)
+
+        if self._apply_res:
+            self.image_copy = self.image.copy()
+            self.rect_copy = self.rect.copy()
+
+            res_perc_list = list(self._var_range(self._res_perc, 100, -self._res_coef, self._res_speed))
+
+            for res_perc in res_perc_list:
+                size = self.image_copy.get_size()
+                size_coeff = res_perc / 100
+                sizex, sizey = (int(size[0] * size_coeff), int(size[1] * size_coeff))
+
+                resized_image = pygame.transform.scale(self.image_copy, (sizex, sizey))
+                self._resized_buffer.append(resized_image)
+
+            if len(self._resized_buffer) > 0:
+                self.image = self._resized_buffer.pop(0)
+
     def im_sub_load(self, path):
         self.image = pygame.image.load(path)
+        self.image.convert_alpha()
+
         self.rect = self.image.get_rect()
+        self.im_sub_load_process()
 
 
 class AnimatedVideo(pygame.sprite.Sprite):
@@ -757,7 +956,7 @@ class AnimatedVideo(pygame.sprite.Sprite):
     def play(self):
         self.is_play = True
 
-    def update(self, speed: float):
+    def update(self):
         if not self.is_play:
             return
 
@@ -782,8 +981,10 @@ class AnimatedVideo(pygame.sprite.Sprite):
 class BackAnimated(AnimatedVideo):
     def __init__(self, num: str, star: str):
         super().__init__()
+
         self.star = star
         self.num = num
+
         self._load()
 
     def _load(self):
@@ -794,8 +995,10 @@ class BackAnimated(AnimatedVideo):
 class FallAnimated(AnimatedVideo):
     def __init__(self, star: str, multi: False):
         super().__init__()
+
         self.multi = multi
         self.star = star
+
         self._load()
 
     def _load(self):
@@ -812,52 +1015,63 @@ class FallAnimated(AnimatedVideo):
 class Background(StaticImage):
     def __init__(self, lifetime):
         super().__init__()
+
         animations_cfg = CONFIG['animations']
         self.lifetime = 60 + lifetime * animations_cfg['fps']
+
         self.re_lifetime = self.lifetime
+
         self._load()
+        self.rect.topleft = (0, 0)
 
     def _load(self):
-        path = os.path.join('background', 'static', 'Wish_template.jpg')
+        path = os.path.join('background', 'static', 'background.jpg')
         self.im_sub_load(path)
-        self.rect.topleft = (0, 0)
 
 
 class UserBackground(StaticImage):
     def __init__(self, fname):
         super().__init__()
+
         self.fname = fname
         self.lifetime = -1
+
         self._load()
+        self.rect.topleft = (0, 0)
 
     def _load(self):
         path = os.path.join('background', self.fname)
         self.im_sub_load(path)
-        self.rect.topleft = (0, 0)
 
 
 class UserBackgroundAnim(AnimatedVideo):
     def __init__(self, fname):
         super().__init__()
+
         self.cycled = True
         self.fname = fname
         self.lifetime = -1
+
         self._load()
+        self.rect.topleft = (0, 0)
 
     def _load(self):
         path = os.path.join('background', self.fname)
         self.im_sub_load(path)
-        self.rect.topleft = (0, 0)
 
 
 class UserText(StaticImage):
     def __init__(self, text, cords, color=None):
         super().__init__()
+
         self.text = text
+
         animations_cfg = CONFIG['animations']
         self.lifetime = animations_cfg['start_delay'] * animations_cfg['fps']
+
         self.center = cords
         self.color = color
+
         self._render()
         self._load()
 
@@ -883,13 +1097,19 @@ class UserText(StaticImage):
 
 
 class WishSplash(StaticImage):
-    def __init__(self, wtype, wname, cords):
-        super().__init__()
+    def __init__(self, wtype, wname, cords, **kwargs):
+        super().__init__(**kwargs)
         self.lifetime = -1
+
         self.wtype = wtype
         self.wname = wname
+
         self._load()
-        self.rect.center = cords
+
+        if kwargs.get('apply_res', False):
+            self.rect_copy.center = cords
+        else:
+            self.rect.center = cords
 
     def _load(self):
         path = os.path.join('images', self.wtype, '%s.png' % self.wname)
@@ -897,24 +1117,29 @@ class WishSplash(StaticImage):
 
 
 class WishBack(StaticImage):
-    def __init__(self, wtype):
-        super().__init__()
+    def __init__(self, wtype, coords, **kwargs):
+        super().__init__(**kwargs)
+
         self.lifetime = -1
         self.wtype = wtype
+
         self._load()
+
+        self.rect.center = coords
 
     def _load(self):
         path = os.path.join('background', 'weapon', '%s.png' % self.wtype)
         self.im_sub_load(path)
-        self.rect.center = (640, 360)
 
 
 class WishMeta(StaticImage):
-    def __init__(self, wtype, wname):
-        super().__init__()
+    def __init__(self, wtype, wname, **kwargs):
+        super().__init__(**kwargs)
+
         self.lifetime = -1
         self.wtype = wtype
         self.wname = wname
+
         self._load()
 
     def _load(self):
@@ -926,13 +1151,15 @@ class WishMeta(StaticImage):
 
 
 class WishText(StaticImage):
-    def __init__(self, text):
-        super().__init__()
-        self.text = text
+    def __init__(self, text, **kwargs):
+        super().__init__(**kwargs)
 
         font_config = CONFIG['animations']['font']
         self.font = pygame.font.Font(os.path.join('fonts', font_config['path']), font_config['wish_name_size'])
+
+        self.text = text
         self.lifetime = -1
+
         self._load()
 
     def _load(self):
@@ -945,19 +1172,21 @@ class WishText(StaticImage):
 class FrontText(StaticImage):
     def __init__(self, text):
         super().__init__()
-        self.text = text
 
         font_config = CONFIG['animations']['font']
         self.font = pygame.font.Font(os.path.join('fonts', font_config['path']), font_config['user_uid_size'])
+
+        self.text = text
         self.lifetime = -1
+
         self._load()
+        self.rect.bottomright = (1270, 710)
 
     def _load(self):
         textobj = self.font.render(self.text, True, USERTEXT_COLOR).convert_alpha()
         self.image = textobj
         self.out_image = fill_surface(textobj.copy(), USERTEXT_OUTLINE)
         self.rect = self.image.get_rect()
-        self.rect.bottomright = (1270, 710)
 
 
 class TwitchBot(commands.Bot):
@@ -1225,9 +1454,9 @@ class TwitchBot(commands.Bot):
 
         try:
             answer_text = STATUS_MESSAGE.format(user_mention=user.mention,
-                                               proj_name=__title__,
-                                               proj_ver=__version__,
-                                               proj_url=__site__)
+                                                proj_name=__title__,
+                                                proj_ver=__version__,
+                                                proj_url=__site__)
         except KeyError as format_error:
             print('[TWITCH] Ошибка при форматировании ответа:', format_error)
             return
@@ -1303,29 +1532,66 @@ class TwitchBot(commands.Bot):
 
 
 def merge_wish_meta(cords: Tuple[int, int],
+                    wish_kwargs: Dict,
                     wish_type: StaticImage,
-                    wish_name: List[StaticImage],
+                    wish_name: List[str],
                     wish_stars: int
-                    ) -> Tuple[StaticImage, List[StaticImage], List[StaticImage]]:
+                    ) -> StaticImage:
     """
     Function to create wish information (type, name and number of stars), combines 3 objects at specified coordinates.
     """
-    wish_type.rect.center = cords
+    wish_objs = []
+    max_width, max_height = 0, 0
+
+    wish_type.rect.topleft = (0, 0)
+    wish_objs.append(wish_type)
 
     wish_name_offset = 0
+    wish_name_last = None
     for wish_name_n in wish_name:
-        wish_name_n.rect.midleft = (
-            (wish_type.rect.center[0] - 20) + wish_type.image.get_width() / 2, cords[1] + wish_name_offset)
-        wish_name_offset += wish_name_n.image.get_height()
-    wish_name_last = wish_name[-1]
+        wish_name_obj = WishText(wish_name_n)
 
-    wish_stars_list = list()
+        x_midleft = (wish_type.rect.center[0] - 20) + wish_type.image.get_width() / 2
+        y_midleft = wish_type.rect.center[1] + wish_name_offset
+
+        wish_name_obj.rect.midleft = (x_midleft, y_midleft)
+        wish_name_offset += wish_name_obj.image.get_height()
+
+        wish_objs.append(wish_name_obj)
+        wish_name_last = wish_name_obj
+
+        name_width = wish_name_last.rect.midright[0] + 3
+        if name_width > max_width:
+            max_width = name_width
+
+    last_star = None
     for i in range(wish_stars):
         star = WishMeta('star', None)
         star.rect.topleft = (wish_name_last.rect.bottomleft[0] + 30 * i, wish_name_last.rect.bottomleft[1] + 5)
-        wish_stars_list.append(star)
+        wish_objs.append(star)
+        last_star = star
 
-    return wish_type, wish_name, wish_stars_list
+    star_width = last_star.rect.bottomright[1]
+    if star_width > max_height:
+        max_height = star_width
+
+    result_sur = StaticImage(**wish_kwargs)
+
+    result_sur.image = pygame.Surface((max_width, max_height), pygame.SRCALPHA)
+    result_sur.image.convert_alpha()
+
+    for wish_obj in wish_objs:
+        if isinstance(wish_obj, WishText):
+            render_text_outline(result_sur.image, wish_obj, 1)
+        result_sur.image.blit(wish_obj.image, wish_obj.rect)
+
+    result_sur.rect = result_sur.image.get_rect()
+    result_sur.rect.midleft = cords
+
+    result_sur.im_sub_load_process()
+    result_sur.lifetime = -1
+
+    return result_sur
 
 
 def fill_surface(surf: pygame.Surface, color: pygame.Color) -> pygame.Surface:
@@ -1336,11 +1602,6 @@ def fill_surface(surf: pygame.Surface, color: pygame.Color) -> pygame.Surface:
             a = surf.get_at((x, y))[3]
             surf.set_at((x, y), pygame.Color(r, g, b, a))
     return surf
-
-
-def fill_object(obj: StaticImage, color: pygame.Color) -> StaticImage:
-    obj.image = fill_surface(obj.image, color)
-    return obj
 
 
 def render_text_outline(display: pygame.Surface, anim: Union[WishText, UserText, FrontText], tx: int) -> None:
@@ -1369,9 +1630,9 @@ def draw_group(display: pygame.Surface, animation_group: List[BaseDrawClass]) ->
         display.blit(animation.image, animation.rect)
 
 
-def update_group(animation_group: List[BaseDrawClass], speed: float) -> None:
+def update_group(animation_group: List[BaseDrawClass]) -> None:
     for animation in animation_group:
-        animation.update(speed)
+        animation.update()
 
 
 def update_auth() -> None:
@@ -1661,7 +1922,7 @@ def main():
 
         main_display.fill(animation_cfg['chroma_color'])
         draw_group(main_display, animation_group)
-        update_group(animation_group, 1.0)
+        update_group(animation_group)
 
         pygame.display.update()
 
