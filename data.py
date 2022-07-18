@@ -328,6 +328,8 @@ DATABASE = {
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'sw', 'wish_obj_name': 'vspishka', 'wish_obj_text': 'Вспышка во тьме'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'sw', 'wish_obj_name': 'amenoma', 'wish_obj_text': 'Амэнома Кагэути'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'sw', 'wish_obj_name': 'issinbladesw', 'wish_obj_text': 'Легендарный\nклинок Иссин'},
+                        {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'sw', 'wish_obj_name': 'issinbladerawsw', 'wish_obj_text': 'Легендарный\nклинок Иссин'},
+                        {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'sw', 'wish_obj_name': 'issinbladenowsw', 'wish_obj_text': 'Кагоцурубэ\nИссин'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'gsw', 'wish_obj_name': 'chernogorgws', 'wish_obj_text': 'Черногорская\nбритва'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'gsw', 'wish_obj_name': 'ceremonialgsw', 'wish_obj_text': 'Церемониальный\nдвуручный меч'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'gsw', 'wish_obj_name': 'parhaich', 'wish_obj_text': 'Прототип:\nАрхаичный'},
