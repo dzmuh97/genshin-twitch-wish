@@ -330,6 +330,7 @@ DATABASE = {
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'sw', 'wish_obj_name': 'issinbladesw', 'wish_obj_text': 'Легендарный\nклинок Иссин'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'sw', 'wish_obj_name': 'issinbladerawsw', 'wish_obj_text': 'Легендарный\nклинок Иссин'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'sw', 'wish_obj_name': 'issinbladenowsw', 'wish_obj_text': 'Кагоцурубэ\nИссин'},
+                        {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'sw', 'wish_obj_name': 'woodsw', 'wish_obj_text': 'Деревянный\nклинок'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'gsw', 'wish_obj_name': 'chernogorgws', 'wish_obj_text': 'Черногорская\nбритва'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'gsw', 'wish_obj_name': 'ceremonialgsw', 'wish_obj_text': 'Церемониальный\nдвуручный меч'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'gsw', 'wish_obj_name': 'parhaich', 'wish_obj_text': 'Прототип:\nАрхаичный'},
@@ -344,6 +345,7 @@ DATABASE = {
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'gsw', 'wish_obj_name': 'blagorodvladyka', 'wish_obj_text': 'Благодатный\nвладыка вод'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'gsw', 'wish_obj_name': 'belayaten', 'wish_obj_text': 'Белая тень'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'gsw', 'wish_obj_name': 'akuomaku', 'wish_obj_text': 'Акуомару'},
+                        {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'gsw', 'wish_obj_name': 'woodgsw', 'wish_obj_text': 'Регалия леса'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'pol', 'wish_obj_name': 'chernogorpika', 'wish_obj_text': 'Черногорская\nпика'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'pol', 'wish_obj_name': 'smertboy', 'wish_obj_text': 'Смертельный бой'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'pol', 'wish_obj_name': 'rezhushiy', 'wish_obj_text': 'Режущий волны\nплавник'},
@@ -356,6 +358,7 @@ DATABASE = {
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'pol', 'wish_obj_name': 'kamennoekop', 'wish_obj_text': 'Каменное копьё'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'pol', 'wish_obj_name': 'grozadrakonov', 'wish_obj_text': 'Гроза драконов'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'pol', 'wish_obj_name': 'ulov', 'wish_obj_text': 'Улов'},
+                        {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'pol', 'wish_obj_name': 'woodpol', 'wish_obj_text': 'Пронзающий\nлуну'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'bow', 'wish_obj_name': 'chernogorbow', 'wish_obj_text': 'Черногорский\nбоевой лук'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'bow', 'wish_obj_name': 'ceremonualbow', 'wish_obj_text': 'Церемониальный\nлук'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'bow', 'wish_obj_name': 'hishnik', 'wish_obj_text': 'Хищник'},
@@ -372,6 +375,8 @@ DATABASE = {
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'bow', 'wish_obj_name': 'favoniybow', 'wish_obj_text': 'Боевой лук\nФавония'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'bow', 'wish_obj_name': 'besstrunniy', 'wish_obj_text': 'Бесструнный'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'bow', 'wish_obj_name': 'sumekri', 'wish_obj_text': 'Гаснущие\nсумерки'},
+                        {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'bow', 'wish_obj_name': 'woodbow', 'wish_obj_text': 'Приближённый\nкороля'},
+                        {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'bow', 'wish_obj_name': 'dolphbow', 'wish_obj_text': 'Иссушитель'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'chernogorcat', 'wish_obj_text': 'Черногорский\nагат'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'ceremonmemuary', 'wish_obj_text': 'Церемониальные\nмемуары'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'solzhemchuzh', 'wish_obj_text': 'Солнечная\nжемчужина'},
@@ -385,7 +390,8 @@ DATABASE = {
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'hakusin', 'wish_obj_text': 'Кольцо Хакусин'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'favoniykodex', 'wish_obj_text': 'Кодекс Фавония'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'dodoko', 'wish_obj_text': 'Истории Додоко'},
-                        {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'vinoipesni', 'wish_obj_text': 'Вино и песни'}
+                        {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'vinoipesni', 'wish_obj_text': 'Вино и песни'},
+                        {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'woodcat', 'wish_obj_text': 'Плод восполнения'}
                 ],
                 'char': [
                         {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'hydro', 'wish_obj_name': 'barbruh_skin', 'wish_obj_text': 'Летний блеск'},
@@ -417,7 +423,9 @@ DATABASE = {
                         {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'pyro', 'wish_obj_name': 'yanfei', 'wish_obj_text': 'Янь Фэй'},
                         {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'geo', 'wish_obj_name': 'yunjin', 'wish_obj_text': 'Юнь Цзинь'},
                         {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'electro', 'wish_obj_name': 'shinobu', 'wish_obj_text': 'Куки Синобу'},
-                        {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'anemo', 'wish_obj_name': 'heizo', 'wish_obj_text': 'Сиканоин Хэйдзо'}
+                        {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'anemo', 'wish_obj_name': 'heizo', 'wish_obj_text': 'Сиканоин Хэйдзо'},
+                        {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'electro', 'wish_obj_name': 'dori', 'wish_obj_text': 'Дори'},
+                        {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'dendro', 'wish_obj_name': 'collei', 'wish_obj_text': 'Коллеи'}
                 ]
         },
         '5': {
@@ -446,6 +454,7 @@ DATABASE = {
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'bow', 'wish_obj_name': 'amos', 'wish_obj_text': 'Лук Амоса'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'bow', 'wish_obj_name': 'grompulse', 'wish_obj_text': 'Громовой пульс'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'bow', 'wish_obj_name': 'aquasimul', 'wish_obj_text': 'Аква симулякрум'},
+                        {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'bow', 'wish_obj_name': 'huntertrope', 'wish_obj_text': 'Охотничья тропа'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'pamatopily', 'wish_obj_text': 'Память о пыли'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'nebesatlas', 'wish_obj_text': 'Небесный атлас'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'molitvavetram', 'wish_obj_text': 'Молитва святым\nветрам'},
@@ -478,7 +487,8 @@ DATABASE = {
                         {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'pyro', 'wish_obj_name': 'yoimiya', 'wish_obj_text': 'Ёимия'},
                         {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'geo', 'wish_obj_name': 'zhongli', 'wish_obj_text': 'Чжун Ли'},
                         {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'cryo', 'wish_obj_name': 'aloy', 'wish_obj_text': 'Элой'},
-                        {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'hydro', 'wish_obj_name': 'elan', 'wish_obj_text': 'Е Лань'}
+                        {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'hydro', 'wish_obj_name': 'elan', 'wish_obj_text': 'Е Лань'},
+                        {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'dendro', 'wish_obj_name': 'tighnari', 'wish_obj_text': 'Тигнари'}
                 ]
         }
 }
