@@ -1,21 +1,18 @@
 CONFIG_SCHEMA = {
         "type": "object",
         "required": ["window_name",
+                     "banner",
                      "chat_bot",
                      "event_bot",
                      "animations",
                      "sound",
                      "history_file",
-                     "wish_fo_garant",
-                     "wish_fo_chance",
-                     "wish_fi_garant",
-                     "wish_fi_chance",
-                     "wish_fi_soft_a",
                      "test_mode"
                      ],
         "additionalProperties": False,
         "properties": {
                 "window_name": {"type": "string"},
+                "banner": {"type": "string"},
                 "chat_bot": {
                         "type": "object",
                         "required": ["enabled",
@@ -212,11 +209,6 @@ CONFIG_SCHEMA = {
                                 "5": {"type": "boolean"}
                         }
                 },
-                "wish_fo_garant": {"type": "number"},
-                "wish_fo_chance": {"type": "number"},
-                "wish_fi_garant": {"type": "number"},
-                "wish_fi_chance": {"type": "number"},
-                "wish_fi_soft_a": {"type": "number"},
                 "send_dev_stats": {"type": "boolean"},
                 "test_mode": {"type": "boolean"}
         }
@@ -276,6 +268,72 @@ AUTH_SCHEMA = {
                                 "channel_token": {"type": "string"},
                                 "channel_token_ref": {"type": "string"},
                                 "work_channel_id": {"type": "integer"},
+                        }
+                }
+        }
+}
+
+BANNER_SCHEMA = {
+        "type": "object",
+        "required": ["banner_name",
+                     "wish_fo_garant",
+                     "wish_fo_chance",
+                     "wish_fi_garant",
+                     "wish_fi_chance",
+                     "wish_fi_soft_a",
+                     "wishes",
+                     ],
+        "additionalProperties": False,
+        "properties": {
+                "banner_name": {"type": "string"},
+                "wish_fo_garant": {"type": "number"},
+                "wish_fo_chance": {"type": "number"},
+                "wish_fi_garant": {"type": "number"},
+                "wish_fi_chance": {"type": "number"},
+                "wish_fi_soft_a": {"type": "number"},
+                "wishes": {
+                        "type": "object",
+                        "required": [
+                                "5",
+                                "4",
+                                "3"
+                        ],
+                        "additionalProperties": False,
+                        "properties": {
+                                "5": {
+                                        "type": "object",
+                                        "required": [
+                                                "char",
+                                                "weapon"
+                                        ],
+                                        "additionalProperties": False,
+                                        "properties": {
+                                                "char": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+                                                "weapon": {"type": "array", "items": {"type": "string"}, "minItems": 1}
+                                        }
+                                },
+                                "4": {
+                                        "type": "object",
+                                        "required": [
+                                                "char",
+                                                "weapon"
+                                        ],
+                                        "additionalProperties": False,
+                                        "properties": {
+                                                "char": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+                                                "weapon": {"type": "array", "items": {"type": "string"}, "minItems": 1}
+                                        }
+                                },
+                                "3": {
+                                        "type": "object",
+                                        "required": [
+                                                "weapon"
+                                        ],
+                                        "additionalProperties": False,
+                                        "properties": {
+                                                "weapon": {"type": "array", "items": {"type": "string"}, "minItems": 1}
+                                        }
+                                }
                         }
                 }
         }

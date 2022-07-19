@@ -1,5 +1,6 @@
 {
   "window_name": "Genshin Twitch Wish Simulator",
+  "banner": "all_in_one",
   "chat_bot": {
     "enabled": true,
     "wish_command": "wish",
@@ -79,11 +80,6 @@
     "4": true,
     "5": true
   },
-  "wish_fo_garant": 10,
-  "wish_fo_chance": 13.00,
-  "wish_fi_garant": 90,
-  "wish_fi_chance": 1.60,
-  "wish_fi_soft_a": 73,
   "send_dev_stats": true,
   "test_mode": true
 }

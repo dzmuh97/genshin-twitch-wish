@@ -35,8 +35,8 @@ import threading
 import json
 import jsonschema
 
-from data import DATABASE
-from data import CONFIG_SCHEMA, AUTH_SCHEMA, MESSAGES_SCHEMA
+from data import DATABASE as _DATABASE
+from data import CONFIG_SCHEMA, AUTH_SCHEMA, MESSAGES_SCHEMA, BANNER_SCHEMA
 from data import (
     HTML_HISTORY_TEMPLATE_HEADER,
     HTML_HISTORY_TEMPLATE_HEAD_TABLE_ROW_STATS,
@@ -107,6 +107,55 @@ def _config_check(json_file: str, schema: Dict) -> Dict:
     return config
 
 
+def _load_database(config):
+    base_name = config['banner_name']
+
+    stats = {
+        '5': {
+            'char': 0,
+            'weapon': 0
+        },
+        '4': {
+            'char': 0,
+            'weapon': 0
+        },
+        '3': {
+            'weapon': 0
+        }
+    }
+    data_template = {'3': {'weapon': []}, '4': {'char': [], 'weapon': []}, '5': {'char': [], 'weapon': []}}
+
+    print('[MAIN] Загружаю баннер "%s" ..' % base_name, end=' ')
+
+    wishes = config['wishes']
+    for star in wishes:
+
+        wtypes = wishes[star]
+        for wtype in wtypes:
+
+            items = wishes[star][wtype]
+            for item in items:
+
+                star_data = _DATABASE.get(star)
+                wish_type = star_data.get(wtype)
+                for item_data in wish_type:
+
+                    name_data = item_data['wish_obj_text'].replace('\n', ' ')
+                    if item == name_data:
+                        data_template[star][wtype].append(item_data)
+                        stats[star][wtype] += 1
+
+    stat_text = '5*: персонаж: %s, оружие %s; 4*: персонаж: %s, оружие %s; 3*: оружие %s;' % (
+        stats['5']['char'],
+        stats['5']['weapon'],
+        stats['4']['char'],
+        stats['4']['weapon'],
+        stats['3']['weapon']
+    )
+    print(stat_text)
+    return data_template
+
+
 logging.write = _err_logger
 
 _messages = _config_check('messages.json', MESSAGES_SCHEMA)
@@ -126,6 +175,9 @@ if not _test_mode:
     _auth_config = _config_check('auth.json', AUTH_SCHEMA)
 else:
     _auth_config = {'chat_bot': {}, 'event_bot': {}}
+
+BANNER_CONFIG = _config_check(os.path.join('banners', CONFIG['banner']) + '.json', BANNER_SCHEMA)
+DATABASE = _load_database(BANNER_CONFIG)
 
 AUTH_CHAT_BOT = _auth_config['chat_bot']
 AUTH_EVENT_BOT = _auth_config['event_bot']
@@ -199,11 +251,11 @@ class Gacha:
     def __roll(self) -> Tuple[str, str]:
         self.wish_count += 1
 
-        wish_garant_starts = CONFIG['wish_fi_soft_a']
-        wish_5_garant = CONFIG['wish_fi_garant']
-        wish_5_chance = CONFIG['wish_fi_chance']
-        wish_4_garant = CONFIG['wish_fo_garant']
-        wish_4_chance = CONFIG['wish_fo_chance']
+        wish_garant_starts = BANNER_CONFIG['wish_fi_soft_a']
+        wish_5_garant = BANNER_CONFIG['wish_fi_garant']
+        wish_5_chance = BANNER_CONFIG['wish_fi_chance']
+        wish_4_garant = BANNER_CONFIG['wish_fo_garant']
+        wish_4_chance = BANNER_CONFIG['wish_fo_chance']
 
         if (self.wish_5_garant > wish_garant_starts) and (self.wish_5_garant < wish_5_garant):
             _soft_i = (self.wish_5_garant - wish_garant_starts) / (wish_5_garant - wish_garant_starts)
@@ -437,9 +489,9 @@ class Coordinator:
 
         wish_black_kwargs = {
             'apply_res': True,
-            'res_perc': 800,
-            'res_coef': 60,
-            'res_speed': 1.7,
+            'res_perc': 1000,
+            'res_coef': 100,
+            'res_speed': 3,
             'apply_black': True
         }
 
@@ -926,7 +978,7 @@ class StaticImage(pygame.sprite.Sprite):
                 size_coeff = res_perc / 100
                 sizex, sizey = (int(size[0] * size_coeff), int(size[1] * size_coeff))
 
-                resized_image = pygame.transform.scale(self.image_copy, (sizex, sizey))
+                resized_image = pygame.transform.smoothscale(self.image_copy, (sizex, sizey))
                 self._resized_buffer.append(resized_image)
 
             if len(self._resized_buffer) > 0:
