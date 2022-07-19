@@ -273,6 +273,20 @@ AUTH_SCHEMA = {
         }
 }
 
+_BANNER_54_TEMPLATE = {
+        "type": "object",
+        "required": [
+                "char",
+                "weapon",
+                "garant"
+        ],
+        "additionalProperties": False,
+        "properties": {
+                "char": {"type": "array", "items": {"type": "string"}},
+                "weapon": {"type": "array", "items": {"type": "string"}},
+                "garant": {"type": "array", "items": {"type": "string"}}
+        }
+}
 BANNER_SCHEMA = {
         "type": "object",
         "required": ["banner_name",
@@ -300,30 +314,8 @@ BANNER_SCHEMA = {
                         ],
                         "additionalProperties": False,
                         "properties": {
-                                "5": {
-                                        "type": "object",
-                                        "required": [
-                                                "char",
-                                                "weapon"
-                                        ],
-                                        "additionalProperties": False,
-                                        "properties": {
-                                                "char": {"type": "array", "items": {"type": "string"}, "minItems": 1},
-                                                "weapon": {"type": "array", "items": {"type": "string"}, "minItems": 1}
-                                        }
-                                },
-                                "4": {
-                                        "type": "object",
-                                        "required": [
-                                                "char",
-                                                "weapon"
-                                        ],
-                                        "additionalProperties": False,
-                                        "properties": {
-                                                "char": {"type": "array", "items": {"type": "string"}, "minItems": 1},
-                                                "weapon": {"type": "array", "items": {"type": "string"}, "minItems": 1}
-                                        }
-                                },
+                                "5": _BANNER_54_TEMPLATE,
+                                "4": _BANNER_54_TEMPLATE,
                                 "3": {
                                         "type": "object",
                                         "required": [
@@ -331,7 +323,7 @@ BANNER_SCHEMA = {
                                         ],
                                         "additionalProperties": False,
                                         "properties": {
-                                                "weapon": {"type": "array", "items": {"type": "string"}, "minItems": 1}
+                                                "weapon": {"type": "array", "items": {"type": "string"}}
                                         }
                                 }
                         }

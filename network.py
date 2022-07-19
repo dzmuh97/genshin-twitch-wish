@@ -116,7 +116,11 @@ def interactive_auth() -> None:
 
         browser_url = TWITCH_CODE_URL + '?' + parse.urlencode(web_data)
 
-        bot_type_text = 'чат-бот' if bot_type == 'chat' else 'аккаунт стримера для баллов канала'
+        if auth_type == 'solo':
+            bot_type_text = 'чат-бот и аккаунт стримера для баллов канала'
+        else:
+            bot_type_text = 'чат-бот' if bot_type == 'chat' else 'аккаунт стримера для баллов канала'
+
         warn_text = ('\nСейчас будет открыта новая вкладка в вашем стандартном браузере\n'
                      'В ней будет запрос на доступ к аккаунту бота\n\n'
                      'Обязательно проверьте следующе:\n'

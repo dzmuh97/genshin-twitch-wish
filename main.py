@@ -65,7 +65,7 @@ import pygame
 
 from typing import Union, Tuple, List, Dict, Optional
 
-DbUserTuple = Tuple[str, int, int, int]
+DbUserTuple = Tuple[str, int, int, int, bool, bool]
 BaseDrawClass = Union['StaticImage', 'AnimatedVideo']
 DrawDataChunk = Union[BaseDrawClass, List[BaseDrawClass]]
 DrawData = Dict[str, DrawDataChunk]
@@ -107,53 +107,89 @@ def _config_check(json_file: str, schema: Dict) -> Dict:
     return config
 
 
-def _load_database(config):
+def _load_database(config: Dict) -> Dict:
     base_name = config['banner_name']
 
+    total = 0
     stats = {
         '5': {
             'char': 0,
-            'weapon': 0
+            'weapon': 0,
+            'garant': 0
         },
         '4': {
             'char': 0,
-            'weapon': 0
+            'weapon': 0,
+            'garant': 0
         },
         '3': {
             'weapon': 0
         }
     }
-    data_template = {'3': {'weapon': []}, '4': {'char': [], 'weapon': []}, '5': {'char': [], 'weapon': []}}
+    data_template = {
+        '3': {
+            'weapon': []
+        },
+        '4': {
+            'char': [], 'weapon': [], 'garant': []
+        },
+        '5': {
+            'char': [], 'weapon': [], 'garant': []
+        }
+    }
 
+    items_linear = [item for star in _DATABASE for wtype in _DATABASE[star] for item in _DATABASE[star][wtype]]
     print('[MAIN] Загружаю баннер "%s" ..' % base_name, end=' ')
 
     wishes = config['wishes']
     for star in wishes:
-
-        wtypes = wishes[star]
-        for wtype in wtypes:
-
-            items = wishes[star][wtype]
+        for wtype in ['char', 'weapon', 'garant']:
+            items = wishes[star].get(wtype, [])
             for item in items:
 
-                star_data = _DATABASE.get(star)
-                wish_type = star_data.get(wtype)
-                for item_data in wish_type:
+                filtered_data = filter(lambda x: item == _wish_name_normal(x['wish_obj_text']), items_linear)
+                try:
+                    item_data = next(filtered_data)
+                except StopIteration:
+                    print('ошибка загрузки баннера: %s*:%s не найден' % (star, item))
+                    sys.exit()
 
-                    name_data = item_data['wish_obj_text'].replace('\n', ' ')
-                    if item == name_data:
-                        data_template[star][wtype].append(item_data)
-                        stats[star][wtype] += 1
+                data_template[star][wtype].append(item_data)
+                stats[star][wtype] += 1
+                total += 1
 
-    stat_text = '5*: персонаж: %s, оружие %s; 4*: персонаж: %s, оружие %s; 3*: оружие %s;' % (
+    if total == 0:
+        print('ошибка загрузки баннера: ни одного предмета не загружено')
+        sys.exit()
+
+    stat_text = '(%d) | 5*: %d/%d[%d]; 4*: %d/%d[%d]; 3*: 0/%d' % (
+        total,
         stats['5']['char'],
         stats['5']['weapon'],
+        stats['5']['garant'],
         stats['4']['char'],
         stats['4']['weapon'],
+        stats['4']['garant'],
         stats['3']['weapon']
     )
     print(stat_text)
     return data_template
+
+
+def _wish_name_normal(name: str) -> str:
+    return name.replace('\n', ' ')
+
+
+def _wish_garant_type(gtype: str) -> str:
+    star_types = {
+        'srnd': 'мягкий гарант',
+        'garant': 'рандом гарант',
+        'event_garant': 'гарант',
+        'rnd': 'рандом',
+        '50/50': '50/50'
+    }
+
+    return star_types[gtype]
 
 
 logging.write = _err_logger
@@ -219,6 +255,8 @@ class WishData:
     wish_count: int
     wish_4_garant: int
     wish_5_garant: int
+    win_4_garant: int
+    win_5_garant: int
     wish_star: str
     wish_star_type: str
     wish_type: str
@@ -237,18 +275,36 @@ class Wish:
 
 
 class Gacha:
-    def __init__(self, wish_count: int = 0, wish_4_garant: int = 1, wish_5_garant: int = 1):
+    def __init__(self,
+                 wish_count: int = 0,
+                 wish_4_garant: int = 1,
+                 wish_5_garant: int = 1,
+
+                 win_5: bool = False,
+                 win_4: bool = False
+                 ):
         self.wish_5_garant = wish_5_garant
         self.wish_4_garant = wish_4_garant
         self.wish_count = wish_count
         self.last_wish_time = 0
-        logging.debug('[GACHA] Создана гача с параметрами w%d w4%d w4%d', wish_count, wish_4_garant, wish_5_garant)
+
+        self.win_garant_table = {'5': win_5, '4': win_4}
+        self._rollback = [0, 0, 0]
+
+        logging.debug('[GACHA] Создана гача с параметрами w:%d g4:%d g5:%d w4:%d w5:%d', wish_count, wish_4_garant, wish_5_garant, win_4, win_5)
 
     @staticmethod
-    def _random_tap(x: float) -> bool:
-        return random.choice(range(10000)) <= int(x * 100)
+    def _random_tap(chance_percent: float) -> bool:
+        return random.choice(range(10000)) <= int(chance_percent * 100)
+
+    def __flip_garant(self, star: str, val: bool) -> None:
+        self.win_garant_table[star] = val
+
+    def __rollback(self) -> None:
+        self.wish_count, self.wish_4_garant, self.wish_5_garant = self._rollback
 
     def __roll(self) -> Tuple[str, str]:
+        self._rollback = [self.wish_count, self.wish_4_garant, self.wish_5_garant]
         self.wish_count += 1
 
         wish_garant_starts = BANNER_CONFIG['wish_fi_soft_a']
@@ -290,18 +346,39 @@ class Gacha:
         self.last_wish_time = int(time.time())
 
         rolls = []
-        for _ in range(count):
+        roll_i = 0
+        while roll_i < count:
             star, star_type = self.__roll()
-            logging.debug('[GACHA] Результат крутки: %s %s', star, star_type)
             if star == '3':
                 wtype = 'weapon'
             else:
                 wtype = random.choice(['weapon', 'char'])
 
+            if len(DATABASE[star][wtype]) == 0:
+                self.__rollback()
+                continue
+
             data = random.choice(DATABASE[star][wtype])
-            logging.debug('[GACHA] Данные крутки: %s', data)
-            gacha_obj = WishData(self.wish_count, self.wish_4_garant, self.wish_5_garant, star, star_type, **data)
+            garant_datas = DATABASE[star].get('garant', [])
+            if (len(garant_datas) > 0) and (star in ['4', '5']):
+                _win = self.win_garant_table[star]
+                _tap = self._random_tap(50)
+                if _win or _tap:
+                    data = random.choice(garant_datas)
+                    self.__flip_garant(star, False)
+                    if _win:
+                        star_type = 'event_garant'
+                    else:
+                        star_type = '50/50'
+                else:
+                    self.__flip_garant(star, True)
+
+            logging.debug('[GACHA] Результат крутки: %s %s %s', star, star_type, data)
+
+            win_4, win_5 = self.win_garant_table['4'], self.win_garant_table['5']
+            gacha_obj = WishData(self.wish_count, self.wish_4_garant, self.wish_5_garant, win_4, win_5, star, star_type, **data)
             rolls.append(gacha_obj)
+            roll_i += 1
 
         return rolls
 
@@ -309,6 +386,7 @@ class Gacha:
 class UserDB:
     database = 'database.sqlite'
     database_old = 'database.sql'
+    old_to_new = ['win_4', 'win_5']
 
     def __init__(self):
         self.conn = sqlite3.connect(self.database)
@@ -316,6 +394,10 @@ class UserDB:
         if not self._check_table():
             logging.debug('[DB] Таблицы пользователей не существует, создаем..')
             self._create_table()
+        for new_column in self.old_to_new:
+            if not self._check_column(new_column):
+                logging.debug('[DB] Версия базы данных устарела, обновляем таблицу: %s', new_column)
+                self._create_column(new_column)
         self._restore_old()
 
     def _restore_old(self) -> None:
@@ -332,6 +414,7 @@ class UserDB:
         print('[DB] В старой базе найдено пользователей:', len(data))
         for user, gacha in data.items():
             user = user.lower()
+            setattr(gacha, 'win_garant_table', {'5': 0, '4': 0})
 
             check = self.get(user)
             if check:
@@ -344,6 +427,24 @@ class UserDB:
         print('[DB] Импортировано пользователей:', i_users)
         os.remove(self.database_old)
         print('[DB] Старая база данных удалена!', )
+
+    def _create_column(self, column: str) -> None:
+        cur = self.conn.cursor()
+        payload = "ALTER TABLE users ADD COLUMN %s INTEGER DEFAULT 0;" % column
+        cur.execute(payload)
+        self.conn.commit()
+        cur.close()
+
+    def _check_column(self, column: str) -> bool:
+        cur = self.conn.cursor()
+        cur.execute("SELECT * FROM pragma_table_info('users') WHERE name=?;", (column,))
+        ret = cur.fetchone()
+        cur.close()
+
+        if ret is None:
+            return False
+
+        return True
 
     def _check_table(self) -> bool:
         cur = self.conn.cursor()
@@ -358,8 +459,7 @@ class UserDB:
 
     def _create_table(self) -> None:
         cur = self.conn.cursor()
-        payload = 'CREATE TABLE users (username TEXT PRIMARY KEY, wish_count INTEGER, wish_4_garant INTEGER, ' \
-                  'wish_5_garant INTEGER); '
+        payload = "CREATE TABLE users (username TEXT PRIMARY KEY, wish_count INTEGER, wish_4_garant INTEGER, wish_5_garant INTEGER, win_4 INTEGER, win_5 INTEGER);"
         cur.execute(payload)
         self.conn.commit()
         cur.close()
@@ -367,7 +467,7 @@ class UserDB:
     def get_all(self) -> List[DbUserTuple]:
         logging.debug('[DB] Вызван метод get_all')
         cur = self.conn.cursor()
-        payload = 'SELECT * FROM users;'
+        payload = "SELECT * FROM users;"
         cur.execute(payload)
         data = cur.fetchall()
         cur.close()
@@ -377,7 +477,7 @@ class UserDB:
     def get(self, username) -> Optional[DbUserTuple]:
         logging.debug('[DB] Вызван метод get с параметрами %s', username)
         cur = self.conn.cursor()
-        payload = 'SELECT * FROM users WHERE username=?;'
+        payload = "SELECT * FROM users WHERE username=?;"
         cur.execute(payload, (username,))
         data = cur.fetchone()
         cur.close()
@@ -387,16 +487,18 @@ class UserDB:
     def push(self, username: str, gacha: Gacha) -> None:
         logging.debug('[DB] Вызван метод push с параметрами %s, %s', username, gacha)
         cur = self.conn.cursor()
-        payload = 'INSERT INTO users VALUES(?, ?, ?, ?);'
-        cur.execute(payload, (username, gacha.wish_count, gacha.wish_4_garant, gacha.wish_5_garant))
+        payload = "INSERT INTO users VALUES(?, ?, ?, ?, ?, ?);"
+        win_4, win_5 = gacha.win_garant_table['4'], gacha.win_garant_table['5']
+        cur.execute(payload, (username, gacha.wish_count, gacha.wish_4_garant, gacha.wish_5_garant, win_4, win_5))
         self.conn.commit()
         cur.close()
 
     def update(self, username: str, gacha: Gacha) -> None:
         logging.debug('[DB] Вызван метод update с параметрами %s, %s', username, gacha)
         cur = self.conn.cursor()
-        payload = 'UPDATE users SET wish_count=?, wish_4_garant=?, wish_5_garant=? WHERE username=?;'
-        cur.execute(payload, (gacha.wish_count, gacha.wish_4_garant, gacha.wish_5_garant, username))
+        payload = "UPDATE users SET wish_count=?, wish_4_garant=?, wish_5_garant=?, win_4=?, win_5=? WHERE username=?;"
+        win_4, win_5 = gacha.win_garant_table['4'], gacha.win_garant_table['5']
+        cur.execute(payload, (gacha.wish_count, gacha.wish_4_garant, gacha.wish_5_garant, win_4, win_5, username))
         self.conn.commit()
         cur.close()
 
@@ -646,27 +748,23 @@ class Coordinator:
         self.current_wish = wish
         self.wish_que.task_done()
 
-        star_types = {
-            'srnd': 'мягкий гарант',
-            'garant': 'гарант',
-            'rnd': 'рандом',
-        }
-
         for wish_data in wish.wish_data_list:
             t = time.localtime()
             current_time = time.strftime("%H:%M:%S", t)
             print('[ГАЧА]', '[%s]' % current_time,
                   'Результат для', wish.username,
                   '#%d' % wish_data.wish_count,
-                  'w4#%d' % wish_data.wish_4_garant,
-                  'w5#%d' % wish_data.wish_5_garant,
-                  wish_data.wish_star, '* ->', wish_data.wish_obj_text.replace('\n', ' '),
-                  '[%s]' % star_types[wish_data.wish_star_type])
+                  'g4#%d' % wish_data.wish_4_garant,
+                  'g5#%d' % wish_data.wish_5_garant,
+                  'w4#%d' % wish_data.win_4_garant,
+                  'w5#%d' % wish_data.win_5_garant,
+                  wish_data.wish_star, '* ->', _wish_name_normal(wish_data.wish_obj_text),
+                  '[%s]' % _wish_garant_type(wish_data.wish_star_type))
 
             history_cfg = CONFIG['history_file']
             if history_cfg[wish_data.wish_star]:
                 write_history(wish.username, wish_data.wish_count, wish_data.wish_star,
-                              star_types[wish_data.wish_star_type], wish_data.wish_obj_text)
+                              _wish_garant_type(wish_data.wish_star_type), wish_data.wish_obj_text)
 
         return True
 
@@ -1281,8 +1379,8 @@ class TwitchBot(commands.Bot):
     def _load(self) -> None:
         print('[TWITCH] Загружаем данные пользователей..')
         for user_data in self.user_db.get_all():
-            username, user_wish_count, user_wish_4garant, user_wish_5garant = user_data
-            user_gacha = Gacha(user_wish_count, user_wish_4garant, user_wish_5garant)
+            username, *gacha_params = user_data
+            user_gacha = Gacha(*gacha_params)
             self.gacha_users.update({username: user_gacha})
         print('[TWITCH] Данные загружены. Всего пользователей в базе:', len(self.gacha_users))
 
@@ -1881,7 +1979,7 @@ def write_history(nickname: str, wish_count: int, star: str, wtype: str, wish: s
     history_time = time.localtime()
     wdate = time.strftime("%d.%m.%Y-%H:%M:%S", history_time)
     with open(history_path, 'a', encoding='utf-8') as fp:
-        fp.write('%s,%s,%d,%s,%s,%s\n' % (wdate, nickname, wish_count, star, wtype, wish.replace('\n', ' ')))
+        fp.write('%s,%s,%d,%s,%s,%s\n' % (wdate, nickname, wish_count, star, wtype, _wish_name_normal(wish)))
 
 
 def make_user_wish(username: str, color: str, count: int) -> Tuple[Gacha, Wish]:
@@ -1897,27 +1995,6 @@ def main():
 
     wish_que = queue.Queue()
     animation_group = []
-
-    #
-    # _star = '5'
-    # _type = 'char'
-    # _name = 'aloy'
-    #
-    # _wd_r = list(filter(lambda x: x['wish_obj_name'] == _name, DATABASE[_star][_type]))[0]
-    # _wd = WishData(1, 1, 1, _star, 'rnd', **_wd_r)
-    # _wish = Wish("__test_mode__", '#000000', 1, [_wd,])
-    # wish_que.put(_wish)
-    #
-
-    #
-    # for _star in DATABASE:
-    #     _wd_l = [DATABASE[_star][x] for x in DATABASE[_star] if x == 'char']
-    #     for _wd_r in _wd_l:
-    #         if not _wd_r:
-    #             continue
-    #         _wish = Wish("__test_mode__", '#000000', 2, [WishData(1, 1, 1, _star, 'rnd', **_wd_x) for _wd_x in _wd_r])
-    #         wish_que.put(_wish)
-    #
 
     #
     # code, text = render_html_history('local')
