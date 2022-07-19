@@ -138,31 +138,37 @@ def _load_database(config: Dict) -> Dict:
         }
     }
 
-    items_linear = [item for star in _DATABASE for wtype in _DATABASE[star] for item in _DATABASE[star][wtype]]
+    items_linear = [(item, star, wtype) for star in _DATABASE for wtype in _DATABASE[star] for item in _DATABASE[star][wtype]]
     print('[MAIN] Загружаю баннер "%s" ..' % base_name, end=' ')
 
     wishes = config['wishes']
-    for star in wishes:
-        for wtype in ['char', 'weapon', 'garant']:
-            items = wishes[star].get(wtype, [])
-            for item in items:
+    for ban_star in wishes:
+        for ban_wtype in ['char', 'weapon', 'garant']:
+            items = wishes[ban_star].get(ban_wtype, [])
+            for ban_item in items:
 
-                filtered_data = filter(lambda x: item == _wish_name_normal(x['wish_obj_text']), items_linear)
+                filtered_data = filter(lambda x: ban_item == _wish_name_normal(x[0]['wish_obj_text']), items_linear)
                 try:
                     item_data = next(filtered_data)
                 except StopIteration:
-                    print('ошибка загрузки баннера: %s*:%s не найден' % (star, item))
-                    sys.exit()
+                    print('ошибка загрузки баннера: %s*%s:%s не найден' % (ban_star, ban_wtype, ban_item))
+                    sys.exit(input())
 
-                data_template[star][wtype].append(item_data)
-                stats[star][wtype] += 1
+                db_item, db_star, db_wtype = item_data
 
-                if wtype in ['char', 'weapon']:
+                if ban_wtype in ['char', 'weapon']:
+                    if ban_star != db_star or ban_wtype != db_wtype:
+                        _text_params = (ban_star, ban_wtype, ban_item, db_star, db_wtype, db_item['wish_obj_text'])
+                        print('ошибка загрузки баннера: %s*%s:%s <> %s*%s:%s' % _text_params)
+                        sys.exit(input())
                     total += 1
+
+                data_template[ban_star][ban_wtype].append(db_item)
+                stats[ban_star][ban_wtype] += 1
 
     if total == 0:
         print('ошибка загрузки баннера: ни одного предмета не загружено')
-        sys.exit()
+        sys.exit(input())
 
     stat_text = '(%d) | 5*: %d/%d[%d]; 4*: %d/%d[%d]; 3*: 0/%d' % (
         total,
