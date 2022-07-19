@@ -156,7 +156,9 @@ def _load_database(config: Dict) -> Dict:
 
                 data_template[star][wtype].append(item_data)
                 stats[star][wtype] += 1
-                total += 1
+
+                if wtype in ['char', 'weapon']:
+                    total += 1
 
     if total == 0:
         print('ошибка загрузки баннера: ни одного предмета не загружено')
