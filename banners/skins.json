@@ -1,0 +1,31 @@
+{
+  "banner_name": "Skin v2.8",
+  "wish_fo_garant": 10,
+  "wish_fo_chance": 13.00,
+  "wish_fi_garant": 90,
+  "wish_fi_chance": 1.60,
+  "wish_fi_soft_a": 73,
+  "wishes": {
+    "5": {
+      "garant": [],
+      "char": [
+        "Алая ночь"
+      ],
+      "weapon": []
+    },
+    "4": {
+      "garant": [],
+      "char": [
+        "Летний блеск",
+        "Сон морского бриза",
+        "Флёр орхидеи",
+        "Яркая лёгкость",
+        "Сон вечной ночи"
+      ],
+      "weapon": []
+    },
+    "3": {
+      "weapon": []
+    }
+  }
+}
