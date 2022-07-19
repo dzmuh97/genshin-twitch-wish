@@ -9,6 +9,7 @@ pack
 auth.json
 database.sqlite
 users_wish_history.csv
+version-metadata.*
 
 upx.exe
 *.spec
