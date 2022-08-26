@@ -1728,7 +1728,7 @@ def merge_wish_meta(cords: Tuple[int, int],
         wish_objs.append(wish_name_obj)
         wish_name_last = wish_name_obj
 
-        name_width = wish_name_last.rect.midright[0] + 3
+        name_width = wish_name_last.rect.midright[0] + 5
         if name_width > max_width:
             max_width = name_width
 
@@ -1739,9 +1739,10 @@ def merge_wish_meta(cords: Tuple[int, int],
         wish_objs.append(star)
         last_star = star
 
-    star_width = last_star.rect.bottomright[1]
-    if star_width > max_height:
-        max_height = star_width
+    star_width = last_star.rect.bottomright[0]
+    max_height = last_star.rect.bottomright[1]
+    if star_width > max_width:
+        max_width = star_width
 
     result_sur = StaticImage(**wish_kwargs)
 
