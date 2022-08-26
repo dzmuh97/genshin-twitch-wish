@@ -754,7 +754,6 @@ class Coordinator:
         logging.debug('[PANEL] Состояние панели: IDLE')
 
         self.current_wish = wish
-        self.wish_que.task_done()
 
         for wish_data in wish.wish_data_list:
             t = time.localtime()
@@ -941,6 +940,7 @@ class Coordinator:
 
     def state_clear(self) -> bool:
         logging.debug('[PANEL] Состояние панели: CLEAR')
+        self.wish_que.task_done()
         self.animations_list.clear()
         self.current_draw_objs.clear()
         self.used_sound.clear()
