@@ -1578,6 +1578,8 @@ class TwitchBot(commands.Bot):
     async def gbot_stats(self, ctx: commands.Context) -> None:
         user = ctx.author
 
+        logging.debug('[TWITCH] Получена команда gbot_stats: %s', user)
+
         if user.name in self.gacha_users:
             user_gacha = self.gacha_users[user.name]
             uwish_count = user_gacha.wish_count
@@ -1588,14 +1590,8 @@ class TwitchBot(commands.Bot):
             uwish_4_garant = 0
             uwish_5_garant = 0
 
-        primogems = self.wish_r_primo + self.wish_c_primo
         try:
             answer_text = STATS_MESSAGE.format(user_mention=user.mention,
-                                               wcommand=self.chatbot_wish_command,
-                                               wcommand_c=self.wish_c_use,
-                                               rcommand_c=self.wish_r_use,
-                                               wish_points=self.wish_r_sum,
-                                               wish_gems=primogems,
                                                u_w_c=uwish_count,
                                                u_w4_c=uwish_4_garant,
                                                u_w5_c=uwish_5_garant,
@@ -1610,11 +1606,19 @@ class TwitchBot(commands.Bot):
     async def gbot_status(self, ctx: commands.Context) -> None:
         user = ctx.author
 
+        logging.debug('[TWITCH] Получена команда gbot_status: %s', user)
+
+        primogems = self.wish_r_primo + self.wish_c_primo
         try:
             answer_text = STATUS_MESSAGE.format(user_mention=user.mention,
                                                 proj_name=__title__,
                                                 proj_ver=__version__,
-                                                proj_url=__site__)
+                                                proj_url=__site__,
+                                                wcommand=self.chatbot_wish_command,
+                                                wcommand_c=self.wish_c_use,
+                                                rcommand_c=self.wish_r_use,
+                                                wish_points=self.wish_r_sum,
+                                                wish_gems=primogems)
         except KeyError as format_error:
             print('[TWITCH] Ошибка при форматировании ответа:', format_error)
             return
@@ -1627,6 +1631,8 @@ class TwitchBot(commands.Bot):
         sound_cfg = CONFIG['sound']
 
         user = ctx.author
+        logging.debug('[TWITCH] Получена команда gbot_sound: %s', user)
+
         if user.is_mod or user.is_broadcaster:
             if _sound_work:
                 sound_cfg['enabled'] = not sound_cfg['enabled']
@@ -1641,6 +1647,8 @@ class TwitchBot(commands.Bot):
     async def gbot_pause(self, ctx: commands.Context) -> None:
         user = ctx.author
 
+        logging.debug('[TWITCH] Получена команда gbot_pause: %s', user)
+
         if user.is_mod or user.is_broadcaster:
             self.coordinator.que_processing = not self.coordinator.que_processing
 
@@ -1653,6 +1661,8 @@ class TwitchBot(commands.Bot):
     async def gbot_history(self, ctx: commands.Context) -> None:
         user = ctx.author
         code, html_history = render_html_history(user.name)
+
+        logging.debug('[TWITCH] Получена команда gbot_history: %s', user)
 
         errors_map = {
             1: '%s у стримера выключена запись истории молитв :(' % user.mention,
@@ -2003,14 +2013,6 @@ def main():
 
     wish_que = queue.Queue()
     animation_group = []
-
-    #
-    # code, text = render_html_history('local')
-    # print(code)
-    # with open('_test.html', 'w', encoding='utf-8') as f:
-    #     f.write(text)
-    # sys.exit()
-    #
 
     chatbot_cfg = CONFIG['chat_bot']
     eventbot_cfg = CONFIG['event_bot']
