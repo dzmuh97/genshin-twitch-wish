@@ -51,7 +51,6 @@ import network
 from network import do_background_work, interactive_auth
 
 import twitchio
-from twitchio import http as twio_http
 from twitchio.ext import pubsub
 from twitchio.ext import commands
 
@@ -1816,6 +1815,8 @@ def update_auth() -> None:
 
 
 def refresh_bot_token(ref_token: str) -> bool:
+    print('[TWITCH] Пробуем обновить токен..')
+
     try:
         twitch_user_data_raw = requests.post(network.URL_TOKEN_REF, json={'ref_token': ref_token})
         twitch_user_data = twitch_user_data_raw.json()
@@ -1842,43 +1843,54 @@ def refresh_bot_token(ref_token: str) -> bool:
         AUTH_EVENT_BOT['channel_token'] = channel_token_new
         AUTH_EVENT_BOT['channel_token_ref'] = channel_token_ref_new
 
+    print('[TWITCH] Токен успешно обновлен, бот будет перезапущен..')
     update_auth()
     return True
 
 
 def bot_handle(wish_que: queue.Queue, control: Coordinator) -> None:
     loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+    asyncio.set_event_loop(loop)  # fix not exists event loop in new thread
 
-    time.sleep(3)   # Prevent overload Twitch API
+    time.sleep(3)  # Prevent overload Twitch API
 
     bot = TwitchBot(wish_que, control)
-    twiohttp = twio_http.TwitchHTTP(bot)
 
     check_tokens = (AUTH_EVENT_BOT['channel_token'], AUTH_CHAT_BOT['bot_token'])
     check_tokens_ref = (AUTH_EVENT_BOT['channel_token_ref'], AUTH_CHAT_BOT['bot_token_ref'])
 
     print('[TWITCH] Проверяем данные ботов..')
+
+    twitch_token_url = "https://id.twitch.tv/oauth2/validate"
+    session = requests.Session()
+
     for token_t in zip(check_tokens, check_tokens_ref):
         current_token, current_token_ref = token_t
+        headers = {"Authorization": f"OAuth %s" % current_token}
 
         try:
-            twiohttp.nick = None  # force get data from twitch
-            check_task = loop.create_task(twiohttp.validate(token=current_token))
-            loop.run_until_complete(check_task)
-        except (twitchio.errors.AuthenticationError, twitchio.errors.HTTPException) as twitch_error:
+            twitch_resp = session.get(twitch_token_url, headers=headers)
+            if twitch_resp.status_code == 401:
+                raise requests.RequestException('неправильный токен или его время работы истекло')
+            if twitch_resp.status_code > 300 or twitch_resp.status_code < 200:
+                print('[TWITCH] Не удалось проверить токен: %s' % twitch_resp.text)
+                return
+        except requests.RequestException as twitch_error:
             print('[TWITCH] Ошибка авторизации:', twitch_error)
             if not refresh_bot_token(current_token_ref):
                 threading.Event().wait()
             return
 
+        twitch_token_data = twitch_resp.json()
+        print(twitch_token_data['login'], twitch_token_data['user_id'], twitch_token_data['expires_in'])
+
         event_bot_channel_id = AUTH_EVENT_BOT['work_channel_id']
         event_bot_token_ref = AUTH_EVENT_BOT['channel_token_ref']
         if (event_bot_channel_id == 0) and (current_token_ref == event_bot_token_ref):
-            AUTH_EVENT_BOT['work_channel_id'] = twiohttp.user_id
+            AUTH_EVENT_BOT['work_channel_id'] = twitch_token_data['user_id']
             update_auth()
 
-        time.sleep(3)
+        time.sleep(3)  # Prevent overload Twitch API
 
     bot.run()
 
