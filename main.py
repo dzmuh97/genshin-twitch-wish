@@ -1852,12 +1852,19 @@ def bot_handle(wish_que: queue.Queue, control: Coordinator) -> None:
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)  # fix not exists event loop in new thread
 
-    time.sleep(3)  # Prevent overload Twitch API
+    time.sleep(3)  # Prevent flood Twitch API
 
     bot = TwitchBot(wish_que, control)
 
-    check_tokens = (AUTH_EVENT_BOT['channel_token'], AUTH_CHAT_BOT['bot_token'])
-    check_tokens_ref = (AUTH_EVENT_BOT['channel_token_ref'], AUTH_CHAT_BOT['bot_token_ref'])
+    event_bot_channel_id = AUTH_EVENT_BOT['work_channel_id']
+    event_bot_token_ref = AUTH_EVENT_BOT['channel_token_ref']
+    event_bot_token = AUTH_EVENT_BOT['channel_token']
+
+    chat_bot_token_ref = AUTH_CHAT_BOT['bot_token_ref']
+    chat_bot_token = AUTH_CHAT_BOT['bot_token']
+
+    check_tokens = (event_bot_token, chat_bot_token)
+    check_tokens_ref = (event_bot_token_ref, chat_bot_token_ref)
 
     print('[TWITCH] Проверяем данные ботов..')
 
@@ -1871,7 +1878,7 @@ def bot_handle(wish_que: queue.Queue, control: Coordinator) -> None:
         try:
             twitch_resp = session.get(twitch_token_url, headers=headers)
             if twitch_resp.status_code == 401:
-                raise requests.RequestException('неправильный токен или его время работы истекло')
+                raise requests.RequestException('неправильный токен или его время действия истекло')
             if twitch_resp.status_code > 300 or twitch_resp.status_code < 200:
                 print('[TWITCH] Не удалось проверить токен: %s' % twitch_resp.text)
                 return
@@ -1882,15 +1889,28 @@ def bot_handle(wish_que: queue.Queue, control: Coordinator) -> None:
             return
 
         twitch_token_data = twitch_resp.json()
-        print(twitch_token_data['login'], twitch_token_data['user_id'], twitch_token_data['expires_in'])
 
-        event_bot_channel_id = AUTH_EVENT_BOT['work_channel_id']
-        event_bot_token_ref = AUTH_EVENT_BOT['channel_token_ref']
-        if (event_bot_channel_id == 0) and (current_token_ref == event_bot_token_ref):
-            AUTH_EVENT_BOT['work_channel_id'] = twitch_token_data['user_id']
-            update_auth()
+        if current_token_ref == chat_bot_token_ref:
+            new_http_twitch_session = aiohttp.ClientSession()
 
-        time.sleep(3)  # Prevent overload Twitch API
+            conn_cls = getattr(bot, '_connection')
+            http_cls = getattr(bot, '_http')
+
+            setattr(conn_cls, 'nick', twitch_token_data['login'])
+            setattr(conn_cls, 'user_id', int(twitch_token_data['user_id']))
+
+            setattr(http_cls, 'nick', twitch_token_data['login'])
+            setattr(http_cls, 'user_id', int(twitch_token_data['user_id']))
+            setattr(http_cls, 'client_id', twitch_token_data['client_id'])
+
+            setattr(http_cls, 'session', new_http_twitch_session)
+
+        if current_token_ref == event_bot_token_ref:
+            if event_bot_channel_id == 0:
+                AUTH_EVENT_BOT['work_channel_id'] = twitch_token_data['user_id']
+                update_auth()
+
+        time.sleep(3)  # Prevent flood Twitch API
 
     bot.run()
 
