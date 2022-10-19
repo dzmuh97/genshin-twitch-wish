@@ -1909,7 +1909,7 @@ async def _tokens_check(bot: TwitchBot):
 
         if current_token_ref == event_bot_token_ref:
             if event_bot_channel_id == 0:
-                AUTH_EVENT_BOT['work_channel_id'] = twitch_token_data['user_id']
+                AUTH_EVENT_BOT['work_channel_id'] = int(twitch_token_data['user_id'])
                 update_auth()
 
         time.sleep(3)  # Prevent flood Twitch API
