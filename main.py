@@ -29,7 +29,6 @@ from dataclasses import dataclass
 import asyncio
 import aiohttp
 
-import requests
 import threading
 
 import json
@@ -1814,13 +1813,14 @@ def update_auth() -> None:
         json.dump(jdata, authf)
 
 
-def refresh_bot_token(ref_token: str) -> bool:
+async def refresh_bot_token(ref_token: str) -> bool:
     print('[TWITCH] Пробуем обновить токен..')
 
+    refresh_session = aiohttp.ClientSession()
     try:
-        twitch_user_data_raw = requests.post(network.URL_TOKEN_REF, json={'ref_token': ref_token})
-        twitch_user_data = twitch_user_data_raw.json()
-    except requests.RequestException as gate_error:
+        async with refresh_session.post(network.URL_TOKEN_REF, json={'ref_token': ref_token}) as twitch_user_data_raw:
+            twitch_user_data = await twitch_user_data_raw.json()
+    except aiohttp.ClientError as gate_error:
         print('[AUTH] Не удалось обновить токен:', gate_error)
         return False
 
@@ -1848,13 +1848,8 @@ def refresh_bot_token(ref_token: str) -> bool:
     return True
 
 
-def bot_handle(wish_que: queue.Queue, control: Coordinator) -> None:
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)  # fix not exists event loop in new thread
-
-    time.sleep(3)  # Prevent flood Twitch API
-
-    bot = TwitchBot(wish_que, control)
+async def _tokens_check(bot: TwitchBot):
+    print('[TWITCH] Проверяем данные ботов..')
 
     event_bot_channel_id = AUTH_EVENT_BOT['work_channel_id']
     event_bot_token_ref = AUTH_EVENT_BOT['channel_token_ref']
@@ -1866,33 +1861,34 @@ def bot_handle(wish_que: queue.Queue, control: Coordinator) -> None:
     check_tokens = (event_bot_token, chat_bot_token)
     check_tokens_ref = (event_bot_token_ref, chat_bot_token_ref)
 
-    print('[TWITCH] Проверяем данные ботов..')
-
     twitch_token_url = "https://id.twitch.tv/oauth2/validate"
-    session = requests.Session()
+    twitch_session = aiohttp.ClientSession()
 
     for token_t in zip(check_tokens, check_tokens_ref):
         current_token, current_token_ref = token_t
         headers = {"Authorization": f"OAuth %s" % current_token}
 
         try:
-            twitch_resp = session.get(twitch_token_url, headers=headers)
-            if twitch_resp.status_code == 401:
-                raise requests.RequestException('неправильный токен или его время действия истекло')
-            if twitch_resp.status_code > 300 or twitch_resp.status_code < 200:
-                print('[TWITCH] Не удалось проверить токен: %s' % twitch_resp.text)
-                return
-        except requests.RequestException as twitch_error:
+            async with twitch_session.get(twitch_token_url, headers=headers) as twitch_resp:
+                if twitch_resp.status == 401:
+                    raise aiohttp.ClientError('неправильный токен или его время действия истекло')
+                if twitch_resp.status > 300 or twitch_resp.status < 200:
+                    twitch_error_text = await twitch_resp.text()
+                    print('[TWITCH] Не удалось проверить токен: %s' % twitch_error_text)
+                    return False
+                twitch_token_data = await twitch_resp.json()
+        except aiohttp.ClientError as twitch_error:
             print('[TWITCH] Ошибка авторизации:', twitch_error)
-            if not refresh_bot_token(current_token_ref):
+            refresh_satus = await refresh_bot_token(current_token_ref)
+            if not refresh_satus:
                 threading.Event().wait()
-            return
+            return False
 
-        twitch_token_data = twitch_resp.json()
+        login = twitch_token_data['login']
+        expires = twitch_token_data['expires_in']
+        print('[TWITCH] Токен для "%s" закончится через %s сек.' % (login, expires))
 
         if current_token_ref == chat_bot_token_ref:
-            new_http_twitch_session = aiohttp.ClientSession()
-
             conn_cls = getattr(bot, '_connection')
             http_cls = getattr(bot, '_http')
 
@@ -1903,7 +1899,7 @@ def bot_handle(wish_que: queue.Queue, control: Coordinator) -> None:
             setattr(http_cls, 'user_id', int(twitch_token_data['user_id']))
             setattr(http_cls, 'client_id', twitch_token_data['client_id'])
 
-            setattr(http_cls, 'session', new_http_twitch_session)
+            setattr(http_cls, 'session', twitch_session)
 
         if current_token_ref == event_bot_token_ref:
             if event_bot_channel_id == 0:
@@ -1911,6 +1907,22 @@ def bot_handle(wish_que: queue.Queue, control: Coordinator) -> None:
                 update_auth()
 
         time.sleep(3)  # Prevent flood Twitch API
+
+    return True
+
+
+def bot_handle(wish_que: queue.Queue, control: Coordinator) -> None:
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)  # fix not exists event loop in new thread
+
+    time.sleep(3)  # Prevent flood Twitch API
+
+    bot = TwitchBot(wish_que, control)
+
+    check_job = loop.create_task(_tokens_check(bot))
+    check_status = loop.run_until_complete(check_job)
+    if not check_status:
+        return
 
     bot.run()
 
