@@ -5,9 +5,11 @@ import base64
 import random
 import string
 import logging
-import requests
 import threading
 import webbrowser
+
+import asyncio
+import aiohttp
 
 from urllib import parse
 from distutils.version import StrictVersion
@@ -32,13 +34,20 @@ URL_HISTORY = 'https://genshinwishgate.pw/history'
 # URL_HISTORY = 'http://localhost:5555/history'
 
 
-def _get_version(local_version) -> None:
+async def _get_version(local_version) -> None:
+    aio_session = aiohttp.ClientSession()
+
+    version_data = None
     try:
-        version_data_raw = requests.get(URL_VERSION)
-        version_data = version_data_raw.json()
-        logging.debug('[UPDATE] Информация о версии получена')
-    except requests.RequestException as ver_error:
+        async with aio_session.get(URL_VERSION) as version_data_raw:
+            version_data = await version_data_raw.json()
+            logging.debug('[UPDATE] Информация о версии получена')
+    except aiohttp.ClientSession as ver_error:
         logging.debug('[UPDATE] Ошибка получения информации о версии: %s', ver_error)
+
+    await aio_session.close()
+
+    if version_data is None:
         return
 
     web_version = StrictVersion(version_data['current_version'])
@@ -51,28 +60,52 @@ def _get_version(local_version) -> None:
     print('[UPDATE] Используется устаревшая версия - установлена: %s, доступна: %s' % (local_version, web_version))
 
 
-def _send_stats(chat_bot_work_channel: str, event_bot_work_channel_id: str, version: str) -> None:
+async def _send_stats(chat_bot_work_channel: str, event_bot_work_channel_id: str, version: str) -> None:
     stats_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     stats_data = {'date': stats_time, 'version': version, 'channel': chat_bot_work_channel, 'channel_id': event_bot_work_channel_id}
     stats_data_json = json.dumps(stats_data)
     stat_base64 = base64.urlsafe_b64encode(stats_data_json.encode(encoding='utf-8')).decode(encoding='utf-8')
 
+    aio_session = aiohttp.ClientSession()
+
     try:
-        requests.post(URL_VERSION, json={'base64data': stat_base64})
-        logging.debug('[STATS] Статистика отправлена')
-    except requests.RequestException as stats_error:
+        async with aio_session.post(URL_VERSION, json={'base64data': stat_base64}) as _:
+            logging.debug('[STATS] Статистика отправлена')
+    except aiohttp.ClientError as stats_error:
         logging.debug('[STATS] Ошибка отправки статистики: %s', stats_error)
+
+    await aio_session.close()
+
+
+def _threaded_fork(chat_bot_work_channel, event_bot_work_channel_id, version):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    async def _fork():
+        await _send_stats(chat_bot_work_channel, event_bot_work_channel_id, version)
+        await _get_version(version)
+
+    asyncio.run(_fork())
 
 
 def do_background_work(chat_bot_work_channel: str, event_bot_work_channel_id: str, version: str) -> None:
-    stats_thread = threading.Thread(target=_send_stats, args=(chat_bot_work_channel, event_bot_work_channel_id, version))
-    version_thread = threading.Thread(target=_get_version, args=(version,))
+    work_thread = threading.Thread(target=_threaded_fork, args=(chat_bot_work_channel, event_bot_work_channel_id, version))
+    work_thread.daemon = True
+    work_thread.start()
 
-    stats_thread.daemon = True
-    version_thread.daemon = True
 
-    stats_thread.start()
-    version_thread.start()
+async def _get_tw_data(state):
+    aio_session = aiohttp.ClientSession()
+
+    twitch_user_data = None
+    try:
+        async with aio_session.get(URL_TOKEN + state) as twitch_user_data_raw:
+            twitch_user_data = await twitch_user_data_raw.json()
+    except aiohttp.ClientError as gate_error:
+        print(gate_error)
+
+    await aio_session.close()
+    return twitch_user_data
 
 
 def interactive_auth() -> None:
@@ -134,11 +167,8 @@ def interactive_auth() -> None:
         webbrowser.open(browser_url, new=2)
         input('\n[AUTH] Подтвердите доступ в открывшемся окне и нажмите ENTER когда закроете окно браузера: ')
 
-        try:
-            twitch_user_data_raw = requests.get(URL_TOKEN + state)
-            twitch_user_data = twitch_user_data_raw.json()
-        except requests.RequestException as gate_error:
-            print(gate_error)
+        twitch_user_data = asyncio.run(_get_tw_data(state))
+        if twitch_user_data is None:
             input('[AUTH] Не удалось сделать запрос к шлюзу для получения токена! [ENTER]: ')
             return
 
