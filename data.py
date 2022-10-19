@@ -480,7 +480,8 @@ DATABASE = {
                         {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'anemo', 'wish_obj_name': 'heizo', 'wish_obj_text': 'Сиканоин Хэйдзо'},
                         {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'electro', 'wish_obj_name': 'dori', 'wish_obj_text': 'Дори'},
                         {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'dendro', 'wish_obj_name': 'collei', 'wish_obj_text': 'Коллеи'},
-                        {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'hydro', 'wish_obj_name': 'candace', 'wish_obj_text': 'Кандакия'}
+                        {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'hydro', 'wish_obj_name': 'candace', 'wish_obj_text': 'Кандакия'},
+                        {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'cryo', 'wish_obj_name': 'layla', 'wish_obj_text': 'Лайла'}
                 ]
         },
         '5': {
@@ -516,7 +517,8 @@ DATABASE = {
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'nebesatlas', 'wish_obj_text': 'Небесный атлас'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'molitvavetram', 'wish_obj_text': 'Молитва святым\nветрам'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'istinakagura', 'wish_obj_text': 'Истина кагура'},
-                        {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'vechnoyesiyanie', 'wish_obj_text': 'Вечное лунное\nсияние'}
+                        {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'vechnoyesiyanie', 'wish_obj_text': 'Вечное лунное\nсияние'},
+                        {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'snovidenysnochey', 'wish_obj_text': 'Сновидения\nтысячи ночей'}
                 ],
                 'char': [
                         {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'geo', 'wish_obj_name': 'albedo', 'wish_obj_text': 'Альбедо'},
@@ -547,7 +549,8 @@ DATABASE = {
                         {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'hydro', 'wish_obj_name': 'elan', 'wish_obj_text': 'Е Лань'},
                         {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'dendro', 'wish_obj_name': 'tighnari', 'wish_obj_text': 'Тигнари'},
                         {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'hydro', 'wish_obj_name': 'nilou', 'wish_obj_text': 'Нилу'},
-                        {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'electro', 'wish_obj_name': 'cyno', 'wish_obj_text': 'Сайно'}
+                        {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'electro', 'wish_obj_name': 'cyno', 'wish_obj_text': 'Сайно'},
+                        {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'dendro', 'wish_obj_name': 'nahida', 'wish_obj_text': 'Нахида'}
                 ]
         }
 }
