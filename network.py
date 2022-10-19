@@ -15,6 +15,7 @@ from distutils.version import StrictVersion
 STATE_ALPHABLET = string.ascii_letters + string.digits
 TWITCH_APP_CLIENT_ID = '9ykg8n2lg2y808k6veqv6l5o4l0z4e'  # Genshin Wish Simulator
 
+TWITCH_TOKEN_VALIDATE = "https://id.twitch.tv/oauth2/validate"
 TWITCH_CODE_URL = 'https://id.twitch.tv/oauth2/authorize'
 TWITCH_TOKEN_URL = 'https://id.twitch.tv/oauth2/token'
 

@@ -1861,7 +1861,6 @@ async def _tokens_check(bot: TwitchBot):
     check_tokens = (event_bot_token, chat_bot_token)
     check_tokens_ref = (event_bot_token_ref, chat_bot_token_ref)
 
-    twitch_token_url = "https://id.twitch.tv/oauth2/validate"
     twitch_session = aiohttp.ClientSession()
 
     for token_t in zip(check_tokens, check_tokens_ref):
@@ -1869,7 +1868,7 @@ async def _tokens_check(bot: TwitchBot):
         headers = {"Authorization": f"OAuth %s" % current_token}
 
         try:
-            async with twitch_session.get(twitch_token_url, headers=headers) as twitch_resp:
+            async with twitch_session.get(network.TWITCH_TOKEN_VALIDATE, headers=headers) as twitch_resp:
                 if twitch_resp.status == 401:
                     raise aiohttp.ClientError('неправильный токен или его время действия истекло')
                 if twitch_resp.status > 300 or twitch_resp.status < 200:
@@ -1881,6 +1880,13 @@ async def _tokens_check(bot: TwitchBot):
             print('[TWITCH] Ошибка авторизации:', twitch_error)
             refresh_satus = await refresh_bot_token(current_token_ref)
             if not refresh_satus:
+                print('[TWITCH] %s' % ('-' * 80))
+                print('[TWITCH] Не удалось автоматически обновить токен, причина должна быть строчкой выше ^^^')
+                print('[TWITCH] Сейчас приложение можно закрыть и запустить заново - ошибка может исчезнуть,')
+                print('[TWITCH] или попробовать удалить файл "auth.json", чтобы попытаться создать токены заново')
+                print('[TWITCH] Так же можно создать токены вручную, инструкция есть на github странице проекта')
+                print('[TWITCH] Там же можно создать репорт об этой ошибке (настоятельно рекомендуется)')
+                print('[TWITCH] %s' % ('-' * 80))
                 threading.Event().wait()
             return False
 
