@@ -1,3 +1,37 @@
+_SRV_TEMPLATE = {
+        "type": "object",
+        "required": [
+                "enabled",
+                "timeout",
+                "permissions",
+        ],
+        "additionalProperties": False,
+        "properties": {
+                "enabled": {"type": "boolean"},
+                "timeout": {"type": "integer"},
+                "permissions": {
+                        "type": "object",
+                        "required": [
+                                "broadcaster",
+                                "mod",
+                                "vip",
+                                "turbo",
+                                "subscriber",
+                                "user"
+                        ],
+                        "additionalProperties": False,
+                        "properties": {
+                                "broadcaster": {"type": "boolean"},
+                                "mod": {"type": "boolean"},
+                                "vip": {"type": "boolean"},
+                                "turbo": {"type": "boolean"},
+                                "subscriber": {"type": "boolean"},
+                                "user": {"type": "boolean"}
+                        }
+                }
+        }
+}
+
 CONFIG_SCHEMA = {
         "type": "object",
         "required": ["window_name",
@@ -37,6 +71,8 @@ CONFIG_SCHEMA = {
                                         "required": [
                                                 "broadcaster",
                                                 "mod",
+                                                "vip",
+                                                "turbo",
                                                 "subscriber",
                                                 "user"
                                         ],
@@ -44,6 +80,8 @@ CONFIG_SCHEMA = {
                                         "properties": {
                                                 "broadcaster": {"type": "integer"},
                                                 "mod": {"type": "integer"},
+                                                "vip": {"type": "integer"},
+                                                "turbo": {"type": "integer"},
                                                 "subscriber": {"type": "integer"},
                                                 "user": {"type": "integer"}
                                         }
@@ -207,6 +245,24 @@ CONFIG_SCHEMA = {
                                 "3": {"type": "boolean"},
                                 "4": {"type": "boolean"},
                                 "5": {"type": "boolean"}
+                        }
+                },
+                "gbot_config": {
+                        "type": "object",
+                        "required": [
+                                "gbot_status",
+                                "gbot_stats",
+                                "gbot_sound",
+                                "gbot_pause",
+                                "gbot_history",
+                        ],
+                        "additionalProperties": False,
+                        "properties": {
+                                "gbot_status": _SRV_TEMPLATE,
+                                "gbot_stats": _SRV_TEMPLATE,
+                                "gbot_sound": _SRV_TEMPLATE,
+                                "gbot_pause": _SRV_TEMPLATE,
+                                "gbot_history": _SRV_TEMPLATE,
                         }
                 },
                 "send_dev_stats": {"type": "boolean"},

@@ -9,6 +9,8 @@
     "wish_timeout": {
       "broadcaster": 600,
       "mod": 600,
+      "vip": 600,
+      "turbo": 600,
       "subscriber": 600,
       "user": 600
     },
@@ -79,6 +81,68 @@
     "3": true,
     "4": true,
     "5": true
+  },
+  "gbot_config": {
+    "gbot_status": {
+      "enabled": true,
+      "timeout": 30,
+      "permissions": {
+        "broadcaster": true,
+        "mod": true,
+        "vip": true,
+        "turbo": true,
+        "subscriber": true,
+        "user": true
+      }
+    },
+    "gbot_stats": {
+      "enabled": true,
+      "timeout": 5,
+      "permissions": {
+        "broadcaster": true,
+        "mod": true,
+        "vip": true,
+        "turbo": true,
+        "subscriber": true,
+        "user": true
+      }
+    },
+    "gbot_sound": {
+      "enabled": true,
+      "timeout": 1,
+      "permissions": {
+        "broadcaster": true,
+        "mod": true,
+        "vip": false,
+        "turbo": false,
+        "subscriber": false,
+        "user": false
+      }
+    },
+    "gbot_pause": {
+      "enabled": true,
+      "timeout": 1,
+      "permissions": {
+        "broadcaster": true,
+        "mod": true,
+        "vip": false,
+        "turbo": false,
+        "subscriber": false,
+        "user": false
+      }
+    },
+    "gbot_history": {
+      "enabled": true,
+      "timeout": 5,
+      "permissions": {
+        "broadcaster": true,
+        "mod": true,
+        "vip": true,
+        "turbo": true,
+        "subscriber": true,
+        "user": true
+      }
+    }
   },
   "send_dev_stats": true,
   "test_mode": true

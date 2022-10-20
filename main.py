@@ -1353,10 +1353,19 @@ class TwitchBot(commands.Bot):
 
         self.chatbot_cfg = CONFIG['chat_bot']
         self.eventbot_cfg = CONFIG['event_bot']
+        self.service_cfg = CONFIG['gbot_config']
 
         self.wish_que = wish_que
         self.user_db = UserDB()
         self.coordinator = coordinator
+
+        self.cmd_timeout = {
+            "gbot_status": 0,
+            "gbot_stats": 0,
+            "gbot_sound": 0,
+            "gbot_pause": 0,
+            "gbot_history": 0
+        }
 
         chat_bot_token = AUTH_CHAT_BOT['bot_token']
         work_channel = AUTH_CHAT_BOT['work_channel']
@@ -1381,6 +1390,22 @@ class TwitchBot(commands.Bot):
     def run(self):
         self._load()
         super().run()
+
+    @staticmethod
+    def _get_user_conf(conf: dict, user: twitchio.Chatter) -> Union[bool, int, str]:
+        if user.is_broadcaster:
+            user_cfg = conf['broadcaster']
+        elif user.is_mod:
+            user_cfg = conf['mod']
+        elif user.is_vip:
+            user_cfg = conf['vip']
+        elif user.is_turbo:
+            user_cfg = conf['turbo']
+        elif user.is_subscriber:
+            user_cfg = conf['subscriber']
+        else:
+            user_cfg = conf['user']
+        return user_cfg
 
     def _load(self) -> None:
         print('[TWITCH] Загружаем данные пользователей..')
@@ -1474,14 +1499,7 @@ class TwitchBot(commands.Bot):
 
         current_time = int(time.time())
         wtimeoust_cfg = self.chatbot_cfg['wish_timeout']
-        if user.is_broadcaster:
-            user_timeout = wtimeoust_cfg['broadcaster']
-        elif user.is_mod:
-            user_timeout = wtimeoust_cfg['mod']
-        elif user.is_subscriber:
-            user_timeout = wtimeoust_cfg['subscriber']
-        else:
-            user_timeout = wtimeoust_cfg['user']
+        user_timeout = self._get_user_conf(wtimeoust_cfg, user)
 
         if current_time - user_gacha.last_wish_time < user_timeout:
             return
@@ -1501,7 +1519,7 @@ class TwitchBot(commands.Bot):
         wish = Wish(username, ucolor, wishes_in_command, wish_data_list)
 
         try:
-            self.last_wish_time = int(time.time())
+            self.last_wish_time = current_time
             answer_text_raw = random.choice(CHATBOT_TEXT)
             answer_text = answer_text_raw.format(username=user.mention,
                                                  wish_count=user_gacha.wish_count,
@@ -1572,9 +1590,30 @@ class TwitchBot(commands.Bot):
         self.user_db.update(username, user_gacha)
         await self.connected_channels[0].send(anwser_text)
 
+    def _srv_bypass(self, fname: str, user: twitchio.Chatter) -> bool:
+        func_config = self.service_cfg[fname]
+        func_enabled = func_config['enabled']
+        func_timeout = func_config['timeout']
+        func_perms = func_config['permissions']
+
+        if not func_enabled:
+            return False
+
+        if not self._get_user_conf(func_perms, user):
+            return False
+
+        current_time = int(time.time())
+        if current_time - self.cmd_timeout[fname] < func_timeout:
+            return False
+
+        self.cmd_timeout[fname] = current_time
+        return True
+
     @commands.command()
     async def gbot_stats(self, ctx: commands.Context) -> None:
         user = ctx.author
+        if not self._srv_bypass('gbot_stats', user):
+            return
 
         logging.debug('[TWITCH] Получена команда gbot_stats: %s', user)
 
@@ -1603,6 +1642,8 @@ class TwitchBot(commands.Bot):
     @commands.command()
     async def gbot_status(self, ctx: commands.Context) -> None:
         user = ctx.author
+        if not self._srv_bypass('gbot_status', user):
+            return
 
         logging.debug('[TWITCH] Получена команда gbot_status: %s', user)
 
@@ -1629,6 +1670,9 @@ class TwitchBot(commands.Bot):
         sound_cfg = CONFIG['sound']
 
         user = ctx.author
+        if not self._srv_bypass('gbot_sound', user):
+            return
+
         logging.debug('[TWITCH] Получена команда gbot_sound: %s', user)
 
         if user.is_mod or user.is_broadcaster:
@@ -1644,6 +1688,8 @@ class TwitchBot(commands.Bot):
     @commands.command()
     async def gbot_pause(self, ctx: commands.Context) -> None:
         user = ctx.author
+        if not self._srv_bypass('gbot_pause', user):
+            return
 
         logging.debug('[TWITCH] Получена команда gbot_pause: %s', user)
 
@@ -1658,9 +1704,12 @@ class TwitchBot(commands.Bot):
     @commands.command()
     async def gbot_history(self, ctx: commands.Context) -> None:
         user = ctx.author
-        code, html_history = render_html_history(user.name)
+        if not self._srv_bypass('gbot_history', user):
+            return
 
         logging.debug('[TWITCH] Получена команда gbot_history: %s', user)
+
+        code, html_history = render_html_history(user.name)
 
         errors_map = {
             1: '%s у стримера выключена запись истории молитв :(' % user.mention,
