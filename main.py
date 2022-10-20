@@ -9,7 +9,7 @@ __ascii__ = r'''
 
 __title__ = 'genshin-twitch-wish'
 __site__ = 'github.com/dzmuh97/genshin-twitch-wish'
-__version__ = '2.2.1'
+__version__ = '2.3.0'
 
 print(__ascii__)
 
