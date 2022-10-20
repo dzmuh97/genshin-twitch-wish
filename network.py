@@ -35,20 +35,14 @@ URL_HISTORY = 'https://genshinwishgate.pw/history'
 
 
 async def _get_version(local_version) -> None:
-    aio_session = aiohttp.ClientSession()
-
-    version_data = None
-    try:
-        async with aio_session.get(URL_VERSION) as version_data_raw:
-            version_data = await version_data_raw.json()
-            logging.debug('[UPDATE] Информация о версии получена')
-    except aiohttp.ClientSession as ver_error:
-        logging.debug('[UPDATE] Ошибка получения информации о версии: %s', ver_error)
-
-    await aio_session.close()
-
-    if version_data is None:
-        return
+    async with aiohttp.ClientSession() as aio_session:
+        try:
+            async with aio_session.get(URL_VERSION) as version_data_raw:
+                version_data = await version_data_raw.json()
+                logging.debug('[UPDATE] Информация о версии получена')
+        except aiohttp.ClientSession as ver_error:
+            logging.debug('[UPDATE] Ошибка получения информации о версии: %s', ver_error)
+            return
 
     web_version = StrictVersion(version_data['current_version'])
     local_version = StrictVersion(local_version)
@@ -66,21 +60,15 @@ async def _send_stats(chat_bot_work_channel: str, event_bot_work_channel_id: str
     stats_data_json = json.dumps(stats_data)
     stat_base64 = base64.urlsafe_b64encode(stats_data_json.encode(encoding='utf-8')).decode(encoding='utf-8')
 
-    aio_session = aiohttp.ClientSession()
-
-    try:
-        async with aio_session.post(URL_VERSION, json={'base64data': stat_base64}) as _:
-            logging.debug('[STATS] Статистика отправлена')
-    except aiohttp.ClientError as stats_error:
-        logging.debug('[STATS] Ошибка отправки статистики: %s', stats_error)
-
-    await aio_session.close()
+    async with aiohttp.ClientSession() as aio_session:
+        try:
+            async with aio_session.post(URL_VERSION, json={'base64data': stat_base64}) as _:
+                logging.debug('[STATS] Статистика отправлена')
+        except aiohttp.ClientError as stats_error:
+            logging.debug('[STATS] Ошибка отправки статистики: %s', stats_error)
 
 
 def _threaded_fork(chat_bot_work_channel, event_bot_work_channel_id, version):
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-
     async def _fork():
         await _send_stats(chat_bot_work_channel, event_bot_work_channel_id, version)
         await _get_version(version)
@@ -95,16 +83,14 @@ def do_background_work(chat_bot_work_channel: str, event_bot_work_channel_id: st
 
 
 async def _get_tw_data(state):
-    aio_session = aiohttp.ClientSession()
+    async with aiohttp.ClientSession() as aio_session:
+        try:
+            async with aio_session.get(URL_TOKEN + state) as twitch_user_data_raw:
+                twitch_user_data = await twitch_user_data_raw.json()
+        except aiohttp.ClientError as gate_error:
+            print(gate_error)
+            return None
 
-    twitch_user_data = None
-    try:
-        async with aio_session.get(URL_TOKEN + state) as twitch_user_data_raw:
-            twitch_user_data = await twitch_user_data_raw.json()
-    except aiohttp.ClientError as gate_error:
-        print(gate_error)
-
-    await aio_session.close()
     return twitch_user_data
 
 
