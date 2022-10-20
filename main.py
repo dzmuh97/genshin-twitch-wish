@@ -1528,7 +1528,7 @@ class TwitchBot(commands.Bot):
                                                  wishes_in_cmd=wishes_in_command,
                                                  user_wish_delay=user_timeout,
                                                  global_wish_delay=self.chatbot_cfg['wish_global_timeout'],
-                                                 que_num=self.wish_que.qsize() + 1)
+                                                 que_num=self.wish_que.unfinished_tasks + 1)
         except KeyError as format_error:
             print('[TWITCH] Ошибка при форматировании ответа:', format_error)
             return
@@ -1576,7 +1576,7 @@ class TwitchBot(commands.Bot):
                                                  wish_count_w5=user_gacha.wish_5_garant - 1,
                                                  reward_cost=event.reward.cost,
                                                  wishes_in_cmd=wishes_in_command,
-                                                 que_num=self.wish_que.qsize() + 1)
+                                                 que_num=self.wish_que.unfinished_tasks + 1)
         except KeyError as format_error:
             print('[TWITCH] Ошибка при форматировании ответа:', format_error)
             return
