@@ -1629,9 +1629,9 @@ class TwitchBot(commands.Bot):
 
         try:
             answer_text = STATS_MESSAGE.format(user_mention=user.mention,
-                                               u_w_c=uwish_count,
-                                               u_w4_c=uwish_4_garant,
-                                               u_w5_c=uwish_5_garant,
+                                               user_wish_all=uwish_count,
+                                               user_wish_epic=uwish_4_garant,
+                                               user_wish_leg=uwish_5_garant,
                                                user_primo=uwish_count * 160)
         except KeyError as format_error:
             print('[TWITCH] Ошибка при форматировании ответа:', format_error)
@@ -1657,7 +1657,8 @@ class TwitchBot(commands.Bot):
                                                 wcommand_c=self.wish_c_use,
                                                 rcommand_c=self.wish_r_use,
                                                 wish_points=self.wish_r_sum,
-                                                wish_gems=primogems)
+                                                wish_gems=primogems,
+                                                wish_queue_size=self.wish_que.unfinished_tasks)
         except KeyError as format_error:
             print('[TWITCH] Ошибка при форматировании ответа:', format_error)
             return
