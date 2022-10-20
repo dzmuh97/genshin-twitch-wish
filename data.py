@@ -31,7 +31,6 @@ _SRV_TEMPLATE = {
                 }
         }
 }
-
 CONFIG_SCHEMA = {
         "type": "object",
         "required": ["window_name",

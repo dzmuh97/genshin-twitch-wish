@@ -24,9 +24,29 @@ import base64
 import random
 
 from itertools import cycle, zip_longest
+from functools import wraps
+
 from dataclasses import dataclass
 
 import asyncio
+try:  # https://github.com/aio-libs/aiohttp/issues/4324
+    from asyncio.proactor_events import _ProactorBasePipeTransport
+
+    def silence_event_loop_closed(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            try:
+                return func(self, *args, **kwargs)
+            except RuntimeError as e:
+                if str(e) != 'Event loop is closed':
+                    raise
+
+        return wrapper
+
+    _ProactorBasePipeTransport.__del__ = silence_event_loop_closed(_ProactorBasePipeTransport.__del__)
+except ImportError:
+    _ProactorBasePipeTransport = None
+
 import aiohttp
 
 import threading
@@ -1387,9 +1407,9 @@ class TwitchBot(commands.Bot):
         logging.debug('[TWITCH] Инициализация твич бота, параметры: %s, %s, %s', chat_bot_token,
                       command_prefix + self.chatbot_cfg['wish_command'], work_channel)
 
-    def run(self):
+    async def start(self):
         self._load()
-        super().run()
+        await super().start()
 
     @staticmethod
     def _get_user_conf(conf: dict, user: twitchio.Chatter) -> Union[bool, int, str]:
@@ -1962,25 +1982,22 @@ async def _tokens_check(bot: TwitchBot):
                 AUTH_EVENT_BOT['work_channel_id'] = int(twitch_token_data['user_id'])
                 update_auth()
 
-        time.sleep(3)  # Prevent flood Twitch API
+        await asyncio.sleep(3)  # Prevent flood Twitch API
 
     return True
 
 
 def bot_handle(wish_que: queue.Queue, control: Coordinator) -> None:
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)  # fix not exists event loop in new thread
-
     time.sleep(3)  # Prevent flood Twitch API
 
-    bot = TwitchBot(wish_que, control)
+    async def _async_wrap():
+        bot = TwitchBot(wish_que, control)
+        check_status = await _tokens_check(bot)
+        if not check_status:
+            return
+        await bot.start()
 
-    check_job = loop.create_task(_tokens_check(bot))
-    check_status = loop.run_until_complete(check_job)
-    if not check_status:
-        return
-
-    bot.run()
+    asyncio.run(_async_wrap())
 
 
 def create_bot_thread(wish_que: queue.Queue, control: Coordinator) -> threading.Thread:
