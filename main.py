@@ -1373,13 +1373,8 @@ class TwitchBot(commands.Bot):
         self.user_db = UserDB()
         self.coordinator = coordinator
 
-        self.cmd_timeout = {
-            "gbot_status": 0,
-            "gbot_stats": 0,
-            "gbot_sound": 0,
-            "gbot_pause": 0,
-            "gbot_history": 0
-        }
+        gconfig = CONFIG['gbot_config']
+        self.cmd_timeout = {gkey: 0 for gkey in gconfig.keys()}
 
         chat_bot_token = AUTH_CHAT_BOT['bot_token']
         work_channel = AUTH_CHAT_BOT['work_channel']
@@ -1716,20 +1711,13 @@ class TwitchBot(commands.Bot):
 
             await ctx.send(answer_text)
 
-    @commands.command()
-    async def gbot_history(self, ctx: commands.Context) -> None:
-        user = ctx.author
-        if not self._srv_bypass('gbot_history', user):
-            return
-
-        logging.debug('[TWITCH] Получена команда gbot_history: %s', user)
-
-        code, html_history = render_html_history(user.name, self.nick)
+    async def _gbot_history_fnc(self, ctx: commands.Context, user_name: str, user_mention: str, user_id: int):
+        code, html_history = render_html_history(user_name, self.nick)
 
         errors_map = {
-            1: '%s у стримера выключена запись истории молитв :(' % user.mention,
-            2: '%s истории молитв еще нет, попробуй позже :(' % user.mention,
-            3: '%s тебя еще нет в истории молитв, попробуй позже :(' % user.mention
+            1: '%s у стримера выключена запись истории молитв :(' % user_mention,
+            2: '%s истории молитв еще нет, попробуй позже :(' % user_mention,
+            3: '%s тебя еще нет в истории молитв, попробуй позже :(' % user_mention
         }
 
         if code < 0:
@@ -1739,7 +1727,7 @@ class TwitchBot(commands.Bot):
 
         channel_id = AUTH_EVENT_BOT['work_channel_id']
         html_history_b64 = base64.urlsafe_b64encode(html_history.encode(encoding='utf-8')).decode(encoding='utf-8')
-        json_data = {'user_id': user.id, 'channel_id': channel_id, 'html': html_history_b64}
+        json_data = {'user_id': user_id, 'channel_id': channel_id, 'html': html_history_b64}
 
         async with aiohttp.ClientSession() as session:
             try:
@@ -1747,18 +1735,39 @@ class TwitchBot(commands.Bot):
                     response = await post_data.json()
             except aiohttp.ClientError as history_error:
                 print('[TWITCH] Ошибка получения файла истории:', history_error)
-                error_response = '%s не удалось загрузить историю, попробуй позже :(' % user.mention
+                error_response = '%s не удалось загрузить историю, попробуй позже :(' % user_mention
                 await ctx.send(error_response)
                 return
 
         if not ('url' in response):
-            error_response = '%s Не удалось создать ссылку, попробуйте позже :(' % user.mention
+            error_response = '%s Не удалось создать ссылку, попробуйте позже :(' % user_mention
             await ctx.send(error_response)
             return
 
         history_url = response['url']
-        response = '%s твоя история молитв: %s' % (user.mention, history_url)
+        response = '%s история молитв: %s' % (user_mention, history_url)
         await ctx.send(response)
+
+    @commands.command()
+    async def gbot_history(self, ctx: commands.Context) -> None:
+        user = ctx.author
+        if not self._srv_bypass('gbot_history', user):
+            return
+
+        logging.debug('[TWITCH] Получена команда gbot_history: %s', user)
+        await self._gbot_history_fnc(ctx, user.name, user.mention, user.id)
+
+    @commands.command()
+    async def gbot_history_all(self, ctx: commands.Context) -> None:
+        user = ctx.author
+        if not self._srv_bypass('gbot_history_all', user):
+            return
+
+        logging.debug('[TWITCH] Получена команда gbot_history_all: %s', user)
+
+        user_id = 0
+        user_name = ''
+        await self._gbot_history_fnc(ctx, user_name, user.mention, user_id)
 
 
 def merge_wish_meta(cords: Tuple[int, int],
@@ -2037,7 +2046,7 @@ def render_html_history(filter_nick: str, streamer_nick: str) -> Tuple[int, str]
             history_data = history_line.strip().split(',')
             wdate, nickname, _, star, wish_type, wish_name = history_data
 
-            if filter_nick != nickname.lower():
+            if filter_nick and (filter_nick != nickname.lower()):
                 continue
 
             wish_style = style_map[star]
@@ -2079,7 +2088,7 @@ def render_html_history(filter_nick: str, streamer_nick: str) -> Tuple[int, str]
 
     html_params = dict(
         proj_ver=__version__,
-        user=filter_nick,
+        user=filter_nick if filter_nick else 'всех зрителей',
         owner=streamer_nick,
         total_wish=total,
         total_gems=total_gems,

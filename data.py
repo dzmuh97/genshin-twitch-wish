@@ -254,6 +254,7 @@ CONFIG_SCHEMA = {
                                 "gbot_sound",
                                 "gbot_pause",
                                 "gbot_history",
+                                "gbot_history_all"
                         ],
                         "additionalProperties": False,
                         "properties": {
@@ -262,6 +263,7 @@ CONFIG_SCHEMA = {
                                 "gbot_sound": _SRV_TEMPLATE,
                                 "gbot_pause": _SRV_TEMPLATE,
                                 "gbot_history": _SRV_TEMPLATE,
+                                "gbot_history_all": _SRV_TEMPLATE
                         }
                 },
                 "send_dev_stats": {"type": "boolean"},
