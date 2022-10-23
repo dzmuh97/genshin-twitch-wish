@@ -610,12 +610,15 @@ DATABASE = {
         }
 }
 
-HTML_HISTORY_TEMPLATE_HEADER = '''<!DOCTYPE html>
+HTML_HISTORY_TEMPLATE_HEAD1 = r'''<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Genshin Twitch Wish Simulator</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/4.2.0/mdb.min.css">
+    <title>Wish History</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/4.4.0/mdb.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/4.4.0/mdb.min.js"></script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;900&display=swap" rel="stylesheet">
@@ -657,70 +660,118 @@ HTML_HISTORY_TEMPLATE_HEADER = '''<!DOCTYPE html>
         .main_table_data {
             line-height: 12px;
         }
+
+        .head_undertext {
+            font-size: 20px;
+            font-weight: 500;
+            font-family: 'Montserrat', sans-serif;
+            line-height: 10px;
+        }
+
+        .head_text {
+            font-size: 30px;
+            font-weight: 500;
+            font-family: 'Montserrat', sans-serif;
+        }
     </style>
 </head>
 <body>
+<script>
+    function filter_table(_type) {
+        const switcher = document.getElementsByClassName("switcher_button")[0];
+        switch (_type) {
+            case "star3":
+                switcher.textContent = "3★ ";
+                break;
+            case "star4":
+                switcher.textContent = "4★ ";
+                break;
+            case "star5":
+                switcher.textContent = "5★ ";
+                break;
+            default:
+                switcher.textContent = "★ ";
+                break;
+        }
+        const elems = document.getElementsByClassName("filtered_items");
+        for (let i = 0; i < elems.length; i++) {
+            const elem = elems[i];
+            const chelem = elem.children[elem.children.length - 1];
+            const chtype = chelem.getAttribute("class");
+            elem.style.display = "";
+            if (_type.length == 0) continue;
+            if (chtype != _type) elem.style.display = "none";
+        }
+    }
+</script>
+'''
+HTML_HISTORY_TEMPLATE_INFO1 = r'''<div class="container-fluid">
+<p class="head_text text-center text-white">Genshin Twitch Wish Simulator v{proj_ver}</p>
 <div class="row justify-content-center">
-<div class="col-auto">
-    <table class="table table-sm table-borderless text-center text-white border-light">
-      <thead>
-        <tr>
-            <th scope="col" class="fw-bold">Всего молитв</th>
-            <th scope="col" class="fw-bold">Примогемов потрачено</th>
-        </tr>
-      </thead>
-      <tbody>
+    <div class="col-auto">
+        <p class="head_undertext text-left text-white">История молитв <span class="text-primary">{user}</span> на канале <span class="text-primary">{owner}</span></p>
 '''
-
-HTML_HISTORY_TEMPLATE_HEAD_TABLE_ROW_STATS = '''
-        <tr class="stats_table_data">
-            <td>{total_wish}</td>
-            <td>{total_gems}</td>
-        </tr>
+HTML_HISTORY_TEMPLATE_HEAD2 = r'''
+        <div class="progress" style="height: 3px;">
+            <div class="progress-bar bg-primary" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <table class="table table-sm table-borderless text-center text-white border-light">
+            <thead>
+            <tr>
+                <th scope="col" class="fw-bold">Всего молитв</th>
+                <th scope="col" class="fw-bold">Примогемов потрачено</th>
+            </tr>
+            </thead>
+            <tbody>
 '''
-
-HTML_HISTORY_TEMPLATE_HEAD_TABLE_STATS_PRE = '''</tbody>
-    </table>
-    <table class="table table-sm table-borderless text-center text-white border-light">
-      <thead>
-        <tr>
-            <th scope="col" class="fw-bold">Всего 3★</th>
-            <th scope="col" class="fw-bold">Всего 4★</th>
-            <th scope="col" class="fw-bold">Всего 5★</th>
-        </tr>
-      </thead>
-      <tbody>
+HTML_HISTORY_TEMPLATE_STATS1 = r'''<tr class="stats_table_data"><td>{total_wish}</td><td>{total_gems}</td></tr>'''
+HTML_HISTORY_TEMPLATE_HEAD3 = r'''
+            </tbody>
+        </table>
+        <table class="table table-sm table-borderless text-center text-white border-light">
+            <thead>
+            <tr>
+                <th scope="col" class="fw-bold">Всего 3★</th>
+                <th scope="col" class="fw-bold">Всего 4★</th>
+                <th scope="col" class="fw-bold">Всего 5★</th>
+            </tr>
+            </thead>
+            <tbody>
 '''
+HTML_HISTORY_TEMPLATE_STATS2 = r'''<tr class="star_table_data"><td class="star3">{total_wish3}</td><td class="star4">{total_wish4}</td><td class="star5">{total_wish5}</td></tr>'''
+HTML_HISTORY_TEMPLATE_HEAD4 = r'''
+            </tbody>
+        </table>
+        <table class="table table-sm table-borderless text-center text-white border-light" id="my-table" style="overflow:visible">
+            <thead>
+            <tr>
+                <th scope="col" class="fw-bold">Дата</th>
+                <th scope="col" class="fw-bold">Ник</th>
+                <th scope="col" class="fw-bold">Молитва</th>
+                <th scope="col" class="fw-bold">Гарант</th>
 
-HTML_HISTORY_TEMPLATE_HEAD_TABLE_ROW_STARS = '''<tr class="star_table_data">
-            <td class="star3">{total_wish3}</td>
-            <td class="star4">{total_wish4}</td>
-            <td class="star5">{total_wish5}</td>
-        </tr>
+                <th scope="col" class="fw-bold dropdown">
+                    <button class="switcher_button btn btn-primary btn-sm dropdown-toggle" type="button" data-mdb-toggle="dropdown" aria-expanded="false">★ </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item" onclick="filter_table('')">★</a></li>
+                        <li><a class="dropdown-item" onclick="filter_table('star3')">3★</a></li>
+                        <li><a class="dropdown-item" onclick="filter_table('star4')">4★</a></li>
+                        <li><a class="dropdown-item" onclick="filter_table('star5')">5★</a></li>
+                    </ul>
+                </th>
+
+            </tr>
+            </thead>
+            <tbody class="main_table_data">
 '''
-
-HTML_HISTORY_TEMPLATE_HEAD_TABLE_END = '''</tbody>
-    </table>
-    <table class="table table-sm table-borderless text-center text-white border-light">
-      <thead>
-        <tr>
-            <th scope="col" class="fw-bold">Дата</th>
-            <th scope="col" class="fw-bold">Ник</th>
-            <th scope="col" class="fw-bold">Молитва</th>
-            <th scope="col" class="fw-bold">Гарант</th>
-            <th scope="col" class="fw-bold">Название</th>
-        </tr>
-      </thead>
-      <tbody class="main_table_data">
-'''
-
-HTML_HISTORY_TEMPLATE_MAIN_TABLE_ROW = '''
-<tr><td>{wish_date}</td><td>{wish_user}</td><td>{wish_count}</td><td>{wish_type}</td><td class="{wish_style_color}">{wish_name}</td></tr>
-'''
-
-HTML_HISTORY_TEMPLATE_END = '''
-      </tbody>
-    </table>
+HTML_HISTORY_TEMPLATE_TABLE = r'<tr class="filtered_items"><td>{wish_date}</td><td>{wish_user}</td><td>{wish_count}</td><td>{wish_type}</td><td class="{wish_style_color}">{wish_name}</td></tr>'
+HTML_HISTORY_TEMPLATE_TAIL = r'''
+            </tbody>
+        </table>
+        <div class="progress" style="height: 3px;">
+            <div class="progress-bar bg-primary" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+    </div>
 </div>
 </div>
 </body>

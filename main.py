@@ -57,13 +57,15 @@ import jsonschema
 from data import DATABASE as _DATABASE
 from data import CONFIG_SCHEMA, AUTH_SCHEMA, MESSAGES_SCHEMA, BANNER_SCHEMA
 from data import (
-    HTML_HISTORY_TEMPLATE_HEADER,
-    HTML_HISTORY_TEMPLATE_HEAD_TABLE_ROW_STATS,
-    HTML_HISTORY_TEMPLATE_HEAD_TABLE_STATS_PRE,
-    HTML_HISTORY_TEMPLATE_HEAD_TABLE_ROW_STARS,
-    HTML_HISTORY_TEMPLATE_HEAD_TABLE_END,
-    HTML_HISTORY_TEMPLATE_MAIN_TABLE_ROW,
-    HTML_HISTORY_TEMPLATE_END
+    HTML_HISTORY_TEMPLATE_HEAD1,
+    HTML_HISTORY_TEMPLATE_HEAD2,
+    HTML_HISTORY_TEMPLATE_HEAD3,
+    HTML_HISTORY_TEMPLATE_HEAD4,
+    HTML_HISTORY_TEMPLATE_INFO1,
+    HTML_HISTORY_TEMPLATE_STATS1,
+    HTML_HISTORY_TEMPLATE_STATS2,
+    HTML_HISTORY_TEMPLATE_TABLE,
+    HTML_HISTORY_TEMPLATE_TAIL
 )
 
 import network
@@ -1730,7 +1732,7 @@ class TwitchBot(commands.Bot):
 
         logging.debug('[TWITCH] Получена команда gbot_history: %s', user)
 
-        code, html_history = render_html_history(user.name)
+        code, html_history = render_html_history(user.name, self.nick)
 
         errors_map = {
             1: '%s у стримера выключена запись истории молитв :(' % user.mention,
@@ -2006,7 +2008,7 @@ def create_bot_thread(wish_que: queue.Queue, control: Coordinator) -> threading.
     return bot_thread
 
 
-def render_html_history(filter_nick: str) -> Tuple[int, str]:
+def render_html_history(filter_nick: str, streamer_nick: str) -> Tuple[int, str]:
     history_cfg = CONFIG['history_file']
     history_enabled = history_cfg['enabled']
     if not history_enabled:
@@ -2033,10 +2035,7 @@ def render_html_history(filter_nick: str) -> Tuple[int, str]:
     total_4 = 0
     total_3 = 0
 
-    html_result = ''
-    html_result += HTML_HISTORY_TEMPLATE_HEADER
-
-    html_main_table = ''
+    html_rows = ''
 
     with open(history_path, 'r', encoding='utf-8') as fp:
         for line_num, history_line in enumerate(fp):
@@ -2060,7 +2059,7 @@ def render_html_history(filter_nick: str) -> Tuple[int, str]:
             if star == '5':
                 total_5 += 1
 
-            table_row = HTML_HISTORY_TEMPLATE_MAIN_TABLE_ROW.format(
+            table_row = HTML_HISTORY_TEMPLATE_TABLE.format(
                 wish_date=wdate.replace('-', ' '),
                 wish_user=nickname,
                 wish_count='1' if star == '3' else wishes_map[star],
@@ -2068,7 +2067,7 @@ def render_html_history(filter_nick: str) -> Tuple[int, str]:
                 wish_style_color=wish_style,
                 wish_name=wish_name
             )
-            html_main_table += table_row
+            html_rows += table_row
 
             for wish_star in wishes_map:
                 wishes_map[wish_star] += 1
@@ -2080,19 +2079,28 @@ def render_html_history(filter_nick: str) -> Tuple[int, str]:
         return -3, ''
 
     total_gems = total * 160
-    html_result += HTML_HISTORY_TEMPLATE_HEAD_TABLE_ROW_STATS.format(
-        total_wish=total,
-        total_gems=total_gems
+
+    html_result = ''
+    html_result += HTML_HISTORY_TEMPLATE_HEAD1
+    html_result += HTML_HISTORY_TEMPLATE_INFO1.format(
+        proj_ver=__version__,
+        user=filter_nick,
+        owner=streamer_nick,
     )
-    html_result += HTML_HISTORY_TEMPLATE_HEAD_TABLE_STATS_PRE
-    html_result += HTML_HISTORY_TEMPLATE_HEAD_TABLE_ROW_STARS.format(
+    html_result += HTML_HISTORY_TEMPLATE_HEAD2
+    html_result += HTML_HISTORY_TEMPLATE_STATS1.format(
+        total_wish=total,
+        total_gems=total_gems,
+    )
+    html_result += HTML_HISTORY_TEMPLATE_HEAD3
+    html_result += HTML_HISTORY_TEMPLATE_STATS2.format(
         total_wish3=total_3,
         total_wish4=total_4,
         total_wish5=total_5
     )
-    html_result += HTML_HISTORY_TEMPLATE_HEAD_TABLE_END
-    html_result += html_main_table
-    html_result += HTML_HISTORY_TEMPLATE_END
+    html_result += HTML_HISTORY_TEMPLATE_HEAD4
+    html_result += html_rows
+    html_result += HTML_HISTORY_TEMPLATE_TAIL
 
     return 0, html_result
 
