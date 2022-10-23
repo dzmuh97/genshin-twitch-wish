@@ -56,17 +56,7 @@ import jsonschema
 
 from data import DATABASE as _DATABASE
 from data import CONFIG_SCHEMA, AUTH_SCHEMA, MESSAGES_SCHEMA, BANNER_SCHEMA
-from data import (
-    HTML_HISTORY_TEMPLATE_HEAD1,
-    HTML_HISTORY_TEMPLATE_HEAD2,
-    HTML_HISTORY_TEMPLATE_HEAD3,
-    HTML_HISTORY_TEMPLATE_HEAD4,
-    HTML_HISTORY_TEMPLATE_INFO1,
-    HTML_HISTORY_TEMPLATE_STATS1,
-    HTML_HISTORY_TEMPLATE_STATS2,
-    HTML_HISTORY_TEMPLATE_TABLE,
-    HTML_HISTORY_TEMPLATE_TAIL
-)
+from data import HTML_HISTORY_TEMPLATE_TABLE
 
 import network
 from network import do_background_work, interactive_auth
@@ -77,6 +67,8 @@ from twitchio.ext import commands
 
 import pickle
 import sqlite3
+
+import chevron
 
 import logging
 
@@ -2059,7 +2051,7 @@ def render_html_history(filter_nick: str, streamer_nick: str) -> Tuple[int, str]
             if star == '5':
                 total_5 += 1
 
-            table_row = HTML_HISTORY_TEMPLATE_TABLE.format(
+            table_row_params = dict(
                 wish_date=wdate.replace('-', ' '),
                 wish_user=nickname,
                 wish_count='1' if star == '3' else wishes_map[star],
@@ -2067,6 +2059,7 @@ def render_html_history(filter_nick: str, streamer_nick: str) -> Tuple[int, str]
                 wish_style_color=wish_style,
                 wish_name=wish_name
             )
+            table_row = chevron.render(HTML_HISTORY_TEMPLATE_TABLE, table_row_params)
             html_rows += table_row
 
             for wish_star in wishes_map:
@@ -2080,27 +2073,22 @@ def render_html_history(filter_nick: str, streamer_nick: str) -> Tuple[int, str]
 
     total_gems = total * 160
 
-    html_result = ''
-    html_result += HTML_HISTORY_TEMPLATE_HEAD1
-    html_result += HTML_HISTORY_TEMPLATE_INFO1.format(
+    tmpl_path = os.path.join('background', 'html_history_template.html')
+    with open(tmpl_path, 'r', encoding='utf-8') as _tmpl_f:
+        html_template = _tmpl_f.read()
+
+    html_params = dict(
         proj_ver=__version__,
         user=filter_nick,
         owner=streamer_nick,
-    )
-    html_result += HTML_HISTORY_TEMPLATE_HEAD2
-    html_result += HTML_HISTORY_TEMPLATE_STATS1.format(
         total_wish=total,
         total_gems=total_gems,
-    )
-    html_result += HTML_HISTORY_TEMPLATE_HEAD3
-    html_result += HTML_HISTORY_TEMPLATE_STATS2.format(
         total_wish3=total_3,
         total_wish4=total_4,
-        total_wish5=total_5
+        total_wish5=total_5,
+        main_table_content=html_rows
     )
-    html_result += HTML_HISTORY_TEMPLATE_HEAD4
-    html_result += html_rows
-    html_result += HTML_HISTORY_TEMPLATE_TAIL
+    html_result = chevron.render(html_template, html_params)
 
     return 0, html_result
 
