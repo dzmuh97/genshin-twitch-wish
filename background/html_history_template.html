@@ -62,34 +62,6 @@
     </style>
 </head>
 <body>
-<script>
-    function filter_table(_type) {
-        const switcher = document.getElementsByClassName("switcher_button")[0];
-        switch (_type) {
-            case "star3":
-                switcher.textContent = "3★ ";
-                break;
-            case "star4":
-                switcher.textContent = "4★ ";
-                break;
-            case "star5":
-                switcher.textContent = "5★ ";
-                break;
-            default:
-                switcher.textContent = "★ ";
-                break;
-        }
-        const elems = document.getElementsByClassName("filtered_items");
-        for (let i = 0; i < elems.length; i++) {
-            const elem = elems[i];
-            const chelem = elem.children[elem.children.length - 1];
-            const chtype = chelem.getAttribute("class");
-            elem.style.display = "";
-            if (_type.length === 0) continue;
-            if (chtype !== _type) elem.style.display = "none";
-        }
-    }
-</script>
 <div class="container-fluid">
     <p class="head_text text-center text-white">Genshin Twitch Wish Simulator v{{ proj_ver }}</p>
     <div class="row justify-content-center">
@@ -135,14 +107,21 @@
                     <th scope="col" class="fw-bold">Ник</th>
                     <th scope="col" class="fw-bold">Молитва</th>
                     <th scope="col" class="fw-bold">Гарант</th>
-                    <th scope="col" class="fw-bold dropdown">
-                        <button class="switcher_button btn btn-primary btn-sm dropdown-toggle" type="button" data-mdb-toggle="dropdown" aria-expanded="false">★ </button>
-                        <ul class="dropdown-menu dropdown-menu-dark">
-                            <li><a class="dropdown-item" onclick="filter_table('')">★</a></li>
-                            <li><a class="dropdown-item" onclick="filter_table('star3')">3★</a></li>
-                            <li><a class="dropdown-item" onclick="filter_table('star4')">4★</a></li>
-                            <li><a class="dropdown-item" onclick="filter_table('star5')">5★</a></li>
-                        </ul>
+                    <th scope="col" class="fw-bold">
+                        <div class="input-group input-group-sm">
+                            <input id="search_input" class="form-control align-self-center" type="text" placeholder="Фильтр">
+                            <div class="input-group-append">
+                                <div class="dropdown">
+                                    <button id="switcher_button" class="btn btn-primary dropdown-toggle align-self-center" type="button" data-mdb-toggle="dropdown" aria-expanded="false">★ </button>
+                                    <ul class="dropdown-menu dropdown-menu-dark">
+                                        <li><a class="dropdown-item" onclick="filter_table('')">★</a></li>
+                                        <li><a class="dropdown-item" onclick="filter_table('star3')">3★</a></li>
+                                        <li><a class="dropdown-item" onclick="filter_table('star4')">4★</a></li>
+                                        <li><a class="dropdown-item" onclick="filter_table('star5')">5★</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                     </th>
                 </tr>
                 </thead>
@@ -156,5 +135,62 @@
         </div>
     </div>
 </div>
+<script>
+    const table_elems = document.getElementsByClassName("filtered_items");
+    const searchInput = document.getElementById("search_input");
+    const switcher = document.getElementById("switcher_button");
+
+    function rows_filter() {
+        const s_text = searchInput.value.toLowerCase();
+        let s_type;
+
+        switch (switcher.textContent) {
+            case "3★ ":
+                s_type = "star3";
+                break;
+            case "4★ ":
+                s_type = "star4";
+                break;
+            case "5★ ":
+                s_type = "star5";
+                break;
+            default:
+                s_type = "";
+                break;
+        }
+
+        for (let i = 0; i < table_elems.length; i++) {
+            const row_elems = table_elems[i];
+            const name_elem = row_elems.children[row_elems.children.length - 1];
+
+            const elem_name = name_elem.textContent.toLowerCase();
+            const elem_class = name_elem.getAttribute("class");
+
+            row_elems.style.display = "";
+            if ((s_text.length !== 0) && !elem_name.startsWith(s_text)) row_elems.style.display = "none";
+            if ((s_type.length !== 0) && (elem_class !== s_type)) row_elems.style.display = "none";
+        }
+    }
+
+    searchInput.addEventListener("keyup", rows_filter);
+
+    function filter_table(_type) {
+        switch (_type) {
+            case "star3":
+                switcher.textContent = "3★ ";
+                break;
+            case "star4":
+                switcher.textContent = "4★ ";
+                break;
+            case "star5":
+                switcher.textContent = "5★ ";
+                break;
+            default:
+                switcher.textContent = "★ ";
+                break;
+        }
+        rows_filter();
+    }
+</script>
 </body>
 </html>
