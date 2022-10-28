@@ -142,7 +142,15 @@
 
     function rows_filter() {
         const s_text = searchInput.value.toLowerCase();
-        const regex = new RegExp(s_text);
+
+        let regex = null;
+        try {
+            regex = new RegExp(s_text);
+        } catch (e) {
+            console.log("Regex error: " + e.name + ":" + e.message);
+            return;
+        }
+
         let s_type;
 
         switch (switcher.textContent) {
