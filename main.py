@@ -54,6 +54,7 @@ import threading
 import json
 import jsonschema
 
+from data import TEXT
 from data import DATABASE as _DATABASE
 from data import CONFIG_SCHEMA, AUTH_SCHEMA, MESSAGES_SCHEMA, BANNER_SCHEMA
 from data import HTML_HISTORY_TEMPLATE_TABLE
@@ -97,24 +98,35 @@ logging.basicConfig(format='[%(asctime)s] [%(levelname)s] %(message)s',
                     level=logging.DEBUG)
 
 
+def _msg(_msg_type):
+    return TEXT.get(_msg_type, 'msg miss: unknown msg type "%s"' % _msg_type)
+
+
+def _log_print(*args, **kwargs):
+    log_text = ' '.join(str(arg) for arg in args)
+    logging.info(log_text)
+    print(*args, **kwargs)
+
+
 def _err_logger(msg: str) -> None:
-    message_strip = msg.strip()
-    if (message_strip != '\n') and (len(message_strip) > 0):
-        logging.error(message_strip)
+    for msg_line in msg.strip().splitlines():
+        message_line_strip = msg_line.strip()
+        if len(message_line_strip) > 0:
+            logging.error(message_line_strip)
 
 
 def _config_check(json_file: str, schema: Dict) -> Dict:
     try:
         config = json.loads(open(json_file, 'r', encoding='utf-8').read())
     except (json.JSONDecodeError, ValueError) as json_error:
-        print('[MAIN] Ошибка при загрузке файла конфигурации (%s) : %s' % (json_file, json_error))
-        sys.exit(input('Нажмите любую кнопку чтобы выйти > '))
+        _log_print(_msg('config_check_error_load') % (json_file, json_error))
+        sys.exit(input(_msg('press_to_exit')))
 
     try:
         jsonschema.validate(config, schema=schema)
     except jsonschema.ValidationError as json_error:
-        print('[MAIN] Ошибка при проверке файла конфигурации (%s) : %s' % (json_file, json_error))
-        sys.exit(input('Нажмите любую кнопку чтобы выйти > '))
+        _log_print(_msg('config_check_error_check') % (json_file, json_error))
+        sys.exit(input(_msg('press_to_exit')))
 
     return config
 
@@ -151,7 +163,7 @@ def _load_database(config: Dict) -> Dict:
     }
 
     items_linear = [(item, star, wtype) for star in _DATABASE for wtype in _DATABASE[star] for item in _DATABASE[star][wtype]]
-    print('[MAIN] Загружаю баннер "%s" ..' % base_name, end=' ')
+    _log_print(_msg('load_databse_load_pre') % base_name, end=' ')
 
     wishes = config['wishes']
     for ban_star in wishes:
@@ -163,7 +175,7 @@ def _load_database(config: Dict) -> Dict:
                 try:
                     item_data = next(filtered_data)
                 except StopIteration:
-                    print('ошибка загрузки баннера: %s*%s:%s не найден' % (ban_star, ban_wtype, ban_item))
+                    _log_print(_msg('load_database_item_not_found') % (ban_star, ban_wtype, ban_item))
                     sys.exit(input())
 
                 db_item, db_star, db_wtype = item_data
@@ -171,7 +183,7 @@ def _load_database(config: Dict) -> Dict:
                 if ban_wtype in ['char', 'weapon']:
                     if ban_star != db_star or ban_wtype != db_wtype:
                         _text_params = (ban_star, ban_wtype, ban_item, db_star, db_wtype, db_item['wish_obj_text'])
-                        print('ошибка загрузки баннера: %s*%s:%s <> %s*%s:%s' % _text_params)
+                        _log_print(_msg('load_database_item_wrong_params') % _text_params)
                         sys.exit(input())
                     total += 1
 
@@ -179,7 +191,7 @@ def _load_database(config: Dict) -> Dict:
                 stats[ban_star][ban_wtype] += 1
 
     if total == 0:
-        print('ошибка загрузки баннера: ни одного предмета не загружено')
+        _log_print(_msg('load_database_item_zero_items'))
         sys.exit(input())
 
     stat_text = '(%d) | 5*: %d/%d[%d]; 4*: %d/%d[%d]; 3*: 0/%d' % (
@@ -192,7 +204,7 @@ def _load_database(config: Dict) -> Dict:
         stats['4']['garant'],
         stats['3']['weapon']
     )
-    print(stat_text)
+    _log_print(stat_text)
     return data_template
 
 
@@ -311,7 +323,7 @@ class Gacha:
         self.win_garant_table = {'5': win_5, '4': win_4}
         self._rollback = [0, 0, 0]
 
-        logging.debug('[GACHA] Создана гача с параметрами w:%d g4:%d g5:%d w4:%d w5:%d', wish_count, wish_4_garant, wish_5_garant, win_4, win_5)
+        logging.debug(_msg('log_gacha_created'), wish_count, wish_4_garant, wish_5_garant, win_4, win_5)
 
     @staticmethod
     def _random_tap(chance_percent: float) -> bool:
@@ -393,7 +405,7 @@ class Gacha:
                 else:
                     self.__flip_garant(star, True)
 
-            logging.debug('[GACHA] Результат крутки: %s %s %s', star, star_type, data)
+            logging.debug(_msg('log_gacha_wish_result'), star, star_type, data)
 
             win_4, win_5 = self.win_garant_table['4'], self.win_garant_table['5']
             gacha_obj = WishData(self.wish_count, self.wish_4_garant, self.wish_5_garant, win_4, win_5, star, star_type, **data)
@@ -410,13 +422,13 @@ class UserDB:
 
     def __init__(self):
         self.conn = sqlite3.connect(self.database)
-        logging.debug('[DB] Создано новое подключение к базе данных')
+        logging.debug(_msg('log_db_created'))
         if not self._check_table():
-            logging.debug('[DB] Таблицы пользователей не существует, создаем..')
+            logging.debug(_msg('log_db_table_create'))
             self._create_table()
         for new_column in self.old_to_new:
             if not self._check_column(new_column):
-                logging.debug('[DB] Версия базы данных устарела, обновляем таблицу: %s', new_column)
+                logging.debug(_msg('log_db_old_update'), new_column)
                 self._create_column(new_column)
         self._restore_old()
 
@@ -424,14 +436,14 @@ class UserDB:
         if not os.path.exists(self.database_old):
             return
 
-        logging.debug('[DB] Начата загрузка данных из старой базы данных (<=1.3)')
+        logging.debug(_msg('log_db_old_import'))
 
-        print('[DB] Начинаем импорт старой базы данных..')
+        _log_print(_msg('db_import_old_start'))
         with open(self.database_old, mode='rb') as f:
             data = pickle.loads(f.read())
 
         i_users = 0
-        print('[DB] В старой базе найдено пользователей:', len(data))
+        _log_print(_msg('db_import_old_users_count'), len(data))
         for user, gacha in data.items():
             user = user.lower()
             setattr(gacha, 'win_garant_table', {'5': 0, '4': 0})
@@ -444,9 +456,9 @@ class UserDB:
             self.push(user, gacha)
             i_users += 1
 
-        print('[DB] Импортировано пользователей:', i_users)
+        _log_print(_msg('db_import_old_users_total'), i_users)
         os.remove(self.database_old)
-        print('[DB] Старая база данных удалена!', )
+        _log_print(_msg('db_import_old_deleted'), )
 
     def _create_column(self, column: str) -> None:
         cur = self.conn.cursor()
@@ -485,7 +497,7 @@ class UserDB:
         cur.close()
 
     def get_all(self) -> List[DbUserTuple]:
-        logging.debug('[DB] Вызван метод get_all')
+        logging.debug(_msg('log_db_method_getall'))
         cur = self.conn.cursor()
         payload = "SELECT * FROM users;"
         cur.execute(payload)
@@ -495,7 +507,7 @@ class UserDB:
         return data
 
     def get(self, username) -> Optional[DbUserTuple]:
-        logging.debug('[DB] Вызван метод get с параметрами %s', username)
+        logging.debug(_msg('log_db_method_get'), username)
         cur = self.conn.cursor()
         payload = "SELECT * FROM users WHERE username=?;"
         cur.execute(payload, (username,))
@@ -505,7 +517,7 @@ class UserDB:
         return data
 
     def push(self, username: str, gacha: Gacha) -> None:
-        logging.debug('[DB] Вызван метод push с параметрами %s, %s', username, gacha)
+        logging.debug(_msg('log_db_method_push'), username, gacha)
         cur = self.conn.cursor()
         payload = "INSERT INTO users VALUES(?, ?, ?, ?, ?, ?);"
         win_4, win_5 = gacha.win_garant_table['4'], gacha.win_garant_table['5']
@@ -514,7 +526,7 @@ class UserDB:
         cur.close()
 
     def update(self, username: str, gacha: Gacha) -> None:
-        logging.debug('[DB] Вызван метод update с параметрами %s, %s', username, gacha)
+        logging.debug(_msg('log_db_method_update'), username, gacha)
         cur = self.conn.cursor()
         payload = "UPDATE users SET wish_count=?, wish_4_garant=?, wish_5_garant=?, win_4=?, win_5=? WHERE username=?;"
         win_4, win_5 = gacha.win_garant_table['4'], gacha.win_garant_table['5']
@@ -542,7 +554,7 @@ class Coordinator:
         self.wish_que = wish_que
 
         self.que_processing = True
-        logging.debug('[PANEL] Создана новая панель управления анимации')
+        logging.debug(_msg('log_panel_created'))
 
     def _load_chunk_check(self):
         if self.current_wish_data is None:
@@ -557,13 +569,13 @@ class Coordinator:
 
     def _load_chunk(self) -> None:
         if self.current_wish_data is None:
-            logging.debug('[PANEL] BUG? Вызван метод _t_load_chunk, но cur_wish_data == None')
+            logging.debug(_msg('log_panel_none_check'))
             return
 
         wish_data = self.current_wish_data
 
         _t = time.time()
-        logging.debug('[PANEL] Вызван метод _t_load_chunk с параметрами: %s', wish_data)
+        logging.debug(_msg('log_panel_call_chunk_load'), wish_data)
 
         is_multi_star = True if self.current_wish.wish_data_count > 1 else False
         wish_stars = wish_data.wish_star
@@ -696,7 +708,7 @@ class Coordinator:
             }
         )
 
-        logging.debug('[PANEL] Метод _t_load_chunk загрузил данные за %s с.', time.time() - _t)
+        logging.debug(_msg('log_panel_call_chunk_time'), time.time() - _t)
 
     def _purge_obj(self, obj_name: str) -> None:
         self._hide_obj(obj_name)
@@ -763,22 +775,22 @@ class Coordinator:
         except queue.Empty:
             return False
 
-        logging.debug('[PANEL] Состояние панели: IDLE')
+        logging.debug(_msg('log_panel_state_idle'))
 
         self.current_wish = wish
 
         for wish_data in wish.wish_data_list:
             t = time.localtime()
             current_time = time.strftime("%H:%M:%S", t)
-            print('[ГАЧА]', '[%s]' % current_time,
-                  'Результат для', wish.username,
-                  '#%d' % wish_data.wish_count,
-                  'g4#%d' % wish_data.wish_4_garant,
-                  'g5#%d' % wish_data.wish_5_garant,
-                  'w4#%d' % wish_data.win_4_garant,
-                  'w5#%d' % wish_data.win_5_garant,
-                  wish_data.wish_star, '* ->', _wish_name_normal(wish_data.wish_obj_text),
-                  '[%s]' % _wish_garant_type(wish_data.wish_star_type))
+            _log_print(_msg('cord_gacha_br'), '[%s]' % current_time,
+                       _msg('cord_result_for'), wish.username,
+                       '#%d' % wish_data.wish_count,
+                       'g4#%d' % wish_data.wish_4_garant,
+                       'g5#%d' % wish_data.wish_5_garant,
+                       'w4#%d' % wish_data.win_4_garant,
+                       'w5#%d' % wish_data.win_5_garant,
+                       wish_data.wish_star, '* ->', _wish_name_normal(wish_data.wish_obj_text),
+                       '[%s]' % _wish_garant_type(wish_data.wish_star_type))
 
             history_cfg = CONFIG['history_file']
             if history_cfg[wish_data.wish_star]:
@@ -788,7 +800,7 @@ class Coordinator:
         return True
 
     def state_init(self) -> bool:
-        logging.debug('[PANEL] Состояние панели: INIT')
+        logging.debug(_msg('log_panel_state_init'))
         _t = time.time()
 
         wish_data = self.current_wish
@@ -810,7 +822,7 @@ class Coordinator:
                                          wish_count=user_wish_count,
                                          gems_in_cmd=user_gems_in_cmd)
 
-        logging.debug('[PANEL] Анимация падения имеет параметры: wish_stars=%s, multi=%s', wish_stars, is_multi_star)
+        logging.debug(_msg('log_panel_init_wish_params'), wish_stars, is_multi_star)
 
         self.current_draw_objs = \
             {
@@ -829,8 +841,8 @@ class Coordinator:
                 'user_background': False
             }
 
-        logging.debug('[PANEL] Начальные данные для анимации загружены за %s с.', time.time() - _t)
-        logging.debug('[PANEL] Инициализация анимации с данными: %s', self.current_draw_objs)
+        logging.debug(_msg('log_panel_init_load_time'), time.time() - _t)
+        logging.debug(_msg('log_panel_init_anim'), self.current_draw_objs)
 
         background_cfg = self.animation_cfg['user_background']
         background_enabled = background_cfg['enabled']
@@ -848,7 +860,7 @@ class Coordinator:
             }
         )
 
-        logging.debug('[PANEL] Загружен пользовательский фон: %s', self.current_draw_objs['user_background'])
+        logging.debug(_msg('log_panel_init_loaded_uback'), self.current_draw_objs['user_background'])
         return True
 
     def state_draw_usertext(self) -> bool:
@@ -951,7 +963,7 @@ class Coordinator:
         return False
 
     def state_clear(self) -> bool:
-        logging.debug('[PANEL] Состояние панели: CLEAR')
+        logging.debug(_msg('log_panel_state_clear'))
         self.wish_que.task_done()
         self.animations_list.clear()
         self.current_draw_objs.clear()
@@ -1393,8 +1405,8 @@ class TwitchBot(commands.Bot):
         self.wish_r_primo = 0
         self.wish_r_sum = 0
 
-        logging.debug('[TWITCH] Инициализация твич бота, параметры: %s, %s, %s', chat_bot_token,
-                      command_prefix + self.chatbot_cfg['wish_command'], work_channel)
+        _wish_cmd = command_prefix + self.chatbot_cfg['wish_command']
+        logging.debug(_msg('log_twitch_init'), chat_bot_token, _wish_cmd, work_channel)
 
     async def start(self):
         self._load()
@@ -1417,53 +1429,53 @@ class TwitchBot(commands.Bot):
         return user_cfg
 
     def _load(self) -> None:
-        print('[TWITCH] Загружаем данные пользователей..')
+        _log_print(_msg('twitch_load_userdata'))
         for user_data in self.user_db.get_all():
             username, *gacha_params = user_data
             user_gacha = Gacha(*gacha_params)
             self.gacha_users.update({username: user_gacha})
-        print('[TWITCH] Данные загружены. Всего пользователей в базе:', len(self.gacha_users))
+        _log_print(_msg('twitch_load_users_total'), len(self.gacha_users))
 
         if self.chatbot_cfg['enabled']:
             chat_wish_command = self.chatbot_cfg['wish_command']
             command_function = commands.Command(chat_wish_command, self.wish)
             self.add_command(command_function)
-            print('[TWITCH] Чат бот включен, команда:', chat_wish_command)
+            _log_print(_msg('twitch_load_chatbot_command'), chat_wish_command)
 
         if self.eventbot_cfg['enabled']:
             event_token = AUTH_EVENT_BOT['channel_token']
             event_channel = AUTH_EVENT_BOT['work_channel_id']
             pubsub_topic = pubsub.channel_points(event_token)[event_channel]
             self.sub_topics.append(pubsub_topic)
-            print('[TWITCH] Баллы канала включены, активировано наград:', len(self.eventbot_cfg['rewards']))
+            _log_print(_msg('twitch_load_eventbot_count'), len(self.eventbot_cfg['rewards']))
 
         if self.chatbot_cfg['enabled']:
-            print('[TWITCH] Подключаемся к чату на канал %s..' % AUTH_CHAT_BOT['work_channel'])
+            _log_print(_msg('twitch_load_chat_connect') % AUTH_CHAT_BOT['work_channel'])
         if self.eventbot_cfg['enabled']:
-            print('[TWITCH] Подключаемся к баллам канала %d..' % AUTH_EVENT_BOT['work_channel_id'])
+            _log_print(_msg('twitch_load_event_connect') % AUTH_EVENT_BOT['work_channel_id'])
 
     async def event_ready(self) -> None:
-        print('[TWITCH] Подключено. Данные чатбота:', self.nick, self.user_id)
+        _log_print(_msg('twitch_chat_connected'), self.nick, self.user_id)
         if self.eventbot_cfg['enabled']:
             await self.pubsub.subscribe_topics(self.sub_topics)
         if self.chatbot_cfg['self_wish']:
-            print('[TWITCH] Молитвы бота включены каждые %d сек.' % self.chatbot_cfg['self_wish_every'])
+            _log_print(_msg('twitch_self_wishes_enabled') % self.chatbot_cfg['self_wish_every'])
             asyncio.Task(self.send_autowish(), loop=self.loop)
 
     @staticmethod
     async def event_pubsub_error(message: dict) -> None:
-        print('[TWITCH] Не удалось подключиться к баллам канала [ %d ] -> %s' % (AUTH_EVENT_BOT['work_channel_id'], message))
+        _log_print(_msg('twitch_event_connect_error') % (AUTH_EVENT_BOT['work_channel_id'], message))
 
     @staticmethod
     async def event_pubsub_nonce(_) -> None:
-        print('[TWITCH] Успешно подключен к баллам канала [ %d ]' % AUTH_EVENT_BOT['work_channel_id'])
+        _log_print(_msg('twitch_event_connected') % AUTH_EVENT_BOT['work_channel_id'])
 
     async def send_notify(self, mention: str, wtime: int) -> None:
         notify_text_raw = random.choice(NOTIFY_TEXT)
         try:
             notify_text = notify_text_raw.format(username=mention, command=self.chatbot_wish_command)
         except KeyError as format_error:
-            print('[TWITCH] Ошибка при форматировании ответа:', format_error)
+            _log_print(_msg('twitch_error_format'), format_error)
             return
 
         await asyncio.sleep(wtime)
@@ -1472,7 +1484,7 @@ class TwitchBot(commands.Bot):
     async def send_autowish(self) -> None:
         auto_gacha = Gacha()
         while True:
-            print('[TWITCH] Отправляю автосообщение..')
+            _log_print(_msg('twitch_send_autowish'))
             await self.connected_channels[0].send(self.chatbot_wish_command)
             await asyncio.sleep(1)
 
@@ -1497,7 +1509,7 @@ class TwitchBot(commands.Bot):
         user = ctx.author
         username = user.name
 
-        logging.debug('[TWITCH] Получена команда wish: %s, %s', username, user.color)
+        logging.debug(_msg('log_twitch_wish_command'), username, user.color)
 
         if username in self.gacha_users:
             user_gacha = self.gacha_users[username]
@@ -1539,7 +1551,7 @@ class TwitchBot(commands.Bot):
                                                  global_wish_delay=self.chatbot_cfg['wish_global_timeout'],
                                                  que_num=self.wish_que.unfinished_tasks + 1)
         except KeyError as format_error:
-            print('[TWITCH] Ошибка при форматировании ответа:', format_error)
+            _log_print(_msg('twitch_error_format'), format_error)
             return
 
         self.wish_que.put(wish)
@@ -1555,13 +1567,13 @@ class TwitchBot(commands.Bot):
         reward_title = event.reward.title
         user_color = self.eventbot_cfg['default_color']
 
-        logging.debug('[TWITCH] Получен ивент pubsub_channel_points: %s, %s, %s', username, reward_title, user_color)
+        logging.debug(_msg('log_twitch_pubsub_event'), username, reward_title, user_color)
 
         rewards_map = {}
         for reward in self.eventbot_cfg['rewards']:
             rewards_map.update({reward['event_name']: reward['wish_count']})
 
-        logging.debug('[TWITCH] pubsub_channel_points rewards_map: %s', rewards_map)
+        logging.debug(_msg('log_twitch_pubsub_map'), rewards_map)
 
         if not (reward_title in rewards_map):
             return
@@ -1587,7 +1599,7 @@ class TwitchBot(commands.Bot):
                                                  wishes_in_cmd=wishes_in_command,
                                                  que_num=self.wish_que.unfinished_tasks + 1)
         except KeyError as format_error:
-            print('[TWITCH] Ошибка при форматировании ответа:', format_error)
+            _log_print(_msg('twitch_error_format'), format_error)
             return
 
         self.wish_que.put(wish)
@@ -1624,7 +1636,7 @@ class TwitchBot(commands.Bot):
         if not self._srv_bypass('gbot_stats', user):
             return
 
-        logging.debug('[TWITCH] Получена команда gbot_stats: %s', user)
+        logging.debug(_msg('log_twitch_getcmd_stats'), user)
 
         if user.name in self.gacha_users:
             user_gacha = self.gacha_users[user.name]
@@ -1643,7 +1655,7 @@ class TwitchBot(commands.Bot):
                                                user_wish_leg=uwish_5_garant,
                                                user_primo=uwish_count * 160)
         except KeyError as format_error:
-            print('[TWITCH] Ошибка при форматировании ответа:', format_error)
+            _log_print(_msg('twitch_error_format'), format_error)
             return
 
         await ctx.send(answer_text)
@@ -1654,7 +1666,7 @@ class TwitchBot(commands.Bot):
         if not self._srv_bypass('gbot_status', user):
             return
 
-        logging.debug('[TWITCH] Получена команда gbot_status: %s', user)
+        logging.debug(_msg('log_twitch_getcmd_status'), user)
 
         primogems = self.wish_r_primo + self.wish_c_primo
         try:
@@ -1669,7 +1681,7 @@ class TwitchBot(commands.Bot):
                                                 wish_gems=primogems,
                                                 wish_queue_size=self.wish_que.unfinished_tasks)
         except KeyError as format_error:
-            print('[TWITCH] Ошибка при форматировании ответа:', format_error)
+            _log_print(_msg('twitch_error_format'), format_error)
             return
 
         await ctx.send(answer_text)
@@ -1683,7 +1695,7 @@ class TwitchBot(commands.Bot):
         if not self._srv_bypass('gbot_sound', user):
             return
 
-        logging.debug('[TWITCH] Получена команда gbot_sound: %s', user)
+        logging.debug(_msg('log_twitch_getcmd_sound'), user)
 
         if user.is_mod or user.is_broadcaster:
             if _sound_work:
@@ -1701,7 +1713,7 @@ class TwitchBot(commands.Bot):
         if not self._srv_bypass('gbot_pause', user):
             return
 
-        logging.debug('[TWITCH] Получена команда gbot_pause: %s', user)
+        logging.debug(_msg('log_twitch_getcmd_pause'), user)
 
         if user.is_mod or user.is_broadcaster:
             self.coordinator.que_processing = not self.coordinator.que_processing
@@ -1734,7 +1746,7 @@ class TwitchBot(commands.Bot):
                 async with session.post(network.URL_HISTORY, json=json_data) as post_data:
                     response = await post_data.json()
             except aiohttp.ClientError as history_error:
-                print('[TWITCH] Ошибка получения файла истории:', history_error)
+                _log_print(_msg('twitch_history_get_error'), history_error)
                 error_response = '%s не удалось загрузить историю, попробуй позже :(' % user_mention
                 await ctx.send(error_response)
                 return
@@ -1754,7 +1766,7 @@ class TwitchBot(commands.Bot):
         if not self._srv_bypass('gbot_history', user):
             return
 
-        logging.debug('[TWITCH] Получена команда gbot_history: %s', user)
+        logging.debug(_msg('log_twitch_getcmd_history'), user)
         await self._gbot_history_fnc(ctx, user.name, user.mention, user.id)
 
     @commands.command()
@@ -1763,7 +1775,7 @@ class TwitchBot(commands.Bot):
         if not self._srv_bypass('gbot_history_all', user):
             return
 
-        logging.debug('[TWITCH] Получена команда gbot_history_all: %s', user)
+        logging.debug(_msg('log_twitch_getcmd_history_all'), user)
 
         user_id = 0
         user_name = ''
@@ -1887,19 +1899,19 @@ def update_auth() -> None:
 
 
 async def refresh_bot_token(ref_token: str) -> bool:
-    print('[TWITCH] Пробуем обновить токен..')
+    _log_print(_msg('token_refresh_try'))
 
     refresh_session = aiohttp.ClientSession()
     try:
         async with refresh_session.post(network.URL_TOKEN_REF, json={'ref_token': ref_token}) as twitch_user_data_raw:
             twitch_user_data = await twitch_user_data_raw.json()
     except aiohttp.ClientError as gate_error:
-        print('[AUTH] Не удалось обновить токен:', gate_error)
+        _log_print(_msg('token_refresh_error'), gate_error)
         return False
 
     token_error = twitch_user_data.get('error')
     if not (token_error is None):
-        print('[AUTH] Не удалось обновить токен:', token_error)
+        _log_print(_msg('token_refresh_error'), token_error)
         return False
 
     config_chat_bot_token_ref = AUTH_CHAT_BOT['bot_token_ref']
@@ -1916,13 +1928,13 @@ async def refresh_bot_token(ref_token: str) -> bool:
         AUTH_EVENT_BOT['channel_token'] = channel_token_new
         AUTH_EVENT_BOT['channel_token_ref'] = channel_token_ref_new
 
-    print('[TWITCH] Токен успешно обновлен, бот будет перезапущен..')
+    _log_print(_msg('token_refresh_ok'))
     update_auth()
     return True
 
 
 async def _tokens_check(bot: TwitchBot):
-    print('[TWITCH] Проверяем данные ботов..')
+    _log_print(_msg('twitch_bots_check'))
 
     event_bot_channel_id = AUTH_EVENT_BOT['work_channel_id']
     event_bot_token_ref = AUTH_EVENT_BOT['channel_token_ref']
@@ -1946,26 +1958,22 @@ async def _tokens_check(bot: TwitchBot):
                     raise aiohttp.ClientError('неправильный токен или его время действия истекло')
                 if twitch_resp.status > 300 or twitch_resp.status < 200:
                     twitch_error_text = await twitch_resp.text()
-                    print('[TWITCH] Не удалось проверить токен: %s' % twitch_error_text)
+                    _log_print(_msg('twitch_token_check_error') % twitch_error_text)
                     return False
                 twitch_token_data = await twitch_resp.json()
         except aiohttp.ClientError as twitch_error:
-            print('[TWITCH] Ошибка авторизации:', twitch_error)
+            _log_print(_msg('twitch_auth_error'), twitch_error)
             refresh_satus = await refresh_bot_token(current_token_ref)
             if not refresh_satus:
-                print('[TWITCH] %s' % ('-' * 80))
-                print('[TWITCH] Не удалось автоматически обновить токен, причина должна быть строчкой выше ^^^')
-                print('[TWITCH] Сейчас приложение можно закрыть и запустить заново - ошибка может исчезнуть,')
-                print('[TWITCH] или попробовать удалить файл "auth.json", чтобы попытаться создать токены заново')
-                print('[TWITCH] Так же можно создать токены вручную, инструкция есть на github странице проекта')
-                print('[TWITCH] Там же можно создать репорт об этой ошибке (настоятельно рекомендуется)')
-                print('[TWITCH] %s' % ('-' * 80))
+                _log_print(_msg('twitch_empty_format') % ('-' * 80))
+                _log_print(_msg('twitch_backend_error_note'))
+                _log_print(_msg('twitch_empty_format') % ('-' * 80))
                 threading.Event().wait()
             return False
 
         login = twitch_token_data['login']
         expires = twitch_token_data['expires_in']
-        print('[TWITCH] Токен для "%s" закончится через %s сек.' % (login, expires))
+        _log_print(_msg('twitch_token_expire_notify') % (login, expires))
 
         if current_token_ref == chat_bot_token_ref:
             conn_cls = getattr(bot, '_connection')
@@ -2148,7 +2156,7 @@ def main():
 
     twitch_bot_start = False
     twitch_bot_thread = None
-    print('[MAIN] Запускаемся..')
+    _log_print(_msg('main_start'))
 
     coordinator = Coordinator(wish_que, animation_group)
 
@@ -2156,22 +2164,22 @@ def main():
         twitch_bot_thread = create_bot_thread(wish_que, coordinator)
         twitch_bot_thread.start()
         twitch_bot_start = True
-        print('[MAIN] Твич бот запущен')
+        _log_print(_msg('main_twitch_bot_started'))
         if CONFIG['send_dev_stats']:
             chat_bot_work_channel = AUTH_CHAT_BOT['work_channel']
             event_bot_work_channel_id = AUTH_EVENT_BOT['work_channel_id']
             do_background_work(chat_bot_work_channel, event_bot_work_channel_id, __version__)
     else:
-        print('[MAIN] Твич бот отключен')
+        _log_print(_msg('main_twitch_bot_disabled'))
 
     animation_cfg = CONFIG['animations']
-    print('[MAIN] FPS установлен в', animation_cfg['fps'])
+    _log_print(_msg('main_fps'), animation_cfg['fps'])
     while True:
         fps.tick(animation_cfg['fps'])
 
         if twitch_bot_start and (not twitch_bot_thread.is_alive()):
             twitch_bot_thread.join()
-            print('[MAIN] Твич бот умер, перезапускаем..')
+            _log_print(_msg('main_twitch_bot_restart'))
             twitch_bot_thread = create_bot_thread(wish_que, coordinator)
             twitch_bot_thread.start()
 
