@@ -73,7 +73,7 @@ import chevron
 
 import logging
 
-os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
 import pygame
 
 from typing import Union, Tuple, List, Dict, Optional
@@ -90,7 +90,7 @@ os.chdir(_script_dir)
 if not os.path.exists('logs'):
     os.makedirs('logs')
 
-_time_stamp = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
+_time_stamp = time.strftime('%Y-%m-%d_%H_%M_%S', time.localtime())
 logging.basicConfig(format='[%(asctime)s] [%(levelname)s] %(message)s',
                     filename=os.path.join('logs', '%s.log' % _time_stamp),
                     filemode='w',
@@ -98,11 +98,11 @@ logging.basicConfig(format='[%(asctime)s] [%(levelname)s] %(message)s',
                     level=logging.DEBUG)
 
 
-def _msg(_msg_type):
-    return TEXT.get(_msg_type, 'msg miss: unknown msg type "%s"' % _msg_type)
+def _msg(_msg_type: str) -> str:
+    return TEXT.get(_msg_type, '(msg error: unknown msg type "%s")' % _msg_type)
 
 
-def _log_print(*args, **kwargs):
+def _log_print(*args, **kwargs) -> None:
     log_text = ' '.join(str(arg) for arg in args)
     logging.info(log_text)
     print(*args, **kwargs)
@@ -115,12 +115,20 @@ def _err_logger(msg: str) -> None:
             logging.error(message_line_strip)
 
 
-def _config_check(json_file: str, schema: Dict) -> Dict:
+def _load_json(json_file: str) -> Dict:
     try:
-        config = json.loads(open(json_file, 'r', encoding='utf-8').read())
+        json_data = json.loads(open(json_file, 'r', encoding='utf-8').read())
     except (json.JSONDecodeError, ValueError) as json_error:
         _log_print(_msg('config_check_error_load') % (json_file, json_error))
         sys.exit(input(_msg('press_to_exit')))
+    except FileNotFoundError as file_error:
+        _log_print(_msg('config_check_error_load') % (json_file, file_error))
+        sys.exit(input(_msg('press_to_exit')))
+    return json_data
+
+
+def _config_check(json_file: str, schema: Dict) -> Dict:
+    config = _load_json(json_file)
 
     try:
         jsonschema.validate(config, schema=schema)
@@ -129,6 +137,20 @@ def _config_check(json_file: str, schema: Dict) -> Dict:
         sys.exit(input(_msg('press_to_exit')))
 
     return config
+
+
+def _load_text(text_file: str) -> Dict:
+    empty = {'text': {}}
+    _text_path = os.path.join('text', 'text_%s.json' % text_file)
+
+    if not text_file:
+        return empty
+
+    if not os.path.exists(_text_path):
+        _log_print(_msg('text_load_not_found') % text_file)
+        return empty
+
+    return _load_json(_text_path)
 
 
 def _load_database(config: Dict) -> Dict:
@@ -176,7 +198,7 @@ def _load_database(config: Dict) -> Dict:
                     item_data = next(filtered_data)
                 except StopIteration:
                     _log_print(_msg('load_database_item_not_found') % (ban_star, ban_wtype, ban_item))
-                    sys.exit(input())
+                    sys.exit(input(_msg('press_to_exit')))
 
                 db_item, db_star, db_wtype = item_data
 
@@ -184,7 +206,7 @@ def _load_database(config: Dict) -> Dict:
                     if ban_star != db_star or ban_wtype != db_wtype:
                         _text_params = (ban_star, ban_wtype, ban_item, db_star, db_wtype, db_item['wish_obj_text'])
                         _log_print(_msg('load_database_item_wrong_params') % _text_params)
-                        sys.exit(input())
+                        sys.exit(input(_msg('press_to_exit')))
                     total += 1
 
                 data_template[ban_star][ban_wtype].append(db_item)
@@ -192,7 +214,7 @@ def _load_database(config: Dict) -> Dict:
 
     if total == 0:
         _log_print(_msg('load_database_item_zero_items'))
-        sys.exit(input())
+        sys.exit(input(_msg('press_to_exit')))
 
     stat_text = '(%d) | 5*: %d/%d[%d]; 4*: %d/%d[%d]; 3*: 0/%d' % (
         total,
@@ -214,19 +236,30 @@ def _wish_name_normal(name: str) -> str:
 
 def _wish_garant_type(gtype: str) -> str:
     star_types = {
-        'srnd': 'мягкий гарант',
-        'garant': 'рандом гарант',
-        'event_garant': 'гарант',
-        'rnd': 'рандом',
-        '50/50': '50/50'
+        'srnd': _msg('wish_garant_type_1'),
+        'garant': _msg('wish_garant_type_2'),
+        'event_garant': _msg('wish_garant_type_3'),
+        'rnd': _msg('wish_garant_type_4'),
+        '50/50': _msg('wish_garant_type_5')
     }
 
     return star_types[gtype]
 
 
 logging.write = _err_logger
+sys.stderr = logging
 
-_messages = _config_check('messages.json', MESSAGES_SCHEMA)
+CONFIG = _config_check('config.json', CONFIG_SCHEMA)
+
+_text = _load_text(CONFIG['language'])
+TEXT.update(_text['text'])
+
+_banner_path = os.path.join('banners', '%s.json' % CONFIG['banner'])
+BANNER_CONFIG = _config_check(_banner_path, BANNER_SCHEMA)
+DATABASE = _load_database(BANNER_CONFIG)
+
+_messages_path = os.path.join('text', '%s.json' % CONFIG['messages'])
+_messages = _config_check(_messages_path, MESSAGES_SCHEMA)
 USER_SPLASH_TEXT = _messages['user_splash_text']
 CHATBOT_TEXT = _messages['chatbot_text']
 NOTIFY_TEXT = _messages['notify_text']
@@ -234,7 +267,6 @@ POINTS_TEXT = _messages['chanel_points_text']
 STATS_MESSAGE = _messages['stats_message']
 STATUS_MESSAGE = _messages['status_message']
 
-CONFIG = _config_check('config.json', CONFIG_SCHEMA)
 _test_mode = CONFIG['test_mode']
 if not _test_mode:
     interactive_auth()
@@ -244,13 +276,8 @@ if not _test_mode:
 else:
     _auth_config = {'chat_bot': {}, 'event_bot': {}}
 
-BANNER_CONFIG = _config_check(os.path.join('banners', CONFIG['banner']) + '.json', BANNER_SCHEMA)
-DATABASE = _load_database(BANNER_CONFIG)
-
 AUTH_CHAT_BOT = _auth_config['chat_bot']
 AUTH_EVENT_BOT = _auth_config['event_bot']
-
-SOUND_CFG = CONFIG['sound']
 
 USERTEXT_COLOR = pygame.Color(255, 255, 255, 0)
 USERTEXT_OUTLINE = pygame.Color(0, 0, 0, 0)
@@ -268,15 +295,16 @@ try:
 except pygame.error:
     _sound_work = False
 
-if SOUND_CFG['enabled'] and (not _sound_work):
-    SOUND_CFG['enabled'] = False
+SOUND_CONFIG = CONFIG['sound']
+if SOUND_CONFIG['enabled'] and (not _sound_work):
+    SOUND_CONFIG['enabled'] = False
 
-if SOUND_CFG['enabled']:
+if SOUND_CONFIG['enabled']:
     SOUND = {
-        'fall': pygame.mixer.Sound(os.path.join('sound', SOUND_CFG['fall'])),
-        '3': pygame.mixer.Sound(os.path.join('sound', SOUND_CFG['3'])),
-        '4': pygame.mixer.Sound(os.path.join('sound', SOUND_CFG['4'])),
-        '5': pygame.mixer.Sound(os.path.join('sound', SOUND_CFG['5']))
+        'fall': pygame.mixer.Sound(os.path.join('sound', SOUND_CONFIG['fall'])),
+        '3': pygame.mixer.Sound(os.path.join('sound', SOUND_CONFIG['3'])),
+        '4': pygame.mixer.Sound(os.path.join('sound', SOUND_CONFIG['4'])),
+        '5': pygame.mixer.Sound(os.path.join('sound', SOUND_CONFIG['5']))
     }
 else:
     SOUND = {}
@@ -781,7 +809,7 @@ class Coordinator:
 
         for wish_data in wish.wish_data_list:
             t = time.localtime()
-            current_time = time.strftime("%H:%M:%S", t)
+            current_time = time.strftime('%H:%M:%S', t)
             _log_print(_msg('cord_gacha_br'), '[%s]' % current_time,
                        _msg('cord_result_for'), wish.username,
                        '#%d' % wish_data.wish_count,
@@ -1133,7 +1161,7 @@ class AnimatedVideo(pygame.sprite.Sprite):
         self.rect = None
 
     def _set_frame(self, video_image):
-        self.image = pygame.image.frombuffer(video_image.tobytes(), video_image.shape[1::-1], "BGR")
+        self.image = pygame.image.frombuffer(video_image.tobytes(), video_image.shape[1::-1], 'BGR')
 
     def play(self):
         self.is_play = True
@@ -1702,8 +1730,8 @@ class TwitchBot(commands.Bot):
                 sound_cfg['enabled'] = not sound_cfg['enabled']
                 pygame.mixer.stop()
 
-            sound_text = 'включен' if sound_cfg['enabled'] else 'выключен'
-            answer_text = '%s звук: %s' % (user.mention, sound_text)
+            sound_text = _msg('enabled') if sound_cfg['enabled'] else _msg('disabled')
+            answer_text = _msg('sound_status') % (user.mention, sound_text)
 
             await ctx.send(answer_text)
 
@@ -1718,8 +1746,8 @@ class TwitchBot(commands.Bot):
         if user.is_mod or user.is_broadcaster:
             self.coordinator.que_processing = not self.coordinator.que_processing
 
-            pause_text = 'включена' if self.coordinator.que_processing else 'выключена'
-            answer_text = '%s обработка команд: %s' % (user.mention, pause_text)
+            pause_text = _msg('enabled') if self.coordinator.que_processing else _msg('disabled')
+            answer_text = _msg('commands_status') % (user.mention, pause_text)
 
             await ctx.send(answer_text)
 
@@ -1950,7 +1978,7 @@ async def _tokens_check(bot: TwitchBot):
 
     for token_t in zip(check_tokens, check_tokens_ref):
         current_token, current_token_ref = token_t
-        headers = {"Authorization": f"OAuth %s" % current_token}
+        headers = {'Authorization': 'OAuth %s' % current_token}
 
         try:
             async with twitch_session.get(network.TWITCH_TOKEN_VALIDATE, headers=headers) as twitch_resp:
@@ -2126,7 +2154,7 @@ def write_history(nickname: str, wish_count: int, star: str, wtype: str, wish: s
             fp.write('date,nickname,wish_count,star,type,wish\n')
 
     history_time = time.localtime()
-    wdate = time.strftime("%d.%m.%Y-%H:%M:%S", history_time)
+    wdate = time.strftime('%d.%m.%Y-%H:%M:%S', history_time)
     with open(history_path, 'a', encoding='utf-8') as fp:
         fp.write('%s,%s,%d,%s,%s,%s\n' % (wdate, nickname, wish_count, star, wtype, _wish_name_normal(wish)))
 
@@ -2198,5 +2226,4 @@ def main():
 
 
 if __name__ == '__main__':
-    sys.stderr = logging
     main()
