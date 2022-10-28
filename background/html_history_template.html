@@ -142,6 +142,7 @@
 
     function rows_filter() {
         const s_text = searchInput.value.toLowerCase();
+        const regex = new RegExp(s_text);
         let s_type;
 
         switch (switcher.textContent) {
@@ -167,7 +168,7 @@
             const elem_class = name_elem.getAttribute("class");
 
             row_elems.style.display = "";
-            if ((s_text.length !== 0) && !elem_name.startsWith(s_text)) row_elems.style.display = "none";
+            if ((s_text.length !== 0) && !regex.test(elem_name)) row_elems.style.display = "none";
             if ((s_type.length !== 0) && (elem_class !== s_type)) row_elems.style.display = "none";
         }
     }
