@@ -644,6 +644,7 @@ TEXT = {
         'twitch_error_format': '[TWITCH] Formatting error in the reply:',
         'twitch_send_autowish': '[TWITCH] Sending an auto-message..',
         'twitch_history_get_error': '[TWITCH] Error receiving history file:',
+        'token_check_error': 'wrong token or it has expired',
         'token_refresh_try': '[TWITCH] Trying to update twitch token..',
         'token_refresh_error': '[AUTH] Failed to update twitch token:',
         'token_refresh_ok': '[TWITCH] Token successfully updated, twitch bot will be restarted..',
@@ -697,7 +698,14 @@ TEXT = {
         'enabled': 'enabled',
         'disabled': 'disabled',
         'sound_status': '%s sound: %s',
-        'commands_status': '%s command processing: %s'
+        'commands_status': '%s command processing: %s',
+        'history_error_c1': '%s streamer\'s wish history recording is turned off :(',
+        'history_error_c2': '%s no history of wish yet, try later :(',
+        'history_error_c3': '%s you\'re not in the wish history yet, try later :(',
+        'history_error_c4': '%s failed to load history, try later :(',
+        'history_error_c5': '%s failed to create history link, try later :(',
+        'history_command_reply': '%s wish history: %s',
+        'history_all': 'of all viewers'
 }
 
 HTML_HISTORY_TEMPLATE_TABLE = r'<tr class="filtered_items"><td>{{ wish_date }}</td><td>{{ wish_user }}</td><td>{{ wish_count }}</td><td>{{ wish_type }}</td><td class="{{ wish_style_color }}">{{ wish_name }}</td></tr>'

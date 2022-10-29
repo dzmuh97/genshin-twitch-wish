@@ -27,6 +27,7 @@
     "twitch_error_format": "[TWITCH] Ошибка при форматировании ответа:",
     "twitch_send_autowish": "[TWITCH] Отправляю автосообщение..",
     "twitch_history_get_error": "[TWITCH] Ошибка получения файла истории:",
+    "token_check_error": "неправильный токен или его время действия истекло",
     "token_refresh_try": "[TWITCH] Пробуем обновить токен..",
     "token_refresh_error": "[AUTH] Не удалось обновить токен:",
     "token_refresh_ok": "[TWITCH] Токен успешно обновлен, бот будет перезапущен..",
@@ -80,6 +81,13 @@
     "enabled": "включено",
     "disabled": "выключено",
     "sound_status": "%s звук: %s",
-    "commands_status": "%s обработка команд: %s"
+    "commands_status": "%s обработка команд: %s",
+    "history_error_c1": "%s у стримера выключена запись истории молитв :(",
+    "history_error_c2": "%s истории молитв еще нет, попробуй позже :(",
+    "history_error_c3": "%s тебя еще нет в истории молитв, попробуй позже :(",
+    "history_error_c4": "%s не удалось загрузить историю, попробуй позже :(",
+    "history_error_c5": "%s не удалось создать ссылку, попробуй позже :(",
+    "history_command_reply": "%s история молитв: %s",
+    "history_all": "всех зрителей"
   }
 }

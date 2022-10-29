@@ -1755,9 +1755,11 @@ class TwitchBot(commands.Bot):
         code, html_history = render_html_history(user_name, self.nick)
 
         errors_map = {
-            1: '%s у стримера выключена запись истории молитв :(' % user_mention,
-            2: '%s истории молитв еще нет, попробуй позже :(' % user_mention,
-            3: '%s тебя еще нет в истории молитв, попробуй позже :(' % user_mention
+            1: _msg('history_error_c1'),
+            2: _msg('history_error_c2'),
+            3: _msg('history_error_c3'),
+            4: _msg('history_error_c4'),
+            5: _msg('history_error_c5')
         }
 
         if code < 0:
@@ -1775,17 +1777,17 @@ class TwitchBot(commands.Bot):
                     response = await post_data.json()
             except aiohttp.ClientError as history_error:
                 _log_print(_msg('twitch_history_get_error'), history_error)
-                error_response = '%s не удалось загрузить историю, попробуй позже :(' % user_mention
+                error_response = errors_map[4]
                 await ctx.send(error_response)
                 return
 
         if not ('url' in response):
-            error_response = '%s Не удалось создать ссылку, попробуйте позже :(' % user_mention
+            error_response = errors_map[5]
             await ctx.send(error_response)
             return
 
         history_url = response['url']
-        response = '%s история молитв: %s' % (user_mention, history_url)
+        response = _msg('history_command_reply') % (user_mention, history_url)
         await ctx.send(response)
 
     @commands.command()
@@ -1983,7 +1985,7 @@ async def _tokens_check(bot: TwitchBot):
         try:
             async with twitch_session.get(network.TWITCH_TOKEN_VALIDATE, headers=headers) as twitch_resp:
                 if twitch_resp.status == 401:
-                    raise aiohttp.ClientError('неправильный токен или его время действия истекло')
+                    raise aiohttp.ClientError(_msg('token_check_error'))
                 if twitch_resp.status > 300 or twitch_resp.status < 200:
                     twitch_error_text = await twitch_resp.text()
                     _log_print(_msg('twitch_token_check_error') % twitch_error_text)
@@ -2124,7 +2126,7 @@ def render_html_history(filter_nick: str, streamer_nick: str) -> Tuple[int, str]
 
     html_params = dict(
         proj_ver=__version__,
-        user=filter_nick if filter_nick else 'всех зрителей',
+        user=filter_nick if filter_nick else _msg('history_all'),
         owner=streamer_nick,
         total_wish=total,
         total_gems=total_gems,
