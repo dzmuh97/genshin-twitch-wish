@@ -36,6 +36,7 @@ CONFIG_SCHEMA = {
         "required": ["window_name",
                      "language",
                      "messages",
+                     "html_template",
                      "banner",
                      "chat_bot",
                      "event_bot",
@@ -49,6 +50,7 @@ CONFIG_SCHEMA = {
                 "window_name": {"type": "string"},
                 "language": {"type": "string"},
                 "messages": {"type": "string"},
+                "html_template": {"type": "string"},
                 "banner": {"type": "string"},
                 "chat_bot": {
                         "type": "object",
@@ -619,7 +621,8 @@ DATABASE = {
 TEXT = {
         'config_check_error_load': '[MAIN] Error loading json file (%s) : %s',
         'config_check_error_check': '[MAIN] Error checking json file (%s) : %s',
-        'text_load_not_found': '[MAIN] Translate file not found: %s',
+        'text_load_not_found': '[MAIN] Translation file not found: %s',
+        'text_load_null': '[MAIN] Translation file not specified, use default language',
         'press_to_exit': '\nPress any button to exit > ',
         'load_databse_load_pre': '[MAIN] Loading banner "%s" ..',
         'load_database_item_not_found': 'banner loading error: %s*%s:%s not found',
@@ -702,10 +705,12 @@ TEXT = {
         'history_error_c1': '%s streamer\'s wish history recording is turned off :(',
         'history_error_c2': '%s no history of wish yet, try later :(',
         'history_error_c3': '%s you\'re not in the wish history yet, try later :(',
-        'history_error_c4': '%s failed to load history, try later :(',
-        'history_error_c5': '%s failed to create history link, try later :(',
+        'history_error_c4': '%s failed to load history, ask streamer to check config file :(',
+        'history_error_c5': '%s failed to load history, try later :(',
+        'history_error_c6': '%s failed to create history link, try later :(',
         'history_command_reply': '%s wish history: %s',
-        'history_all': 'of all viewers'
+        'history_all': 'of all viewers',
+        'html_history_template_not_found': '[HTML] Template for twist history not found: %s'
 }
 
 HTML_HISTORY_TEMPLATE_TABLE = r'<tr class="filtered_items"><td>{{ wish_date }}</td><td>{{ wish_user }}</td><td>{{ wish_count }}</td><td>{{ wish_type }}</td><td class="{{ wish_style_color }}">{{ wish_name }}</td></tr>'

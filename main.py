@@ -143,7 +143,8 @@ def _load_text(text_file: str) -> Dict:
     empty = {'text': {}}
     _text_path = os.path.join('text', 'text_%s.json' % text_file)
 
-    if not text_file:
+    if (not text_file) or (text_file == 'default'):
+        _log_print(_msg('text_load_null'))
         return empty
 
     if not os.path.exists(_text_path):
@@ -1759,11 +1760,12 @@ class TwitchBot(commands.Bot):
             2: _msg('history_error_c2'),
             3: _msg('history_error_c3'),
             4: _msg('history_error_c4'),
-            5: _msg('history_error_c5')
+            5: _msg('history_error_c5'),
+            6: _msg('history_error_c6')
         }
 
         if code < 0:
-            error_response = errors_map[abs(code)]
+            error_response = errors_map[abs(code)] % user_mention
             await ctx.send(error_response)
             return
 
@@ -1777,12 +1779,12 @@ class TwitchBot(commands.Bot):
                     response = await post_data.json()
             except aiohttp.ClientError as history_error:
                 _log_print(_msg('twitch_history_get_error'), history_error)
-                error_response = errors_map[4]
+                error_response = errors_map[5]
                 await ctx.send(error_response)
                 return
 
         if not ('url' in response):
-            error_response = errors_map[5]
+            error_response = errors_map[6]
             await ctx.send(error_response)
             return
 
@@ -2057,6 +2059,12 @@ def render_html_history(filter_nick: str, streamer_nick: str) -> Tuple[int, str]
     if not os.path.exists(history_path):
         return -2, ''
 
+    tmpl_file = CONFIG['html_template']
+    tmpl_path = os.path.join('text', tmpl_file)
+    if not os.path.exists(tmpl_path):
+        _log_print(_msg('html_history_template_not_found') % tmpl_path)
+        return -4, ''
+
     style_map = {
         '3': 'star3',
         '4': 'star4',
@@ -2120,7 +2128,6 @@ def render_html_history(filter_nick: str, streamer_nick: str) -> Tuple[int, str]
 
     total_gems = total * 160
 
-    tmpl_path = os.path.join('background', 'html_history_template.html')
     with open(tmpl_path, 'r', encoding='utf-8') as _tmpl_f:
         html_template = _tmpl_f.read()
 
