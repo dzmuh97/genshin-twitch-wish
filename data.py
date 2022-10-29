@@ -709,7 +709,7 @@ TEXT = {
         'history_error_c5': '%s failed to load history, try later :(',
         'history_error_c6': '%s failed to create history link, try later :(',
         'history_command_reply': '%s wish history: %s',
-        'history_all': 'of all viewers',
+        'history_all': 'all viewers',
         'html_history_template_not_found': '[HTML] Template for twist history not found: %s'
 }
 

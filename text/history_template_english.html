@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="UTF-8">
+    <title>Genshin Wish History</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/4.4.0/mdb.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/4.4.0/mdb.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #25294a;
+        }
+
+        .star3 {
+            color: #4e7cff;
+        }
+
+        .star4 {
+            color: #d28fd6;
+        }
+
+        .star5 {
+            color: #ffb13f;
+        }
+
+        thead {
+            color: #cbd5e0;
+        }
+
+        .stats_table_data {
+            font-size: 80px;
+            font-weight: 900;
+            font-family: 'Montserrat', sans-serif;
+            line-height: 50px;
+        }
+
+        .star_table_data {
+            font-size: 30px;
+            font-weight: 900;
+            font-family: 'Montserrat', sans-serif;
+            line-height: 15px;
+        }
+
+        .main_table_data {
+            line-height: 12px;
+        }
+
+        .head_undertext {
+            font-size: 20px;
+            font-weight: 500;
+            font-family: 'Montserrat', sans-serif;
+            line-height: 10px;
+        }
+
+        .head_text {
+            font-size: 30px;
+            font-weight: 500;
+            font-family: 'Montserrat', sans-serif;
+        }
+    </style>
+</head>
+<body>
+<div class="container-fluid">
+    <p class="head_text text-center text-white">Genshin Twitch Wish Simulator v{{ proj_ver }}</p>
+    <div class="row justify-content-center">
+        <div class="col-auto">
+            <p class="head_undertext text-left text-white">Wish history of <span class="text-primary">{{ user }}</span> on channel <span class="text-primary">{{ owner }}</span></p>
+            <div class="progress" style="height: 3px;">
+                <div class="progress-bar bg-primary" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <table class="table table-sm table-borderless text-center text-white border-light">
+                <thead>
+                <tr>
+                    <th scope="col" class="fw-bold">Total wishes</th>
+                    <th scope="col" class="fw-bold">Primogems spent</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr class="stats_table_data">
+                    <td>{{ total_wish }}</td>
+                    <td>{{ total_gems }}</td>
+                </tr>
+                </tbody>
+            </table>
+            <table class="table table-sm table-borderless text-center text-white border-light">
+                <thead>
+                <tr>
+                    <th scope="col" class="fw-bold">Total 3★</th>
+                    <th scope="col" class="fw-bold">Total 4★</th>
+                    <th scope="col" class="fw-bold">Total 5★</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr class="star_table_data">
+                    <td class="star3">{{ total_wish3 }}</td>
+                    <td class="star4">{{ total_wish4 }}</td>
+                    <td class="star5">{{ total_wish5 }}</td>
+                </tr>
+                </tbody>
+            </table>
+            <table class="table table-sm table-borderless text-center text-white border-light" id="my-table" style="overflow:visible">
+                <thead>
+                <tr>
+                    <th scope="col" class="fw-bold">Date</th>
+                    <th scope="col" class="fw-bold">Nickname</th>
+                    <th scope="col" class="fw-bold">Wish</th>
+                    <th scope="col" class="fw-bold">Guarantee</th>
+                    <th scope="col" class="fw-bold">
+                        <div class="input-group input-group-sm">
+                            <input id="search_input" class="form-control align-self-center" type="text" placeholder="Filter">
+                            <div class="input-group-append">
+                                <div class="dropdown">
+                                    <button id="switcher_button" class="btn btn-primary dropdown-toggle align-self-center" type="button" data-mdb-toggle="dropdown" aria-expanded="false">★ </button>
+                                    <ul class="dropdown-menu dropdown-menu-dark">
+                                        <li><a class="dropdown-item" onclick="filter_table('')">★</a></li>
+                                        <li><a class="dropdown-item" onclick="filter_table('star3')">3★</a></li>
+                                        <li><a class="dropdown-item" onclick="filter_table('star4')">4★</a></li>
+                                        <li><a class="dropdown-item" onclick="filter_table('star5')">5★</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </th>
+                </tr>
+                </thead>
+                <tbody class="main_table_data">
+<!--                <tr class="filtered_items"><td>wish_date</td><td>wish_user</td><td>wish_count</td><td>wish_type</td><td class="wish_style_color">wish_name</td></tr>-->
+                {{{ main_table_content }}}
+                </tbody>
+            </table>
+            <div class="progress" style="height: 3px;">
+                <div class="progress-bar bg-primary" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    const table_elems = document.getElementsByClassName("filtered_items");
+    const searchInput = document.getElementById("search_input");
+    const switcher = document.getElementById("switcher_button");
+
+    function rows_filter() {
+        const s_text = searchInput.value.toLowerCase();
+
+        let regex = null;
+        try {
+            regex = new RegExp(s_text);
+        } catch (e) {
+            console.log("Regex error: " + e.name + ":" + e.message);
+            return;
+        }
+
+        let s_type;
+
+        switch (switcher.textContent) {
+            case "3★ ":
+                s_type = "star3";
+                break;
+            case "4★ ":
+                s_type = "star4";
+                break;
+            case "5★ ":
+                s_type = "star5";
+                break;
+            default:
+                s_type = "";
+                break;
+        }
+
+        for (let i = 0; i < table_elems.length; i++) {
+            const row_elems = table_elems[i];
+            const name_elem = row_elems.children[row_elems.children.length - 1];
+
+            const elem_name = name_elem.textContent.toLowerCase();
+            const elem_class = name_elem.getAttribute("class");
+
+            row_elems.style.display = "";
+            if ((s_text.length !== 0) && !regex.test(elem_name)) row_elems.style.display = "none";
+            if ((s_type.length !== 0) && (elem_class !== s_type)) row_elems.style.display = "none";
+        }
+    }
+
+    searchInput.addEventListener("keyup", rows_filter);
+
+    function filter_table(_type) {
+        switch (_type) {
+            case "star3":
+                switcher.textContent = "3★ ";
+                break;
+            case "star4":
+                switcher.textContent = "4★ ";
+                break;
+            case "star5":
+                switcher.textContent = "5★ ";
+                break;
+            default:
+                switcher.textContent = "★ ";
+                break;
+        }
+        rows_filter();
+    }
+</script>
+</body>
+</html>

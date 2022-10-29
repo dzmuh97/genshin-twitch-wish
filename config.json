@@ -1,8 +1,8 @@
 {
   "window_name": "Genshin Twitch Wish Simulator",
-  "language": "russian",
-  "messages": "messages_russian",
-  "html_template": "history_template_russian.html",
+  "language": "default",
+  "messages": "messages_english",
+  "html_template": "history_template_english.html",
   "banner": "all_in_one",
   "chat_bot": {
     "enabled": true,

@@ -1,0 +1,26 @@
+{
+  "user_splash_text": [
+    "spends {wishes_in_cmd} wishes to banner!",
+    "decides to try his luck {wish_count} times!",
+    "spends {gems_in_cmd} primos to banner!",
+    "praying archons for good luck!",
+    "wants to swap primos for waifu!",
+    "hopes for chinese random!"
+  ],
+  "chatbot_text": [
+    "{username} this is your {wish_count} wish, see result on stream in few seconds! Your position in queue: {que_num} HungryPaimon",
+    "{username} does a {wish_count} wish! What will be gained? Watch on stream! Position in queue: {que_num} HungryPaimon",
+    "{username} decides to try luck {wish_count} times! Result on stream in a few seconds! Position in queue: {que_num} HungryPaimon",
+    "{username} sacrifices {wishes_in_cmd} wishes, increasing wish count to {wish_count}! What will drop out? Position in queue: {que_num} HungryPaimon"
+  ],
+  "notify_text": [
+    "{username} you can make a wish again! Chat with {command} to try your luck HungryPaimon",
+    "{username} time is up! Try your luck again with {command} HungryPaimon"
+  ],
+  "chanel_points_text": [
+    "Unbelievable! {username} spends {reward_cost} channel points to make {wishes_in_cmd} wishes! His wish count is now {wish_count}! Position in queue: {que_num} HungryPaimon",
+    "{username} goes wild and spends {reward_cost} channel points for {wishes_in_cmd} wishes! All for favorite waifu! You've now made a whole {wish_count} wishes! Your position is in line: {que_num} HungryPaimon"
+  ],
+  "status_message": "{user_mention} I work on {proj_name} v{proj_ver} ({proj_url}) stream stats: commands \"{wcommand}\" used: {wcommand_c}, awards for channel points received: {rcommand_c}, total points spent: {wish_points}, cost of all wishes in primogems: {wish_gems}, wishes in queue: {wish_queue_size} HungryPaimon",
+  "stats_message": "{user_mention}, your stats: total wishes: {user_wish_all}, guarantee 4★: {user_wish_epic}, guarantee 5★: {user_wish_leg}, all your wishes are worth {user_primo} primogems HungryPaimon"
+}
