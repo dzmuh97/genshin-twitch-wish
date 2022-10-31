@@ -675,7 +675,7 @@ TEXT = {
         'log_panel_created': '[PANEL] A new animation control panel was created',
         'log_panel_none_check': '[PANEL] BUG? Called method "_t_load_chunk", but "cur_wish_data" == None',
         'log_panel_call_chunk_load': '[PANEL] Called method "_t_load_chunk" with: %s',
-        'log_panel_call_chunk_time': '[PANEL] Method "_t_load_chunk" loaded data in %d sec.',
+        'log_panel_call_chunk_time': '[PANEL] Method "_t_load_chunk" loaded data in %s sec.',
         'log_panel_state_idle': '[PANEL] Panel status: IDLE',
         'log_panel_state_init': '[PANEL] Panel status: INIT',
         'log_panel_init_wish_params': '[PANEL] Fall animation has params: wish_stars=%s, multi=%s',
@@ -710,7 +710,26 @@ TEXT = {
         'history_error_c6': '%s failed to create history link, try later :(',
         'history_command_reply': '%s wish history: %s',
         'history_all': 'all viewers',
-        'html_history_template_not_found': '[HTML] Template for twist history not found: %s'
+        'html_history_template_not_found': '[HTML] Template for wish history not found: %s',
+        'version_success': '[UPDATE] Version information received',
+        'version_net_error': '[UPDATE] Failed to get version information: %s',
+        'log_version_info': '[UPDATE] web=%s, local=%s',
+        'version_outdate': '[UPDATE] Outdated simulator version - installed: %s, available: %s',
+        'stats_sended': '[STATS] Statistics sent',
+        'stats_error': '[STATS] Failed to send statistics: %s',
+        'auth_start_promt': 'Unable to find "auth.json" file, start authorization on Twitch? [y/n]: ',
+        'auth_channel_promt': '[AUTH] Enter name of channel where simulator will be used (only nickname, not link to channel): ',
+        'auth_channel_error_name': '[AUTH] Channel name contains invalid characters! Press ENTER to continue: ',
+        'auth_channel_separ': '[AUTH] Will we use one account for chat-bot and channel points? [y/n]: ',
+        'auth_bot_type_both': 'chat-bot and streamer account for channel points',
+        'auth_bot_type_chat': 'chat-bot',
+        'auth_bot_type_event': 'streamer account for channel points',
+        'auth_browser_promt': '\nNow a new tab will be opened in standard web browser\nThis will request access to bot\'s account\nMake sure to check following:\n\n- address in address bar should be: "id.twitch.tv"\n- application name: "Genshin Wish Simulator"\n- on page must be nickname of account that you want to use as bot\n\n>>> Now we are setting up an account for: %s <<<\n\nPress ENTER to begin: ',
+        'auth_browser_close': '\n[AUTH] Confirm access in web browser window that opens and press ENTER when you close that window: ',
+        'auth_gate_error': '[AUTH] Failed to query gate for a token! Press ENTER to continue: ',
+        'auth_token_error': '[AUTH] Failed to create token. The reason was stated in browser window after logging in. Press ENTER to continue: ',
+        'auth_create_success': '[AUTH] All went fine, account is set up. Press ENTER to continue: ',
+        'auth_end': '\nAccount data is stored in "auth.json"\nDo not pass this file on to anyone and do not show its contents on stream!\nTo start setting up accounts again, simply delete "auth.json" from simulator folder\nPress ENTER to continue: '
 }
 
 HTML_HISTORY_TEMPLATE_TABLE = r'<tr class="filtered_items"><td>{{ wish_date }}</td><td>{{ wish_user }}</td><td>{{ wish_count }}</td><td>{{ wish_type }}</td><td class="{{ wish_style_color }}">{{ wish_name }}</td></tr>'
