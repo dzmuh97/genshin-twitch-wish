@@ -68,14 +68,15 @@ class UserDB:
 
     def _check_column(self, column: str) -> bool:
         cur = self.conn.cursor()
-        cur.execute("SELECT * FROM pragma_table_info('users') WHERE name=?;", (column,))
-        ret = cur.fetchone()
+        cur.execute("PRAGMA table_info('users');")
+        table_cols = [col[1] for col in cur.fetchall()]
         cur.close()
 
-        if ret is None:
-            return False
+        is_found = column in table_cols
+        if is_found:
+            return True
 
-        return True
+        return False
 
     def _check_table(self) -> bool:
         cur = self.conn.cursor()
