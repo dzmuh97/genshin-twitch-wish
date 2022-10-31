@@ -33,6 +33,7 @@ from config import __title__
 from config import __version__
 
 from config import CONFIG
+from config import LANG_CONFIG
 
 from config import POINTS_TEXT
 from config import NOTIFY_TEXT
@@ -132,7 +133,7 @@ async def _send_stats(chat_bot_work_channel: str, event_bot_work_channel_id: str
             logging.debug(_msg('stats_error'), stats_error)
 
 
-def _threaded_fork(chat_bot_work_channel, event_bot_work_channel_id, version):
+def _threaded_fork(chat_bot_work_channel, event_bot_work_channel_id, version) -> None:
     async def _fork():
         await _send_stats(chat_bot_work_channel, event_bot_work_channel_id, version)
         await _get_version(version)
@@ -140,7 +141,7 @@ def _threaded_fork(chat_bot_work_channel, event_bot_work_channel_id, version):
     asyncio.run(_fork())
 
 
-async def _get_tw_data(state):
+async def _get_tw_data(state) -> None:
     async with aiohttp.ClientSession() as aio_session:
         try:
             async with aio_session.get(URL_TOKEN + state) as twitch_user_data_raw:
@@ -150,6 +151,325 @@ async def _get_tw_data(state):
             return None
 
     return twitch_user_data
+
+
+def update_auth() -> None:
+    with open('auth.json', 'r', encoding='utf-8') as authf:
+        jdata = json.load(authf)
+
+    jdata.update({'chat_bot': AUTH_CHAT_BOT})
+    jdata.update({'event_bot': AUTH_EVENT_BOT})
+
+    with open('auth.json', 'w', encoding='utf-8') as authf:
+        json.dump(jdata, authf)
+
+
+async def refresh_bot_token(ref_token: str) -> bool:
+    _log_print(_msg('token_refresh_try'))
+
+    refresh_session = aiohttp.ClientSession()
+    try:
+        async with refresh_session.post(URL_TOKEN_REF, json={'ref_token': ref_token}) as twitch_user_data_raw:
+            twitch_user_data = await twitch_user_data_raw.json()
+    except aiohttp.ClientError as gate_error:
+        _log_print(_msg('token_refresh_error'), gate_error)
+        return False
+
+    token_error = twitch_user_data.get('error')
+    if not (token_error is None):
+        _log_print(_msg('token_refresh_error'), token_error)
+        return False
+
+    config_chat_bot_token_ref = AUTH_CHAT_BOT['bot_token_ref']
+    if config_chat_bot_token_ref == ref_token:
+        bot_token_new = twitch_user_data['access_token']
+        bot_token_ref_new = twitch_user_data['refresh_token']
+        AUTH_CHAT_BOT['bot_token'] = bot_token_new
+        AUTH_CHAT_BOT['bot_token_ref'] = bot_token_ref_new
+
+    config_event_bot_ref = AUTH_EVENT_BOT['channel_token_ref']
+    if config_event_bot_ref == ref_token:
+        channel_token_new = twitch_user_data['access_token']
+        channel_token_ref_new = twitch_user_data['refresh_token']
+        AUTH_EVENT_BOT['channel_token'] = channel_token_new
+        AUTH_EVENT_BOT['channel_token_ref'] = channel_token_ref_new
+
+    _log_print(_msg('token_refresh_ok'))
+    update_auth()
+    return True
+
+
+async def _tokens_check(bot: commands.Bot) -> bool:
+    _log_print(_msg('twitch_bots_check'))
+
+    event_bot_channel_id = AUTH_EVENT_BOT['work_channel_id']
+    event_bot_token_ref = AUTH_EVENT_BOT['channel_token_ref']
+    event_bot_token = AUTH_EVENT_BOT['channel_token']
+
+    chat_bot_token_ref = AUTH_CHAT_BOT['bot_token_ref']
+    chat_bot_token = AUTH_CHAT_BOT['bot_token']
+
+    check_tokens = (event_bot_token, chat_bot_token)
+    check_tokens_ref = (event_bot_token_ref, chat_bot_token_ref)
+
+    twitch_session = aiohttp.ClientSession()
+
+    for token_t in zip(check_tokens, check_tokens_ref):
+        current_token, current_token_ref = token_t
+        headers = {'Authorization': 'OAuth %s' % current_token}
+
+        try:
+            async with twitch_session.get(TWITCH_TOKEN_VALIDATE, headers=headers) as twitch_resp:
+                if twitch_resp.status == 401:
+                    raise aiohttp.ClientError(_msg('token_check_error'))
+                if twitch_resp.status > 300 or twitch_resp.status < 200:
+                    twitch_error_text = await twitch_resp.text()
+                    _log_print(_msg('twitch_token_check_error') % twitch_error_text)
+                    return False
+                twitch_token_data = await twitch_resp.json()
+        except aiohttp.ClientError as twitch_error:
+            _log_print(_msg('twitch_auth_error'), twitch_error)
+            refresh_satus = await refresh_bot_token(current_token_ref)
+            if not refresh_satus:
+                _log_print(_msg('twitch_empty_format') % ('-' * 80))
+                _log_print(_msg('twitch_backend_error_note'))
+                _log_print(_msg('twitch_empty_format') % ('-' * 80))
+                threading.Event().wait()
+            return False
+
+        login = twitch_token_data['login']
+        expires = twitch_token_data['expires_in']
+        _log_print(_msg('twitch_token_expire_notify') % (login, expires))
+
+        if current_token_ref == chat_bot_token_ref:
+            conn_cls = getattr(bot, '_connection')
+            http_cls = getattr(bot, '_http')
+
+            setattr(conn_cls, 'nick', twitch_token_data['login'])
+            setattr(conn_cls, 'user_id', int(twitch_token_data['user_id']))
+
+            setattr(http_cls, 'nick', twitch_token_data['login'])
+            setattr(http_cls, 'user_id', int(twitch_token_data['user_id']))
+            setattr(http_cls, 'client_id', twitch_token_data['client_id'])
+
+            setattr(http_cls, 'session', twitch_session)
+
+        if current_token_ref == event_bot_token_ref:
+            if event_bot_channel_id == 0:
+                AUTH_EVENT_BOT['work_channel_id'] = int(twitch_token_data['user_id'])
+                update_auth()
+
+        await asyncio.sleep(3)  # Prevent flood Twitch API
+
+    return True
+
+
+def bot_handle(wish_que: queue.Queue, control: Coordinator) -> None:
+    time.sleep(3)  # Prevent flood Twitch API
+
+    async def _async_wrap():
+        bot = TwitchBot(wish_que, control)
+        check_status = await _tokens_check(bot)
+        if not check_status:
+            return
+        await bot.start()
+
+    asyncio.run(_async_wrap())
+
+
+def render_html_history(filter_nick: str, streamer_nick: str) -> Tuple[int, str]:
+    history_cfg = CONFIG['history_file']
+    history_enabled = history_cfg['enabled']
+    if not history_enabled:
+        return -1, ''
+
+    history_path = history_cfg['path']
+    if not os.path.exists(history_path):
+        return -2, ''
+
+    tmpl_file = LANG_CONFIG['html_template']
+    tmpl_path = os.path.join('text', tmpl_file)
+    if not os.path.exists(tmpl_path):
+        _log_print(_msg('html_history_template_not_found') % tmpl_path)
+        return -4, ''
+
+    style_map = {
+        '3': 'star3',
+        '4': 'star4',
+        '5': 'star5',
+    }
+
+    wishes_map = {
+        '3': 1,
+        '4': 1,
+        '5': 1
+    }
+
+    total = 0
+    total_5 = 0
+    total_4 = 0
+    total_3 = 0
+
+    html_rows = ''
+
+    with open(history_path, 'r', encoding='utf-8') as fp:
+        for line_num, history_line in enumerate(fp):
+            if line_num == 0:  # skip header
+                continue
+
+            history_data = history_line.strip().split(',')
+            wdate, nickname, _, star, wish_type, wish_name = history_data
+
+            if filter_nick and (filter_nick != nickname.lower()):
+                continue
+
+            wish_style = style_map[star]
+
+            if star == '3':
+                total_3 += 1
+
+            if star == '4':
+                total_4 += 1
+
+            if star == '5':
+                total_5 += 1
+
+            table_row_params = dict(
+                wish_date=wdate.replace('-', ' '),
+                wish_user=nickname,
+                wish_count='1' if star == '3' else wishes_map[star],
+                wish_type=wish_type,
+                wish_style_color=wish_style,
+                wish_name=wish_name
+            )
+            table_row = chevron.render(HTML_HISTORY_TEMPLATE_TABLE, table_row_params)
+            html_rows += table_row
+
+            for wish_star in wishes_map:
+                wishes_map[wish_star] += 1
+
+            wishes_map[star] = 1
+            total += 1
+
+    if total == 0:
+        return -3, ''
+
+    total_gems = total * 160
+
+    with open(tmpl_path, 'r', encoding='utf-8') as _tmpl_f:
+        html_template = _tmpl_f.read()
+
+    html_params = dict(
+        proj_ver=__version__,
+        user=filter_nick if filter_nick else _msg('history_all'),
+        owner=streamer_nick,
+        total_wish=total,
+        total_gems=total_gems,
+        total_wish3=total_3,
+        total_wish4=total_4,
+        total_wish5=total_5,
+        main_table_content=html_rows
+    )
+    html_result = chevron.render(html_template, html_params)
+
+    return 0, html_result
+
+
+def do_background_work(chat_bot_work_channel: str, event_bot_work_channel_id: str, version: str) -> None:
+    work_thread = threading.Thread(target=_threaded_fork, args=(chat_bot_work_channel, event_bot_work_channel_id, version))
+    work_thread.daemon = True
+    work_thread.start()
+
+
+def interactive_auth() -> None:
+    if os.path.exists('auth.json'):
+        return
+
+    user_y = input(_msg('auth_start_promt'))
+    if user_y != 'y':
+        return
+
+    user_channel_raw = input(_msg('auth_channel_promt'))
+    user_channel = user_channel_raw.strip()
+    if '/' in user_channel:
+        input(_msg('auth_channel_error_name'))
+        return
+
+    user_y = input(_msg('auth_channel_separ'))
+    if user_y != 'y':
+        auth_type = 'multi'
+    else:
+        auth_type = 'solo'
+
+    auth_data = {}
+    for bot_type in ('chat', 'redem'):
+        state = ''.join(random.choice(STATE_ALPHABLET) for _ in range(32))
+
+        current_scope = MILTI_BOT_SCOPES
+        if bot_type == 'chat':
+            current_scope = CHAT_BOT_SCOPES if auth_type == 'multi' else MILTI_BOT_SCOPES
+        if bot_type == 'redem':
+            current_scope = EVENT_BOT_SCOPES if auth_type == 'multi' else MILTI_BOT_SCOPES
+
+        web_data = {
+            'response_type': 'code',
+            'force_verify': 'true',
+            'client_id': TWITCH_APP_CLIENT_ID,
+            'redirect_uri': URL_CODE,
+            'scope': current_scope,
+            'state': state
+        }
+
+        browser_url = TWITCH_CODE_URL + '?' + parse.urlencode(web_data)
+
+        if auth_type == 'solo':
+            bot_type_text = _msg('auth_bot_type_both')
+        else:
+            bot_type_text = _msg('auth_bot_type_chat') if bot_type == 'chat' else _msg('auth_bot_type_event')
+
+        input(_msg('auth_browser_promt') % bot_type_text)
+        webbrowser.open(browser_url, new=2)
+        input(_msg('auth_browser_close'))
+
+        twitch_user_data = asyncio.run(_get_tw_data(state))
+        if twitch_user_data is None:
+            input(_msg('auth_gate_error'))
+            return
+
+        token_error = twitch_user_data.get('error')
+        if not (token_error is None):
+            input(_msg('auth_token_error'))
+            return
+
+        bot_token = twitch_user_data.get('access_token')
+        bot_token_ref = twitch_user_data.get('refresh_token')
+        if bot_type == 'chat':
+            auth_data.update({
+                'chat_bot': {
+                    'bot_token': bot_token,
+                    'bot_token_ref': bot_token_ref,
+                    'work_channel': user_channel
+                }
+            })
+        if bot_type == 'redem' or auth_type == 'solo':
+            auth_data.update({
+                'event_bot': {
+                    'channel_token': bot_token,
+                    'channel_token_ref': bot_token_ref,
+                    'work_channel_id': 0
+                }
+            })
+
+        if auth_type == 'solo':
+            break
+
+        input(_msg('auth_create_success'))
+
+    with open('auth.json', 'w', encoding='utf-8') as auth_f:
+        json.dump(auth_data, auth_f)
+
+    input(_msg('auth_end'))
+    _log_print('\n')
 
 
 class TwitchBot(commands.Bot):
@@ -563,325 +883,6 @@ class TwitchBot(commands.Bot):
         user_id = 0
         user_name = ''
         await self._gbot_history_fnc(ctx, user_name, user.mention, user_id)
-
-
-def update_auth() -> None:
-    with open('auth.json', 'r', encoding='utf-8') as authf:
-        jdata = json.load(authf)
-
-    jdata.update({'chat_bot': AUTH_CHAT_BOT})
-    jdata.update({'event_bot': AUTH_EVENT_BOT})
-
-    with open('auth.json', 'w', encoding='utf-8') as authf:
-        json.dump(jdata, authf)
-
-
-async def refresh_bot_token(ref_token: str) -> bool:
-    _log_print(_msg('token_refresh_try'))
-
-    refresh_session = aiohttp.ClientSession()
-    try:
-        async with refresh_session.post(URL_TOKEN_REF, json={'ref_token': ref_token}) as twitch_user_data_raw:
-            twitch_user_data = await twitch_user_data_raw.json()
-    except aiohttp.ClientError as gate_error:
-        _log_print(_msg('token_refresh_error'), gate_error)
-        return False
-
-    token_error = twitch_user_data.get('error')
-    if not (token_error is None):
-        _log_print(_msg('token_refresh_error'), token_error)
-        return False
-
-    config_chat_bot_token_ref = AUTH_CHAT_BOT['bot_token_ref']
-    if config_chat_bot_token_ref == ref_token:
-        bot_token_new = twitch_user_data['access_token']
-        bot_token_ref_new = twitch_user_data['refresh_token']
-        AUTH_CHAT_BOT['bot_token'] = bot_token_new
-        AUTH_CHAT_BOT['bot_token_ref'] = bot_token_ref_new
-
-    config_event_bot_ref = AUTH_EVENT_BOT['channel_token_ref']
-    if config_event_bot_ref == ref_token:
-        channel_token_new = twitch_user_data['access_token']
-        channel_token_ref_new = twitch_user_data['refresh_token']
-        AUTH_EVENT_BOT['channel_token'] = channel_token_new
-        AUTH_EVENT_BOT['channel_token_ref'] = channel_token_ref_new
-
-    _log_print(_msg('token_refresh_ok'))
-    update_auth()
-    return True
-
-
-async def _tokens_check(bot: TwitchBot):
-    _log_print(_msg('twitch_bots_check'))
-
-    event_bot_channel_id = AUTH_EVENT_BOT['work_channel_id']
-    event_bot_token_ref = AUTH_EVENT_BOT['channel_token_ref']
-    event_bot_token = AUTH_EVENT_BOT['channel_token']
-
-    chat_bot_token_ref = AUTH_CHAT_BOT['bot_token_ref']
-    chat_bot_token = AUTH_CHAT_BOT['bot_token']
-
-    check_tokens = (event_bot_token, chat_bot_token)
-    check_tokens_ref = (event_bot_token_ref, chat_bot_token_ref)
-
-    twitch_session = aiohttp.ClientSession()
-
-    for token_t in zip(check_tokens, check_tokens_ref):
-        current_token, current_token_ref = token_t
-        headers = {'Authorization': 'OAuth %s' % current_token}
-
-        try:
-            async with twitch_session.get(TWITCH_TOKEN_VALIDATE, headers=headers) as twitch_resp:
-                if twitch_resp.status == 401:
-                    raise aiohttp.ClientError(_msg('token_check_error'))
-                if twitch_resp.status > 300 or twitch_resp.status < 200:
-                    twitch_error_text = await twitch_resp.text()
-                    _log_print(_msg('twitch_token_check_error') % twitch_error_text)
-                    return False
-                twitch_token_data = await twitch_resp.json()
-        except aiohttp.ClientError as twitch_error:
-            _log_print(_msg('twitch_auth_error'), twitch_error)
-            refresh_satus = await refresh_bot_token(current_token_ref)
-            if not refresh_satus:
-                _log_print(_msg('twitch_empty_format') % ('-' * 80))
-                _log_print(_msg('twitch_backend_error_note'))
-                _log_print(_msg('twitch_empty_format') % ('-' * 80))
-                threading.Event().wait()
-            return False
-
-        login = twitch_token_data['login']
-        expires = twitch_token_data['expires_in']
-        _log_print(_msg('twitch_token_expire_notify') % (login, expires))
-
-        if current_token_ref == chat_bot_token_ref:
-            conn_cls = getattr(bot, '_connection')
-            http_cls = getattr(bot, '_http')
-
-            setattr(conn_cls, 'nick', twitch_token_data['login'])
-            setattr(conn_cls, 'user_id', int(twitch_token_data['user_id']))
-
-            setattr(http_cls, 'nick', twitch_token_data['login'])
-            setattr(http_cls, 'user_id', int(twitch_token_data['user_id']))
-            setattr(http_cls, 'client_id', twitch_token_data['client_id'])
-
-            setattr(http_cls, 'session', twitch_session)
-
-        if current_token_ref == event_bot_token_ref:
-            if event_bot_channel_id == 0:
-                AUTH_EVENT_BOT['work_channel_id'] = int(twitch_token_data['user_id'])
-                update_auth()
-
-        await asyncio.sleep(3)  # Prevent flood Twitch API
-
-    return True
-
-
-def bot_handle(wish_que: queue.Queue, control: Coordinator) -> None:
-    time.sleep(3)  # Prevent flood Twitch API
-
-    async def _async_wrap():
-        bot = TwitchBot(wish_que, control)
-        check_status = await _tokens_check(bot)
-        if not check_status:
-            return
-        await bot.start()
-
-    asyncio.run(_async_wrap())
-
-
-def render_html_history(filter_nick: str, streamer_nick: str) -> Tuple[int, str]:
-    history_cfg = CONFIG['history_file']
-    history_enabled = history_cfg['enabled']
-    if not history_enabled:
-        return -1, ''
-
-    history_path = history_cfg['path']
-    if not os.path.exists(history_path):
-        return -2, ''
-
-    tmpl_file = CONFIG['html_template']
-    tmpl_path = os.path.join('text', tmpl_file)
-    if not os.path.exists(tmpl_path):
-        _log_print(_msg('html_history_template_not_found') % tmpl_path)
-        return -4, ''
-
-    style_map = {
-        '3': 'star3',
-        '4': 'star4',
-        '5': 'star5',
-    }
-
-    wishes_map = {
-        '3': 1,
-        '4': 1,
-        '5': 1
-    }
-
-    total = 0
-    total_5 = 0
-    total_4 = 0
-    total_3 = 0
-
-    html_rows = ''
-
-    with open(history_path, 'r', encoding='utf-8') as fp:
-        for line_num, history_line in enumerate(fp):
-            if line_num == 0:  # skip header
-                continue
-
-            history_data = history_line.strip().split(',')
-            wdate, nickname, _, star, wish_type, wish_name = history_data
-
-            if filter_nick and (filter_nick != nickname.lower()):
-                continue
-
-            wish_style = style_map[star]
-
-            if star == '3':
-                total_3 += 1
-
-            if star == '4':
-                total_4 += 1
-
-            if star == '5':
-                total_5 += 1
-
-            table_row_params = dict(
-                wish_date=wdate.replace('-', ' '),
-                wish_user=nickname,
-                wish_count='1' if star == '3' else wishes_map[star],
-                wish_type=wish_type,
-                wish_style_color=wish_style,
-                wish_name=wish_name
-            )
-            table_row = chevron.render(HTML_HISTORY_TEMPLATE_TABLE, table_row_params)
-            html_rows += table_row
-
-            for wish_star in wishes_map:
-                wishes_map[wish_star] += 1
-
-            wishes_map[star] = 1
-            total += 1
-
-    if total == 0:
-        return -3, ''
-
-    total_gems = total * 160
-
-    with open(tmpl_path, 'r', encoding='utf-8') as _tmpl_f:
-        html_template = _tmpl_f.read()
-
-    html_params = dict(
-        proj_ver=__version__,
-        user=filter_nick if filter_nick else _msg('history_all'),
-        owner=streamer_nick,
-        total_wish=total,
-        total_gems=total_gems,
-        total_wish3=total_3,
-        total_wish4=total_4,
-        total_wish5=total_5,
-        main_table_content=html_rows
-    )
-    html_result = chevron.render(html_template, html_params)
-
-    return 0, html_result
-
-
-def do_background_work(chat_bot_work_channel: str, event_bot_work_channel_id: str, version: str) -> None:
-    work_thread = threading.Thread(target=_threaded_fork, args=(chat_bot_work_channel, event_bot_work_channel_id, version))
-    work_thread.daemon = True
-    work_thread.start()
-
-
-def interactive_auth() -> None:
-    if os.path.exists('auth.json'):
-        return
-
-    user_y = input(_msg('auth_start_promt'))
-    if user_y != 'y':
-        return
-
-    user_channel_raw = input(_msg('auth_channel_promt'))
-    user_channel = user_channel_raw.strip()
-    if '/' in user_channel:
-        input(_msg('auth_channel_error_name'))
-        return
-
-    user_y = input(_msg('auth_channel_separ'))
-    if user_y != 'y':
-        auth_type = 'multi'
-    else:
-        auth_type = 'solo'
-
-    auth_data = {}
-    for bot_type in ('chat', 'redem'):
-        state = ''.join(random.choice(STATE_ALPHABLET) for _ in range(32))
-
-        current_scope = MILTI_BOT_SCOPES
-        if bot_type == 'chat':
-            current_scope = CHAT_BOT_SCOPES if auth_type == 'multi' else MILTI_BOT_SCOPES
-        if bot_type == 'redem':
-            current_scope = EVENT_BOT_SCOPES if auth_type == 'multi' else MILTI_BOT_SCOPES
-
-        web_data = {
-            'response_type': 'code',
-            'force_verify': 'true',
-            'client_id': TWITCH_APP_CLIENT_ID,
-            'redirect_uri': URL_CODE,
-            'scope': current_scope,
-            'state': state
-        }
-
-        browser_url = TWITCH_CODE_URL + '?' + parse.urlencode(web_data)
-
-        if auth_type == 'solo':
-            bot_type_text = _msg('auth_bot_type_both')
-        else:
-            bot_type_text = _msg('auth_bot_type_chat') if bot_type == 'chat' else _msg('auth_bot_type_event')
-
-        input(_msg('auth_browser_promt') % bot_type_text)
-        webbrowser.open(browser_url, new=2)
-        input(_msg('auth_browser_close'))
-
-        twitch_user_data = asyncio.run(_get_tw_data(state))
-        if twitch_user_data is None:
-            input(_msg('auth_gate_error'))
-            return
-
-        token_error = twitch_user_data.get('error')
-        if not (token_error is None):
-            input(_msg('auth_token_error'))
-            return
-
-        bot_token = twitch_user_data.get('access_token')
-        bot_token_ref = twitch_user_data.get('refresh_token')
-        if bot_type == 'chat':
-            auth_data.update({
-                'chat_bot': {
-                    'bot_token': bot_token,
-                    'bot_token_ref': bot_token_ref,
-                    'work_channel': user_channel
-                }
-            })
-        if bot_type == 'redem' or auth_type == 'solo':
-            auth_data.update({
-                'event_bot': {
-                    'channel_token': bot_token,
-                    'channel_token_ref': bot_token_ref,
-                    'work_channel_id': 0
-                }
-            })
-
-        if auth_type == 'solo':
-            break
-
-        input(_msg('auth_create_success'))
-
-    with open('auth.json', 'w', encoding='utf-8') as auth_f:
-        json.dump(auth_data, auth_f)
-
-    input(_msg('auth_end'))
-    _log_print('\n')
 
 
 def init():

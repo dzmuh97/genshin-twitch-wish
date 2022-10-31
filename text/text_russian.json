@@ -4,6 +4,8 @@
     "config_check_error_check": "[MAIN] Ошибка при проверке json файла (%s) : %s",
     "text_load_not_found": "[MAIN] Файл с переводом не найден: %s",
     "text_load_null": "[MAIN] Файл с переводом не указан, будет использоваться язык по умолчанию",
+    "items_load_null": "[MAIN] Файл с предметами не указан, будет использоваться набор по умолчанию",
+    "items_load_not_found": "[MAIN] Файл с предметами не найден: %s",
     "press_to_exit": "\nНажмите любую кнопку чтобы выйти > ",
     "load_databse_load_pre": "[MAIN] Загружаю баннер \"%s\" ..",
     "load_database_item_not_found": "ошибка загрузки баннера: %s*%s:%s не найден",

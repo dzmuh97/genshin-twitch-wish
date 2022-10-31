@@ -1,5 +1,5 @@
 {
-  "banner_name": "Standard v2.8",
+  "banner_name": "Event Char v2.8",
   "wish_fo_garant": 10,
   "wish_fo_chance": 13.00,
   "wish_fi_garant": 90,
@@ -7,7 +7,7 @@
   "wish_fi_soft_a": 73,
   "wishes": {
     "5": {
-      "garant": [],
+      "garant": ["Kaedehara Kazuha"],
       "char": [
         "Mona",
         "Diluc",
@@ -15,23 +15,11 @@
         "Qiqi",
         "Keqing"
       ],
-      "weapon": [
-        "Amos’ Bow",
-        "Aquila Favonia",
-        "Wolf’s Gravestone",
-        "Primordial Jade Winged-Spear",
-        "Lost Prayer to the Sacred Winds",
-        "Skyward Pride",
-        "Skyward Spine",
-        "Skyward Harp",
-        "Skyward Blade",
-        "Skyward Atlas"
-      ]
+      "weapon": []
     },
     "4": {
-      "garant": [],
+      "garant": ["Shikanoin Heizou", "Ningguang", "Thoma"],
       "char": [
-        "Amber",
         "Barbara",
         "Beidou",
         "Bennett",
@@ -39,16 +27,12 @@
         "Diona",
         "Fischl",
         "Gorou",
-        "Kaeya",
-        "Lisa",
-        "Ningguang",
         "Noelle",
         "Razor",
         "Rosaria",
         "Kujou Sara",
         "Sayu",
         "Sucrose",
-        "Thoma",
         "Xiangling",
         "Xingqiu",
         "Xinyan",

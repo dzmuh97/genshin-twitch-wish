@@ -1,8 +1,5 @@
 {
   "window_name": "Genshin Twitch Wish Simulator",
-  "language": "default",
-  "messages": "messages_english",
-  "html_template": "history_template_english.html",
   "banner": "all_in_one",
   "chat_bot": {
     "enabled": true,
@@ -84,6 +81,12 @@
     "3": true,
     "4": true,
     "5": true
+  },
+  "language": {
+    "text": "default",
+    "wish_items": "default",
+    "messages": "messages_english",
+    "html_template": "history_template_english.html"
   },
   "gbot_config": {
     "gbot_status": {

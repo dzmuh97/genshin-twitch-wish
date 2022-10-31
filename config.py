@@ -7,9 +7,25 @@ import jsonschema
 
 from typing import Dict
 
-from data import TEXT
+from data import TEXT, DATABASE_TEXT
 from data import DATABASE as _DATABASE
 from data import CONFIG_SCHEMA, MESSAGES_SCHEMA, BANNER_SCHEMA
+
+__title__ = 'genshin-twitch-wish'
+__site__ = 'github.com/dzmuh97/genshin-twitch-wish'
+__version__ = '2.3.0'
+
+CONFIG = {}
+BANNER_CONFIG = {}
+DATABASE = {}
+USER_SPLASH_TEXT = {}
+CHATBOT_TEXT = {}
+NOTIFY_TEXT = {}
+POINTS_TEXT = {}
+STATS_MESSAGE = {}
+STATUS_MESSAGE = {}
+SOUND_CONFIG = {}
+LANG_CONFIG = {}
 
 
 def _wish_name_normal(name: str) -> str:
@@ -52,17 +68,47 @@ def _config_check(json_file: str, schema: Dict) -> Dict:
 
 def _load_text(text_file: str) -> Dict:
     empty = {'text': {}}
-    _text_path = os.path.join('text', 'text_%s.json' % text_file)
+    _text_path = os.path.join('text', '%s.json' % text_file)
 
     if (not text_file) or (text_file == 'default'):
         _log_print(_msg('text_load_null'))
         return empty
 
     if not os.path.exists(_text_path):
-        _log_print(_msg('text_load_not_found') % text_file)
+        _log_print(_msg('text_load_not_found') % _text_path)
         return empty
 
     return _load_json(_text_path)
+
+
+def _items_merge(items_file: str) -> None:
+    _items_path = os.path.join('text', '%s.json' % items_file)
+
+    if (not items_file) or (items_file == 'default'):
+        _log_print(_msg('items_load_null'))
+        return
+
+    if not os.path.exists(_items_path):
+        _log_print(_msg('items_load_not_found') % _items_path)
+        return
+
+    items_text = _load_json(_items_path)['items']
+    DATABASE_TEXT.update(items_text)
+
+
+def _items_text_load() -> None:
+    def _int_iter() -> Dict:
+        for star in _DATABASE:
+            itypes = _DATABASE[star]
+            for itype in itypes:
+                items = itypes[itype]
+                for item_data in items:
+                    yield item_data
+
+    for item in _int_iter():
+        item_obj_name = item['wish_obj_name']
+        item_text = DATABASE_TEXT[item_obj_name]
+        item.update({'wish_obj_text': item_text})
 
 
 def _load_database(config: Dict) -> Dict:
@@ -142,22 +188,6 @@ def _load_database(config: Dict) -> Dict:
     return data_template
 
 
-__title__ = 'genshin-twitch-wish'
-__site__ = 'github.com/dzmuh97/genshin-twitch-wish'
-__version__ = '2.3.0'
-
-CONFIG = {}
-BANNER_CONFIG = {}
-DATABASE = {}
-USER_SPLASH_TEXT = {}
-CHATBOT_TEXT = {}
-NOTIFY_TEXT = {}
-POINTS_TEXT = {}
-STATS_MESSAGE = {}
-STATUS_MESSAGE = {}
-SOUND_CONFIG = {}
-
-
 def init():
     global CONFIG
     global BANNER_CONFIG
@@ -169,17 +199,22 @@ def init():
     global STATS_MESSAGE
     global STATUS_MESSAGE
     global SOUND_CONFIG
+    global LANG_CONFIG
 
     CONFIG = _config_check('config.json', CONFIG_SCHEMA)
+    LANG_CONFIG = CONFIG['language']
 
-    _text = _load_text(CONFIG['language'])
+    _text = _load_text(LANG_CONFIG['text'])
     TEXT.update(_text['text'])
+
+    _items_merge(LANG_CONFIG['wish_items'])
+    _items_text_load()
 
     _banner_path = os.path.join('banners', '%s.json' % CONFIG['banner'])
     BANNER_CONFIG = _config_check(_banner_path, BANNER_SCHEMA)
     DATABASE = _load_database(BANNER_CONFIG)
 
-    _messages_path = os.path.join('text', '%s.json' % CONFIG['messages'])
+    _messages_path = os.path.join('text', '%s.json' % LANG_CONFIG['messages'])
     _messages = _config_check(_messages_path, MESSAGES_SCHEMA)
     USER_SPLASH_TEXT = _messages['user_splash_text']
     CHATBOT_TEXT = _messages['chatbot_text']
