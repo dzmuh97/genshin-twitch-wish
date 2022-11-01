@@ -436,6 +436,7 @@ DATABASE_TEXT = {
         'potustoristor':        'Otherworldly\nStory',
         'parniynefrit':         'Twin Nephrite',
         'izumrudshar':          'Emerald Orb',
+        'yantzhemg':            'Amber Bead',
         # 4 SW
         'chernogorsw':          'Blackcliff\nLongsword',
         'cherniysw':            'The Black\nSword',
@@ -657,7 +658,8 @@ DATABASE = {
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'rukovodmagiya'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'potustoristor'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'parniynefrit'},
-                        {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'izumrudshar'}
+                        {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'izumrudshar'},
+                        {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'yantzhemg'},
                 ],
                 'char': []
         },
