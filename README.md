@@ -1,516 +1,518 @@
-# **Симулятор молитв Genshin Impact для Twitch**
+*Эта страница доступна на русском языке, смотри [README_RU](https://github.com/dzmuh97/genshin-twitch-wish/blob/master/README_RU.md)*
 
-*genshin-twitch-wish не связан с HoYoverse. Genshin Impact, контент и материалы игры являются товарными знаками и принадлежат HoYoverse.*
+# **Genshin Wish Twitch Simulator**
 
-*В симуляторе используются контент и материалы из Honey Impact - Genshin Impact DB and Tools.*
+*genshin-twitch-wish is not related to HoYoverse. Genshin Impact, content and game materials are trademarks and belong HoYoverse.*
 
-![Пример работы](https://media.discordapp.net/attachments/706496930414592080/980878745894260806/dCB9_I5UULE.jpg)
+*This simulator uses content and materials from Honey Impact - Genshin Impact DB and Tools.*
 
-Симулятор написан на Python и использует PyGame для вывода анимации, TwitchIO для взаимодействия с чатом и наградами на трансляции.
+![Example](https://media.discordapp.net/attachments/706496930414592080/980878745894260806/dCB9_I5UULE.jpg)
 
-Возможности:
- - [x] База персонажей и предметов актуальна для патча `3.2`, обновляется с выходом обновлений в игре
- - [x] Поддерживаются как одиночные молитвы, так и множественные (от 2 до бесконечности)
- - [x] Поддерживается работа с чатом на трансляции и использование баллов канала зрителями
- - [x] Поддерживается загрузка пользовательских фонов (даже анимированных), звуков и шрифтов
- - [x] Настройка времени и показа стадий анимации (показ ника зрителя, анимация падения, анимация результата молитвы)
- - [x] Запись истории молитв зрителей в `CSV` формате
- - [x] Рендер истории молитв зрителей в `HTML` формате
- - [x] Полная настройка всех шансов и мягкого гаранта при молитвах
- - [x] Полная настройка сообщений чат-бота и баллов канала
- - [x] Полная настройка баннеров и выпадающих предметов
- - [x] Чат-бот умеет сам делать молитвы, а также подсказывать зрителям, когда они снова могут пользоваться командами (по таймауту)
- - [x] Сервисные команды чат-бота для отключения звука или остановки симулятора (паузы) во время важных моментов на трансляции
- - [x] Поддержка текста и предметов на разных языках
- - [x] Здесь можно выбить скины
+Simulator is written in Python and uses PyGame to display animation, TwitchIO for interaction with chat and rewards on broadcast.
+
+Features:
+ - [x] Database of characters and items is relevant for patch `3.2`, is updated with release of updates in game
+ - [x] Both single wishes and multiple wishes are supported (from 2 to infinity)
+ - [x] Broadcast's chat and the usage of channel points by viewers are supported
+ - [x] Custom backgrounds usage (even animated), sounds and fonts are supported
+ - [x] Setting time and display stages of animations are available (showing viewer's nickname, fall animation, wish result animation)
+ - [x] Recording history of viewers' wishes in `CSV` format
+ - [x] Rendering history of viewers' wishes in `HTML` format
+ - [x] Full customization of all chances and soft pity in wishes
+ - [x] Full customization of chat-bot messages and channel points
+ - [x] Full customization of banners and wish drop
+ - [x] Chat-bot can do wishes by itself and prompts viewers when they can use commands again (by timeout)
+ - [x] Service chat-bot commands to mute sound or stop simulator (pause) during important moments of broadcast
+ - [x] Different languages for text and items are supported
+ - [x] Opportunity to get skins
 
 
-## Настройка
+## Settings
 
-Переходим по ссылке на последний [релиз](https://github.com/dzmuh97/genshin-twitch-wish/releases/latest), скачиваем архив `genshin-twitch-wish_win64.zip`, распаковываем в любую удобную папку. Симулятор состоит из:
-- **banners** - папка, баннеры для симулятора
-- **sound** - папка, звуки для анимаций
-- **logs** - папка, файлы журналов работы симулятора
-- **images** - папка, спрайты для симулятора
-- **fonts** - папка, шрифты для текста
-- **background** - папка, спрайты фонов для анимаций
-- **text** - папка, все текстовые файлы
-- **TwitchGenshinWishSim.exe** - сам симулятор
-- **icon.png** - иконка для окна симулятора
-- **config.json** - файл настроек
-- **messages.json** - файл с сообщениями для симулятора и чат-бота
-- **auth.json** - появится после первого запуска, файл с Twitch токенами
-- **database.sqlite** - появится после первого запуска, база данных с молитвами зрителей
+Follow the link to the latest [release](https://github.com/dzmuh97/genshin-twitch-wish/releases/latest), download archive `genshin-twitch-wish_win64.zip`, unpack to any convenient folder. Simulator consists of:
+- **banners** - folder, banners gor simulator
+- **sound** - folder, sounds for animations
+- **logs** - folder, simulator log files
+- **images** - folder, sprites for simulator
+- **fonts** - folder, fonds for text
+- **background** - folder, background sprites for animations
+- **text** - folder, all text files
+- **TwitchGenshinWishSim.exe** - simulator itself
+- **icon.png** - icon for simulator window
+- **config.json** - settings file
+- **messages.json** - file with messages for simulator and chat-bot
+- **auth.json** - will appear after the first launch, file with Twitch tokens
+- **database.sqlite** - will appear after the first launch, database with viewers' actions
 
-По умолчанию включен тестовый режим. Можно сразу запустить симулятор `TwitchGenshinWishSim.exe` и посмотреть на результат 100 тестовых молитв. Тестовый режим отключается в файле конфигурации, параметр **test_mode**
+Test mode is enabled by default. Simulator can be lauched immediately `TwitchGenshinWishSim.exe` to look at the result of `100` test wishes. Test mode is disabled in configuration file, **test_mode** parameter
 
-<details><summary>Настройка OBS</summary>
+<details><summary>OBS settings</summary>
 
-Чтобы симулятор отображался на трансляции, нужно добавить захват окна в OBS:
-![Окно захвата](https://media.discordapp.net/attachments/706496930414592080/980878746200453120/Sxxgzt6h_Ao.jpg)
+In order for simulator to be displayed on broadcast, it is needed to add a window capture to OBS:
+![Window capture](https://media.discordapp.net/attachments/706496930414592080/980878746200453120/Sxxgzt6h_Ao.jpg)
 
-И настроить фильтр для корректной работы прозрачности окна:
-![Окно фильтра](https://media.discordapp.net/attachments/706496930414592080/980878745659375726/1HahxRWaJBF1kzE3BaChFSsMspC-LWBOcPf-kcj_f9g52D-Ia53P2osjQkR4F4wZXmfmu2-Gaavy5D7rU78ilhnS.jpg)
+And configure filter for the window transparency to work correctly:
+![Filter window](https://media.discordapp.net/attachments/706496930414592080/980878745659375726/1HahxRWaJBF1kzE3BaChFSsMspC-LWBOcPf-kcj_f9g52D-Ia53P2osjQkR4F4wZXmfmu2-Gaavy5D7rU78ilhnS.jpg)
 
 </details>
 
-В симуляторе используется 2 вида бота: чат-бот - читает сообщения из чата (секция **chat_bot**), бот на баллы канала -  ждет использование наград зрителями (секция **event_bot**). Так как эти боты работают раздельно друг от друга, возможны 2 варианта настройки:
+There are 2 types of bots which are used in simulator: chat-bot - reading messages from chat (section **chat_bot**), channel points bot -  waiting for the use of rewards by viewers (section **event_bot**). Since these bots work separately from each other, there are 2 configuration options:
 
- - Использовать разные учетные записи Twitch. Первая будет чат-ботом, вторая - аккаунт стримера, для баллов канала
- - Использовать одну учетную запись и для чат-бота и для баллов канала
+ - Use different Twitch accounts. The first one will work as a chat-bot, and the second as a streamer account, for channel points
+ - Use one account for both chat-bot and channel points
 
-При первом запуске будет предложено настроить аккаунты. Настройка автоматическая и интерактивная, нужно лишь следовать инструкциям и отвечать y или n (y - да, n - нет). Когда файл `auth.json` будет создан симулятор больше не будет предлагать настроить аккаунты
+Setting up accounts will be offered at the first launch. Setup is automatic and interactive, just follow the instructions and answer y or n (y - yes, n - no). When file `auth.json` will be created, simulator will no longer offer to set up accounts
 
-<details><summary>Получение токенов вручную через собственное приложение</summary>
+<details><summary>Receiving tokens manually through own app</summary>
 
-### Регистрируем приложение на Twitch
+### Application registration on Twitch
 
-*Этот и следующие разделы можно пропустить, если сработала интерактивная настройка*
+*This and the following sections can be skipped if the interactive setup worked*
 
-Заходим в свой основной аккаунт Twitch, переходим в [панель разработчика](https://dev.twitch.tv/console/apps), жмем кнопку `Регистрация приложения` 
-![панель разработчика](https://media.discordapp.net/attachments/706496930414592080/984117056448372806/unknown.png)
+Log into main Twitch account, go to [developer console](https://dev.twitch.tv/console/apps), click `Register Your Application` 
+![developer console](https://media.discordapp.net/attachments/706496930414592080/984117056448372806/unknown.png)
 
-Заполняем по порядку:
- - Название приложения (должно быть уникальным, можно добавить название канала)
- - Ссылка, куда будет передаваться токен, указываем `https://twitchtokengenerator.com`
- - Категория `Chat Bot`
+Fill in order:
+ - Application name (must be unique, you can add channel name)
+ - Link where token will be transferred, indicate `https://twitchtokengenerator.com`
+ - Category `Chat Bot`
 
-Проходим капчу и подтверждаем создание приложения.
+Solve captcha and confirm the creation of the application
 ![enter image description here](https://media.discordapp.net/attachments/706496930414592080/986298587069710336/unknown.png)
 
-Переходим обратно к списку всех приложений и выбираем то, которое только что создали, жмем `Управление`
-![данные приложения](https://media.discordapp.net/attachments/706496930414592080/984119131135672370/unknown.png)
+Go back to list of all applications and select the just created one, click `Manage`
+![application data](https://media.discordapp.net/attachments/706496930414592080/984119131135672370/unknown.png)
 
-Жмем на кнопку `Новый секретный код`, появится новое поле. Оставляем текущую вкладку с данными открытой.
+Click `New Secret`, new field will appear. Leave the current data tab open.
 
-### Создаем токен
+### Creating token
 
-Открываем в новой вкладке (вкладку с данными, если она есть, не закрываем) [генератор Twitch токенов](https://twitchtokengenerator.com/), жмем на `Uhhhh what? Just take me to the site`
-![заполняем поля данным из предыдущей вкладки](https://media.discordapp.net/attachments/706496930414592080/984120049344335922/unknown.png)
+Open in new tab (data tab, if it exist, then do not close it) [Twitch token generator](https://twitchtokengenerator.com/), click `Uhhhh what? Just take me to the site`
+![fill in fields with data from previous tab](https://media.discordapp.net/attachments/706496930414592080/984120049344335922/unknown.png)
 
-Заполняем поля данными из предыдущей вкладки (если пропустили предыдущий пункт то не трогаем):
- - **CLIENT ID** = **Идентификатор клиента**
- - **CLIENT SECRET** = **Секретный код клиента**
+Fill in fields with data from previous tab (if the previous paragraph was skipped, then do not touch)
 
-Если для чат-бота и для баллов канала будет использоваться один и тот же аккаунт, то отмечаем пункты:
 
- - **chat:read** - чтобы читать сообщения из чата
- - **chat:edit** - чтобы писать в чат
- - **channel:read:redemptions** - чтобы видеть использование балов канала
 
-Если разные:
+If the same account will be used for chat-bot and channel points, then select the following points:
 
- -  Для чат-бота отмечаем:
-	 - **chat:read** - чтобы читать сообщения из чата
-	 - **chat:edit** - чтобы писать в чат
-  - Для бота баллов канала (аккаунт, *с которого будет вестись трансляция*):
-	 - **channel:read:redemptions** - чтобы видеть использование балов канала
+ - **chat:read** - to read messages from chat
+ - **chat:edit** - to write in chat
+ - **channel:read:redemptions** - to see channel points usage
 
-![если используется один и тот же аккаунт](https://media.discordapp.net/attachments/706496930414592080/984121657838932018/unknown.png) 
-Прокручиваем до конца списка и жмем кнопку `Generate Token!` Обязательно проверяем, что вверху страницы указано название нашего приложения (если создавали) и имя нужного нам аккаунта. После чего нас перекинет на предыдущую страницу.
+If different accounts will be used:
 
-![здесь будет токен](https://media.discordapp.net/attachments/706496930414592080/984123646178107422/unknown.png)
-Копируем токен и вставляем в файл конфигурации `config.json`:
- - если используем один и тот же аккаунт для чат-бота и для баллов канала: 
-   - вставляем токен в **bot_token** и **channel_token**
- - если аккаунты для чат-бота и баллов канала разные:
-   - токен, полученный за аккаунт стримера (с которого *будет вестись трансляция* и у которого мы отметили пункт *channel:read:redemptions*) вставляем в **channel_token**
-   - выходим из своей учетной записи Twitch
-   - входим в учетную запись, которая будет использоваться как чат-бот
-   - повторяем шаги из [Создаем токен](#создаем-токен) (страницу с генератором токенов нужно будет обновить после перезахода в другой Twitch аккаунт)
-   - второй токен вставляем в **bot_token** (должны быть пункты *chat:read* и *chat:edit*)
+ -  For chat-bot select:
+	 - **chat:read** - to read messages from chat
+	 - **chat:edit** - to write in chat
+  - For channel points bot (account, *which will be used to broadcast*):
+	 - **channel:read:redemptions** - to see channel points usage
+
+![if using the same account](https://media.discordapp.net/attachments/706496930414592080/984121657838932018/unknown.png) 
+Scroll to the bottom of list and click `Generate Token!` Be sure to check that name of application (if created) and name of desire account are indicated at the top of page. We'll be transferred to the previous page after that
+
+![there will be token](https://media.discordapp.net/attachments/706496930414592080/984123646178107422/unknown.png)
+Copy token and paste it into configuration file `config.json`:
+ - if the same account will be used for chat-bot and channel points: 
+   - paste token in **bot_token** and **channel_token**
+ - if different accounts will be used:
+   - token received for streamer account (which *will be used to broadcast* and for which there was selected point *channel:read:redemptions*) paste in **channel_token**
+   - log out of Twitch account
+   - log in to account which will be used as chat-bot
+   - repeat steps from [Creating token](#creating-token) (token generator page will need to be refreshed after re-entering another Twitch account)
+   - paste the second token in **bot_token** (there must be *chat:read* and *chat:edit* points)
 
 </details>
 
-## Описание `config.json`
+## Description `config.json`
  
- - **window_name** - название окна для захвата в OBS
- - **banner** - название баннера из папки `banners`, который будет использовать симулятор
- - **chat_bot** - секция для настройки чат-бота
-   - **enabled** - включение или отключение секции (true или false)
-   - **wish_command** - команда, на которую бот должен реагировать
-   - **wish_command_prefix** - префикс для команды
-   - **wish_global_timeout** - общее ограничение для всех пользователей на команду бота (в секундах)
-   - **wish_timeout** - как часто каждый пользователь может использовать команды бота (в секундах)
-     - **broadcaster** - для автора канала
-     - **mod** - для модераторов
-     - **vip** - для зрителей с VIP
-     - **turbo** - для зрителей с Twitch Turbo
-     - **subscriber** - для подписчиков
-     - **user** - все остальные
-   - **send_notify** - отправлять ли уведомление в чат когда пользователь снова может использовать **wish_command** 
-   - **wish_count** - количество молитв, которое будет делаться за одно использование команды
-   - **self_wish** - режим, при котором бот сам использует команду
-   - **self_wish_every** - как часто (если включено) бот будет использовать команду
-   - **enable_colors** - включить цветные ники
- - **event_bot** - секция для настройки баллов канала
-   - **enabled** - включение или отключение секции (true или false)
-   - **default_color** - цвет для ников
-   - **rewards** - секция настройки наград за баллы канала
-     - **event_name** - название награды
-     - **wish_count** - сколько молитв делать при использовании
- - **animations** - секция настройки анимаций
-   - **chroma_color** - цвет хромакея
-   - **draw_states** - какие стадии анимации будут показаны при молитве
-     - **draw_usertext** - вывод ника зрителя с текстом и **user_background** (если включен)
-     - **draw_fall** - вывод анимации падения звезды
-     - **draw_wishes** - вывод анимации результат молитвы
-   - **start_delay** - как долго будет показан ник пользователя сделавшего молитву (в секундах)
-   - **end_delay** - как долго будет показан результат молитвы (в секундах) если была сделана всего 1 молитва
-     - **3** - для 3★
-     - **4** - для 4★
-     - **5** - для 5★
-   - **end_delay_milti** - как долго будет показан результат молитвы (в секундах) если было сделано больше 1 молитвы
-     - **3** - для 3★
-     - **4** - для 4★
-     - **5** - для 5★
-   - **user_background** - секция настройки пользовательских фонов
-     - **enabled** - включение или отключение секции (true или false)
-     - **path** - название файла в папке background (только имя файла, не полный путь)
-     - **type** - тип фона, `static` для JPG или PNG, `gif` для GIF и тд.
-   - **font** - секция настройки шрифтов и текста
-     - **path** - название файла в папке fonts (только имя файла, не полный путь)
-     - **user_uid_size** - размер текста для отображения ника пользователя в правом нижнем углу
-     - **wish_name_size** - размер текста для сплэш анимации (названия оружий и имена персонажей)
-   - **fps** - частота обновления анимаций (все анимации настроены на 30 кадров в секунду)
- - **sound** - секция настройки звука (все файлы должны лежать в папке **sound**)
-   - **enabled** - включение или отключение секции (true или false)
-   - **fall** - для анимации падения
-   - **3** - во время сплэш анимации для 3★
-   - **4** - во время сплэш анимации для 4★
-   - **5** - во время сплэш анимации для 5★
- - **history_file** - секция настройки записи истории молитв
-   - **enabled** - включение или отключение секции (true или false)
-   - **path** - имя файла (не полный путь, вместе с расширением), куда будет записываться история
-   - **3** - записывать ли выпадение 3★
-   - **4** - записывать ли выпадение 4★
-   - **5** - записывать ли выпадение 5★
- - **language** - секция настройки языка симулятора, указывать имя файла (без расширения) из папки `text`
-   - **text** - язык текста в симуляторе, логов и сообщений об ошибках
-   - **wish_items** - язык предметов в симуляторе (должен совпадать с языком в выбранном баннере)
-   - **messages** - язык сообщений в чате
-   - **html_template** - шаблон для рендера истории молитв в HTML
- - **gbot_config** - секция с настройками для сервисных команд
-   - **gbot_command** - команда, для которой применяются настройки (все команды [здесь](#сервисные-команды))
-     - **enabled** - включение или отключение команды (true или false)
-     - **timeout** - как часто можно использовать команду (в секундах)
-     - **permissions** - каким категориям зрителей доступна команда
-       - **broadcaster** - для автора канала
-       - **mod** - для модераторов
-       - **vip** - для зрителей с VIP
-       - **turbo** - для зрителей с Twitch Turbo
-       - **subscriber** - для подписчиков
-       - **user** - все остальные
- - **send_dev_stats** - включение или отключение отправки анонимной статистики
- - **test_mode** - режим тестирования, Twitch бот не включается, автоматически делаются 100 молитв
+ - **window_name** - window's name for OBS capture
+ - **banner** - banner's name from `banners` folder, which will use simulator
+ - **chat_bot** - section for chat-bot settings
+   - **enabled** - enable or disable section (true or false)
+   - **wish_command** - command the bot is responding to
+   - **wish_command_prefix** - command prefix
+   - **wish_global_timeout** - general limit for all users per bot commands (in seconds)
+   - **wish_timeout** - how often each user can use bot commands (in seconds)
+     - **broadcaster** - for broadcaster
+     - **mod** - for moderators
+     - **vip** - for VIP viewers
+     - **turbo** - for Twitch Turbo viewers
+     - **subscriber** - for subscribers
+     - **user** - for everyone else
+   - **send_notify** - whether to send chat notification when user can use **wish_command** again
+   - **wish_count** - number of wishes that will be done in one use of command
+   - **self_wish** - mode in which bot uses the command by itself
+   - **self_wish_every** - how often bot will use the command (if enabled)
+   - **enable_colors** - enable colored nickname
+ - **event_bot** - section for channel points settings
+   - **enabled** - enable or disable section (true or false)
+   - **default_color** - color for nicknames
+   - **rewards** - section for rewards for channel points settings
+     - **event_name** - name of reward
+     - **wish_count** - number of wishes that will be done by using
+ - **animations** - section for animations settings
+   - **chroma_color** - chromakey color
+   - **draw_states** - stages of animation that will be shown when the wish is performed
+     - **draw_usertext** - viewer nickname output with text and **user_background** (if enabled)
+     - **draw_fall** - star fall animation output
+     - **draw_wishes** - wish result animation output
+   - **start_delay** - how long nickname of user who done wish will be shown (in seconds)
+   - **end_delay** - how long wish result will be shown (in seconds) if only 1 wish was done
+     - **3** - for 3★
+     - **4** - for 4★
+     - **5** - for 5★
+   - **end_delay_milti** - how long wish result will be shown (in seconds) if more than 1 wish was done
+     - **3** - for 3★
+     - **4** - for 4★
+     - **5** - for 5★
+   - **user_background** - section for user backgrounds settings
+     - **enabled** - enable or disable section (true or false)
+     - **path** - name of file in background folder (just file name, not the full path)
+     - **type** - background type, `static` for JPG or PNG, `gif` forя GIF etc.
+   - **font** - section for fonts and text settings
+     - **path** - name of file in fonts (just file name, not the full path)
+     - **user_uid_size** - text size for displaying user's nickname in the lower right corner
+     - **wish_name_size** - text size for splash animation (weapon names and character names)
+   - **fps** - animation refresh rate (all animations are set to 30 frames per second)
+ - **sound** - section for sound settings (all files must be in **sound** folder)
+   - **enabled** - enable or disable section (true or false)
+   - **fall** - for fall animation
+   - **3** - during splash animation for 3★
+   - **4** - during splash animation for 4★
+   - **5** - during splash animation for 5★
+ - **history_file** - section for wish history settings
+   - **enabled** - enable or disable section (true or false)
+   - **path** - file name (not the full path, along with file type), where history will be written
+   - **3** - whether to write 3★
+   - **4** - whether to write 4★
+   - **5** - whether to write 5★
+ - **language** - section for language simulator settings, type file name (without file type) from folder `text`
+   - **text** - text language in simulator, logs and error messages
+   - **wish_items** - items language in simulator (must be same as language in **banner** banner)
+   - **messages** - chat messages language
+   - **html_template** - template file for render wish history to HTML
+ - **gbot_config** - section for service commands settings
+   - **gbot_command** - command for which settings apply (all commands are [here](#service-commands))
+     - **enabled** - enable or disable command (true or false)
+     - **timeout** - how often command can be used (in seconds)
+     - **permissions** - what categories of viewers command is available to
+       - **broadcaster** - for broadcaster
+       - **mod** - for moderators
+       - **vip** - for VIP viewers
+       - **turbo** - for Twitch Turbo viewers
+       - **subscriber** - for subscribers
+       - **user** - for everyone else
+ - **send_dev_stats** - enable or disable sending anonymous statistics
+ - **test_mode** - test mode, Twitch bot does not turn on, 100 wishes are automatically done
 
-## Описание `messages.json`
+## Description `messages.json`
 
-Здесь перечислены блоки с текстом, которые симулятор или чат-бот используют во время работы. В каждый блок можно добавлять или удалять строки. В каждом блоке должна быть минимум 1 строка.
+Blocks with text that the simulator or chat-bot uses at runtime are listed here. You can add or delete lines to each block. There must be at least 1 line in each block
 
-- **user_splash_text** - отображается во время первой стадии анимации под ником зрителя
-- **chatbot_text** - чат-бот использует в ответах зрителям в чате на трансляции
-- **notify_text** - используется для напоминания зрителям, когда их таймаут заканчивается
-- **channel_points_text** - используется для ответа зрителям, которые использовали баллы канала
-- **status_message** - одна строка, текст для сервисной команды **gbot_status**
-- **stats_message** - одна строка, текст для сервисной команды **gbot_stats**
+- **user_splash_text** - displayed during the first stage of animation under viewer's nickname
+- **chatbot_text** - chat-bot uses in responses to viewers in broadcast's chat
+- **notify_text** - used to remind viewers when their timeout ends
+- **channel_points_text** - used to respond to viewers who have used channel points
+- **status_message** - one line, text for service command **gbot_status**
+- **stats_message** - one line, text for service command **gbot_stats**
 
-## Параметры в ответах чат-бота зрителям
+## Parameters in chat-bot responses to viewers
 
-В сообщениях бота можно указывать параметры:
- - Общие для блоков **chatbot_text** и **channel_points_text**
-   - **username** - упоминание пользователя, который использовал команду
-   - **wish_count** - сколько всего молитв сделал пользователь
-   - **wish_count_w4** - сколько было сделано молитв после последней выпавшей 4★
-   - **wish_count_w5** - сколько было сделано молитв после последней выпавшей 5★
-   - **wishes_in_cmd** - сколько будет сделано молитв за использование команды
-   - **que_num** - номер в очереди молитв
- - Для блока **chatbot_text**
-   - **user_wish_delay** - сколько пользователю придется подождать перед следующим использованием команды (параметр **wish_timeout**)
-   - **global_wish_delay** - как часто весь чат может использовать команду
- - Для блока **channel_points_text**
-   - **reward_cost** - стоимость награды в баллах, которую активировал пользователь
- - Для блока **notify_text**
-   - **username** - упоминание пользователя, который использовал команду
-   - **command** - команда в виде **wish_command_prefix** + **wish_command**
- - Для блока **user_splash_text**
-   - **wish_count** - сколько всего молитв сделал пользователь
-   - **wishes_in_cmd** - сколько будет сделано молитв за использоание команды
-   - **gems_in_cmd** - сколько стоят молитвы в примогемах
- - Для **status_message**
-   - **user_mention** - зритель, который вызвал команду
-   - **proj_name** - название симулятора
-   - **proj_ver** - версия симулятора
-   - **proj_url** - ссылка на github страницу симулятора
-   - **wcommand** - команда молитв для чат бота
-   - **wcommand_c** - сколько `wcommand` было использовано
-   - **rcommand_c** - сколько команд за баллы использовано
-   - **wish_points** - сколько баллов канала потрачено зрителями на молитвы
-   - **wish_gems** - сколько потратили зрители примогемов (всего молитв * 160)
-   - **wish_queue_size** - размер очереди на молитвы
- - Для **stats_message**
-   - **user_mention** - зритель, который вызвал команду
-   - **user_wish_all** - сколько зритель сделал молитв
-   - **user_wish_epic** - сколько было сделано молитв с предыдущего гаранта на 4★
-   - **user_wish_leg** - сколько было сделано молитв с предыдущего гаранта на 5★
-   - **user_primo** - сколько потратил зритель примогемов (молитвы зрителя * 160)
+In bot messages you can specify parametres:
+ - Common for blocks **chatbot_text** and **channel_points_text**
+   - **username** - mention of user who used command
+   - **wish_count** - how many wishes user has done in total
+   - **wish_count_w4** - how many wishes have been done since the last 4★
+   - **wish_count_w5** - how many wishes have been done since the last 5★
+   - **wishes_in_cmd** - how many wishes will be done for using command
+   - **que_num** - number in wish queue
+ - For block **chatbot_text**
+   - **user_wish_delay** - how long user will have to wait before using the next command (parameter **wish_timeout**)
+   - **global_wish_delay** - how often whole chat can use the command
+ - For block **channel_points_text**
+   - **reward_cost** - value of reward in channel points, which was activated by user
+ - For block **notify_text**
+   - **username** - mention of user who used command
+   - **command** - command in form **wish_command_prefix** + **wish_command**
+ - For block **user_splash_text**
+   - **wish_count** - how many wishes user has done in total
+   - **wishes_in_cmd** - how many wishes will be done for using command
+   - **gems_in_cmd** - how much wishes cost in primogems
+ - For **status_message**
+   - **user_mention** - viewer who wrote command
+   - **proj_name** - simulator name
+   - **proj_ver** - simulator version
+   - **proj_url** - link to github simulator page
+   - **wcommand** - wish command for chat-bot
+   - **wcommand_c** - how many `wcommand` were used
+   - **rcommand_c** - how many commands for channel points were used
+   - **wish_points** - how many channel points were spent by viewers on wishes
+   - **wish_gems** - how many primogems were spent by viewers (total wishes * 160)
+   - **wish_queue_size** - wishes queue size
+ - For **stats_message**
+   - **user_mention** - viewer who wrote command
+   - **user_wish_all** - how many wishes were done by viewer
+   - **user_wish_epic** - how many wishes have been done since the last guaranteed 4★
+   - **user_wish_leg** - how many wishes have been done since the last guaranteed 5★
+   - **user_primo** - how many primogems were spent by viewer (viewer's wishes * 160)
 
-## Баннеры
+## Banners
 
-В симуляторе используется система баннеров похожая на игровую. Настраиваемые баннеры находятся в папке `banners`. По умолчанию включен баннер `all_in_one.json`, в котором представлены все предметы (оружие, персонажи и скины)
+Simulator uses banner system similar to the game's. Customizable banners are in `banners` folder. `all_in_one.json` banner is enabled by default, which contains all items (weapons, characters and skins)
 
-Каждый баннер представляет собой `JSON` файл:
+Each banner is `JSON` file:
 
- - **banner_name** - имя баннера
- - **wish_fo_garant** - сколько молитв должен сделать пользователь до гаранта 4★
- - **wish_fo_chance** - общий шанс выпадения 4★ (от 0.01 до 99.99)
- - **wish_fi_garant** - сколько молитв должен сделать пользователь до гаранта 5★
- - **wish_fi_chance** - общий шанс выпадения 5★ (от 0.01 до 99.99)
- - **wish_fi_soft_a** - после какой молитвы начнет работать мягкий гарант (должен быть меньше **wish_fi_garant**)
- - **wishes** - секция с предметами в баннере
+ - **banner_name** - banner name
+ - **wish_fo_garant** - how many wishes user need to do before the guaranteed 4★
+ - **wish_fo_chance** - overall chance of getting 4★ (from 0.01 to 99.99)
+ - **wish_fi_garant** - how many wishes user need to do before the guaranteed 5★
+ - **wish_fi_chance** - overall chance of getting 5★ (from 0.01 to 99.99)
+ - **wish_fi_soft_a** - after what wish will soft pity start working (shold be less than **wish_fi_garant**)
+ - **wishes** - section with banner items
 
-Внутри **wishes** находятся секции **5**, **4** и **3**, которые обозначают количество звезд у предмета. Внутри каждой из них указываются предметы, доступные для этого баннера:
+Inside **wishes** are sections **5**, **4** and **3** that indicate the number of stars that item has. Inside each of them are items available for this banner:
 
- - **char** - персонажи и скины
- - **weapon** - оружие
- - **garant** - гарантированные предметы и система 50/50
+ - **char** - characters and skins
+ - **weapon** - weapons
+ - **garant** - guaranteed items and 50/50 system
 
-Во всех секциях должен находиться хотя бы один предмет, если в **garant** есть хотя бы один предмет, то будет работать система гарантированных предметов.
+All sections must contain at least one item, if there is at least one item in **garant**, then the system of guaranteed items will work
 
-<details><summary>Список всех доступных предметов для баннеров</summary>
+<details><summary>List of all available items for banners</summary>
 
-Персонажи, 5★
- - `Альбедо`
- - `Камисато Аяка`
- - `Камисато Аято`
- - `Дилюк`
- - `Эола`
- - `Гань Юй`
- - `Ху Тао`
- - `Аратаки Итто`
- - `Джинн`
- - `Каэдэхара Кадзуха`
- - `Кэ Цин`
- - `Кли`
- - `Кокоми`
- - `Яэ Мико`
- - `Мона`
- - `Ци Ци`
- - `Райдэн`
- - `Шэнь Хэ`
- - `Тарталья`
- - `Венти`
- - `Сяо`
- - `Ёимия`
- - `Чжун Ли`
- - `Элой`
- - `Е Лань`
- - `Тигнари`
- - `Нилу`
- - `Сайно`
- - `Нахида`
+Characters, 5★
+ - `Albedo`
+ - `Kamisato Ayaka`
+ - `Kamisato Ayato`
+ - `Diluc`
+ - `Eula`
+ - `Ganyu`
+ - `Hu Tao`
+ - `Arataki Itto`
+ - `Jean`
+ - `Kaedehara Kazuha`
+ - `Keqing`
+ - `Klee`
+ - `Sangonomiya Kokomi`
+ - `Yae Miko`
+ - `Mona`
+ - `Qiqi`
+ - `Raiden Shogun`
+ - `Shenhe`
+ - `Tartaglia`
+ - `Venti`
+ - `Xiao`
+ - `Yoimiya`
+ - `Zhongli`
+ - `Aloy`
+ - `Yelan`
+ - `Tighnari`
+ - `Nilou`
+ - `Cyno`
+ - `Nahida`
 
-Оружие, 5★
- - `Харан гэппаку фуцу`
- - `Рассекающий туман`
- - `Небесный меч`
- - `Меч Сокола`
- - `Кромсатель пиков`
- - `Клятва свободы`
- - `Драгоценный омут`
- - `Песнь разбитых сосен`
- - `Некованый`
- - `Небесное величие`
- - `Краснорогий камнеруб`
- - `Волчья погибель`
- - `Усмиритель бед`
- - `Сияющая жатва`
- - `Посох Хомы`
- - `Покоритель вихря`
- - `Нефритовый коршун`
- - `Небесная ось`
- - `Элегия погибели`
- - `Полярная звезда`
- - `Небесное крыло`
- - `Лук Амоса`
- - `Громовой пульс`
- - `Аква симулякрум`
- - `Охотничья тропа`
- - `Память о пыли`
- - `Небесный атлас`
- - `Молитва святым ветрам`
- - `Истина кагура`
- - `Вечное лунное сияние`
- - `Ключ Хадж-нисут`
- - `Посох алых песков`
- - `Сновидения тысячи ночей`
+Weapons, 5★
+ - `Haran Geppaku Futsu`
+ - `Mistsplitter Reforged`
+ - `Skyward Blade`
+ - `Aquila Favonia`
+ - `Summit Shaper`
+ - `Freedom-Sworn`
+ - `Primordial Jade Cutter`
+ - `Key of Khaj-Nisut`
+ - `Song of Broken Pines`
+ - `The Unforged`
+ - `Skyward Pride`
+ - `Redhorn Stonethresher`
+ - `Wolf’s Gravestone`
+ - `Calamity Queller`
+ - `Engulfing Lightning`
+ - `Staff of Homa`
+ - `Vortex Vanquisher`
+ - `Primordial Jade Winged-Spear`
+ - `Skyward Spine`
+ - `Staff of the Scarlet Sands`
+ - `Elegy for the End`
+ - `Polar Star`
+ - `Skyward Harp`
+ - `Amos’ Bow`
+ - `Thundering Pulse`
+ - `Aqua Simulacra`
+ - `Hunter’s Path`
+ - `Memory of Dust`
+ - `Skyward Atlas`
+ - `Lost Prayer to the Sacred Winds`
+ - `Kagura’s Verity`
+ - `Everlasting Moonglow`
+ - `A Thousand Floating Dreams`
 
-Персонажи, 4★
- - `Эмбер`
- - `Барбара`
- - `Бэй Доу`
- - `Беннет`
- - `Чун Юнь`
- - `Диона`
- - `Фишль`
- - `Горо`
- - `Кэйа`
- - `Лиза`
- - `Нин Гуан`
- - `Ноэлль`
- - `Рэйзор`
- - `Розария`
- - `Кудзё Сара`
- - `Саю`
- - `Сахароза`
- - `Тома`
- - `Сян Лин`
- - `Син Цю`
- - `Синь Янь`
- - `Янь Фэй`
- - `Юнь Цзинь`
- - `Куки Синобу`
- - `Сиканоин Хэйдзо`
- - `Дори`
- - `Коллеи`
- - `Кандакия`
- - `Лайла`
+Characters, 4★
+ - `Amber`
+ - `Barbara`
+ - `Beidou`
+ - `Bennett`
+ - `Chongyun`
+ - `Diona`
+ - `Fischl`
+ - `Gorou`
+ - `Kaeya`
+ - `Lisa`
+ - `Ningguang`
+ - `Noelle`
+ - `Razor`
+ - `Rosaria`
+ - `Kujou Sara`
+ - `Sayu`
+ - `Sucrose`
+ - `Thoma`
+ - `Xiangling`
+ - `Xingqiu`
+ - `Xinyan`
+ - `Yanfei`
+ - `Yun Jin`
+ - `Kuki Shinobu`
+ - `Shikanoin Heizou`
+ - `Dori`
+ - `Collei`
+ - `Candace`
+ - `Layla`
 
-Оружие, 4★
- - `Черногорский длинный меч`
- - `Чёрный меч`
- - `Церемониальный меч`
- - `Стальное жало`
- - `Прототип: Злоба`
- - `Осквернённое желание`
- - `Меч-флейта`
- - `Меч Фавония`
- - `Меч нисхождения`
- - `Меч аристократов`
- - `Киноварное веретено`
- - `Драконий рык`
- - `Вспышка во тьме`
- - `Амэнома Кагэути`
- - `Легендарный клинок Иссин`
- - `Легендарный клинок Иссин`
- - `Кагоцурубэ Иссин`
- - `Деревянный клинок`
- - `Черногорская бритва`
- - `Церемониальный двуручный меч`
- - `Прототип: Архаичный`
- - `Меч-колокол`
- - `Меч драконьей кости`
- - `Королевский двуручный меч`
- - `Кацурагикири Нагамаса`
- - `Каменный меч`
- - `Заснеженное звёздное серебро`
- - `Дождерез`
- - `Двуручный меч Фавония`
- - `Благодатный владыка вод`
- - `Белая тень`
- - `Акуомару`
- - `Регалия леса`
- - `Черногорская пика`
- - `Смертельный бой`
- - `Режущий волны плавник`
- - `Прототип: Звёздный блеск`
- - `Пика полумесяца`
- - `Крест-копьё Китаин`
- - `Королевское копьё`
- - `Копьё Фавония`
- - `Копьё Драконьего хребта`
- - `Каменное копьё`
- - `Гроза драконов`
- - `«Улов»`
- - `Пронзающий луну`
- - `Черногорский боевой лук`
- - `Церемониальный лук`
- - `Хищник`
- - `Хамаюми`
- - `Составной лук`
- - `Ржавый лук`
- - `Прототип: Полумесяц`
- - `Охотник во тьме`
- - `Ода анемонии`
- - `Луна Моун`
- - `Королевский лук`
- - `Зелёный лук`
- - `Вальс Нирваны Ночи`
- - `Боевой лук Фавония`
- - `Бесструнный`
- - `Гаснущие сумерки`
- - `Приближённый короля`
- - `Иссушитель`
- - `Черногорский агат`
- - `Церемониальные мемуары`
- - `Солнечная жемчужина`
- - `Прототип: Янтарь`
- - `Плод вечной мерзлоты`
- - `Песнь странника`
- - `Око сознания`
- - `Око клятвы`
- - `Морской атлас`
- - `Королевский гримуар`
- - `Кольцо Хакусин`
- - `Кодекс Фавония`
- - `Истории Додоко`
- - `Вино и песни`
- - `Плод восполнения`
- - `Лунное сияние ксифоса`
- - `Аквамарин Махары`
- - `Копьё послания ветров`
- - `Скитающаяся звезда`
+Weapons, 4★
+ - `Blackcliff Longsword`
+ - `The Black Sword`
+ - `Sacrificial Sword`
+ - `Iron Sting`
+ - `Prototype Rancour`
+ - `Festering Desire`
+ - `The Flute`
+ - `Favonius Sword`
+ - `Sword of Descension`
+ - `Royal Longsword`
+ - `Cinnabar Spindle`
+ - `Lion’s Roar`
+ - `The Alley Flash`
+ - `Amenoma Kageuchi`
+ - `Prized Isshin Blade`
+ - `Prized Isshin Blade`
+ - `Kagotsurube Isshin`
+ - `Sapwood Blade`
+ - `Xiphos’ Moonlight`
+ - `Blackcliff Slasher`
+ - `Sacrificial Greatsword`
+ - `Prototype Archaic`
+ - `The Bell`
+ - `Serpent Spine`
+ - `Royal Greatsword`
+ - `Katsuragikiri Nagamasa`
+ - `Lithic Blade`
+ - `Snow-Tombed Starsilver`
+ - `Rainslasher`
+ - `Favonius Greatsword`
+ - `Luxurious Sea-Lord`
+ - `Whiteblind`
+ - `Akuoumaru`
+ - `Forest Regalia`
+ - `Makhaira Aquamarine`
+ - `Blackcliff Pole`
+ - `Deathmatch`
+ - `Wavebreaker’s Fin`
+ - `Prototype Starglitter`
+ - `Crescent Pike`
+ - `Kitain Cross Spear`
+ - `Royal Spear`
+ - `Favonius Lance`
+ - `Dragonspine Spear`
+ - `Lithic Spear`
+ - `Dragon’s Bane`
+ - `“The Catch”`
+ - `Moonpiercer`
+ - `Missive Windspear`
+ - `Blackcliff Warbow`
+ - `Sacrificial Bow`
+ - `Predator`
+ - `Hamayumi`
+ - `Compound Bow`
+ - `Rust`
+ - `Prototype Crescent`
+ - `Alley Hunter`
+ - `Windblume Ode`
+ - `Mouun’s Moon`
+ - `Royal Bow`
+ - `The Viridescent Hunt`
+ - `Mitternachts Waltz`
+ - `Favonius Warbow`
+ - `The Stringless`
+ - `Fading Twilight`
+ - `King’s Squire`
+ - `End of the Line`
+ - `Blackcliff Agate`
+ - `Sacrificial Fragments`
+ - `Solar Pearl`
+ - `Prototype Amber`
+ - `Frostbearer`
+ - `The Widsith`
+ - `Eye of Perception`
+ - `Oathsworn Eye`
+ - `Mappa Mare`
+ - `Royal Grimoire`
+ - `Hakushin Ring`
+ - `Favonius Codex`
+ - `Dodoco Tales`
+ - `Wine and Song`
+ - `Fruit of Fulfillment`
+ - `Wandering Evenstar`
 
-Оружие, 3★
- - `Холодное лезвие`
- - `Филейный нож`
- - `Тёмный железный меч`
- - `Предвестник зари`
- - `Меч путешественника`
- - `Меч небесного всадника`
- - `Меч из белого железа`
- - `Меч драконьей крови`
- - `Металлическая тень`
- - `Дубина переговоров`
- - `Большой меч небесного всадника`
- - `Чёрная кисть`
- - `Белая кисть`
- - `Алебарда Миллелита`
- - `Рогатка`
- - `Посыльный`
- - `Лук ворона`
- - `Клятва стрелка`
- - `Изогнутый лук`
- - `Эпос о драконоборцах`
- - `Руководство по магии`
- - `Потусторонняя история`
- - `Парный нефрит`
- - `Изумрудный шар`
- - `Янтарная жемчужина`
+Weapons, 3★
+ - `Cool Steel`
+ - `Fillet Blade`
+ - `Dark Iron Sword`
+ - `Harbinger of Dawn`
+ - `Traveler’s Handy Sword`
+ - `Skyrider Sword`
+ - `White Iron Greatsword`
+ - `Bloodtainted Greatsword`
+ - `Ferrous Shadow`
+ - `Debate Club`
+ - `Skyrider Greatsword`
+ - `Black Tassel`
+ - `White Tassel`
+ - `Halberd`
+ - `Slingshot`
+ - `Messenger`
+ - `Raven Bow`
+ - `Sharpshooter’s Oath`
+ - `Recurve Bow`
+ - `Thrilling Tales of Dragon Slayers`
+ - `Magic Guide`
+ - `Otherworldly Story`
+ - `Twin Nephrite`
+ - `Emerald Orb`
+ - `Amber Bead`
 
-Скины, 4★ и 5★
- - `Алая ночь`
- - `Летний блеск`
- - `Сон морского бриза`
- - `Флёр орхидеи`
- - `Яркая лёгкость`
- - `Сон вечной ночи`
- - `За вольный дух церкви`
- - `Встреча звёзд и луны`
- - `Скаут на все сто`
- - `Наследие Гуннхильдр`
+Skins, 4★ and 5★
+ - `Summertime Sparkle`
+ - `Sea Breeze Dandelion`
+ - `Orchid’s Evening Gown`
+ - `Opulent Splendor`
+ - `Ein Immernachtstraum`
+ - `To the Church’s Free Spirit`
+ - `Pact of Stars and Moon`
+ - `100% Outrider`
+ - `Gunnhildr’s Legacy`
+ - `Red Dead of Night`
 
 </details>
 
-## Сервисные команды
+## Service commands
 
-Перед всеми командами используется префикс из **wish_command_prefix**
+All commands are preceded by prefix from **wish_command_prefix**
 
- - **gbot_stats** - выводит статистику молитв в чат
- - **gbot_status** - выводит информацию о симуляторе
- - **gbot_sound** - включает или отключает звук во время молитв
- - **gbot_pause** - включает или отключает обработку молитв. Бот по-прежнему будет реагировать на использование баллов канала или команды чата, но анимации молитв воспроизводится не будут, при этом все молитвы будут находиться в очереди пока обработка не будет снова включена
- - **gbot_history** - сгенерирует историю круток в html для зрителя, который использовал команду, и отправит общедоступную ссылку для ее просмотра
- - **gbot_history_all** - то же, что и `gbot_history`, но для всех зрителей
+ - **gbot_stats** - displays statistics of wishes in chat
+ - **gbot_status** - displays information about simulator
+ - **gbot_sound** - turn sound on and off during wishes
+ - **gbot_pause** - toggles wishes procesing on and off. Bot will still respond to using channel points or chat commands, but wish animations will not play, and all wishes will be in queue until processing is enabled again
+ - **gbot_history** - will generate wish history in html for the viewer who used command and send public link to view it
+ - **gbot_history_all** - same as `gbot_history`, but for all viewers
 
-*Проект собирает анонимную статистику. В нее входят время запуска и название канала из файла конфигурации. Никакие личные данные, IP адреса или токены от каналов\ботов не передаются.*
+*Project collects anonymous statistics. It includes start time and channel name from configuration file. No personal data, IP addresses or tokens from channels/bots are transmitted.*
