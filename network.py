@@ -167,13 +167,13 @@ def update_auth() -> None:
 async def refresh_bot_token(ref_token: str) -> bool:
     _log_print(_msg('token_refresh_try'))
 
-    refresh_session = aiohttp.ClientSession()
-    try:
-        async with refresh_session.post(URL_TOKEN_REF, json={'ref_token': ref_token}) as twitch_user_data_raw:
-            twitch_user_data = await twitch_user_data_raw.json()
-    except aiohttp.ClientError as gate_error:
-        _log_print(_msg('token_refresh_error'), gate_error)
-        return False
+    async with aiohttp.ClientSession() as refresh_session:
+        try:
+            async with refresh_session.post(URL_TOKEN_REF, json={'ref_token': ref_token}) as twitch_user_data_raw:
+                twitch_user_data = await twitch_user_data_raw.json()
+        except aiohttp.ClientError as gate_error:
+            _log_print(_msg('token_refresh_error'), gate_error)
+            return False
 
     token_error = twitch_user_data.get('error')
     if not (token_error is None):
