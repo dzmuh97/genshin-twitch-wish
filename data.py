@@ -295,7 +295,7 @@ MESSAGES_SCHEMA = {
                 "user_splash_text",
                 "chatbot_text",
                 "notify_text",
-                "chanel_points_text"
+                "channel_points_text"
         ],
         "additionalProperties": False,
         "properties": {
@@ -311,7 +311,7 @@ MESSAGES_SCHEMA = {
                         "type": "array",
                         "minItems": 1
                 },
-                "chanel_points_text": {
+                "channel_points_text": {
                         "type": "array",
                         "minItems": 1
                 },

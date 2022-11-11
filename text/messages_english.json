@@ -17,7 +17,7 @@
     "{username} you can make a wish again! Chat with {command} to try your luck HungryPaimon",
     "{username} time is up! Try your luck again with {command} HungryPaimon"
   ],
-  "chanel_points_text": [
+  "channel_points_text": [
     "Unbelievable! {username} spends {reward_cost} channel points to make {wishes_in_cmd} wishes! His wish count is now {wish_count}! Position in queue: {que_num} HungryPaimon",
     "{username} goes wild and spends {reward_cost} channel points for {wishes_in_cmd} wishes! All for favorite waifu! You've now made a whole {wish_count} wishes! Your position is in line: {que_num} HungryPaimon"
   ],

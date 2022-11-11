@@ -17,7 +17,7 @@
     "{username} ты снова можешь сделать крутку! Напиши в чат {command} чтобы испытать удачу HungryPaimon",
     "{username} время вышло! Снова испытай удачу командой {command} HungryPaimon"
   ],
-  "chanel_points_text": [
+  "channel_points_text": [
     "Невероятно! {username} тратит {reward_cost} баллов, чтобы сделать {wishes_in_cmd} круток! Теперь его счетчик круток равен {wish_count}! Позиция в очереди: {que_num} HungryPaimon",
     "{username} идет вразнос и тратит {reward_cost} баллов ради {wishes_in_cmd} круток! Все ради любимой вайфу! Теперь у тебя сделано целых {wish_count} круток! Твоя позиция в очереди: {que_num} HungryPaimon"
   ],

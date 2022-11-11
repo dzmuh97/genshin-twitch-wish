@@ -219,7 +219,7 @@ def init():
     USER_SPLASH_TEXT = _messages['user_splash_text']
     CHATBOT_TEXT = _messages['chatbot_text']
     NOTIFY_TEXT = _messages['notify_text']
-    POINTS_TEXT = _messages['chanel_points_text']
+    POINTS_TEXT = _messages['channel_points_text']
     STATS_MESSAGE = _messages['stats_message']
     STATUS_MESSAGE = _messages['status_message']
 
