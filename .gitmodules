@@ -1,4 +1,0 @@
-[submodule "TwitchIO"]
-	path = TwitchIO
-	url = https://github.com/dzmuh97/TwitchIO
-	branch = dzmuh97_dev
