@@ -457,6 +457,7 @@ DATABASE_TEXT = {
         'issinbladenowsw':      'Kagotsurube\nIsshin',
         'woodsw':               'Sapwood Blade',
         'lunnoesyanie':         'Xiphos’\nMoonlight',
+        'zloyzont':             'Toukabou\nShigure',
         # 4 GSW
         'chernogorgws':         'Blackcliff\nSlasher',
         'ceremonialgsw':        'Sacrificial\nGreatsword',
@@ -565,6 +566,7 @@ DATABASE_TEXT = {
         'collei':               'Collei',
         'candace':              'Candace',
         'layla':                'Layla',
+        'faruzan':              'Faruzan',
         # 5 SW
         'haran':                'Haran Geppaku\nFutsu',
         'tuman':                'Mistsplitter\nReforged',
@@ -603,6 +605,7 @@ DATABASE_TEXT = {
         'istinakagura':         'Kagura’s Verity',
         'vechnoyesiyanie':      'Everlasting\nMoonglow',
         'snovidenysnochey':     'A Thousand\nFloating Dreams',
+        'catkolokol':           'Tulaytullah’s\nRemembrance',
         # 5 SKIN
         'diluc_skin':           'Red Dead of Night',
         # 5 CHAR
@@ -634,7 +637,8 @@ DATABASE_TEXT = {
         'tighnari':             'Tighnari',
         'nilou':                'Nilou',
         'cyno':                 'Cyno',
-        'nahida':               'Nahida'
+        'nahida':               'Nahida',
+        'wanderer':             'Wanderer'
 }
 DATABASE = {
         '3': {
@@ -688,6 +692,7 @@ DATABASE = {
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'sw', 'wish_obj_name': 'issinbladenowsw'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'sw', 'wish_obj_name': 'woodsw'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'sw', 'wish_obj_name': 'lunnoesyanie'},
+                        {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'sw', 'wish_obj_name': 'zloyzont'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'gsw', 'wish_obj_name': 'chernogorgws'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'gsw', 'wish_obj_name': 'ceremonialgsw'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'gsw', 'wish_obj_name': 'parhaich'},
@@ -791,7 +796,8 @@ DATABASE = {
                         {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'electro', 'wish_obj_name': 'dori'},
                         {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'dendro', 'wish_obj_name': 'collei'},
                         {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'hydro', 'wish_obj_name': 'candace'},
-                        {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'cryo', 'wish_obj_name': 'layla'}
+                        {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'cryo', 'wish_obj_name': 'layla'},
+                        {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'anemo', 'wish_obj_name': 'faruzan'}
                 ]
         },
         '5': {
@@ -828,7 +834,8 @@ DATABASE = {
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'molitvavetram'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'istinakagura'},
                         {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'vechnoyesiyanie'},
-                        {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'snovidenysnochey'}
+                        {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'snovidenysnochey'},
+                        {'wish_type': 'weapon', 'wish_meta_type': 'weapon', 'wish_meta_element': 'cat', 'wish_obj_name': 'catkolokol'}
                 ],
                 'char': [
                         {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'pyro', 'wish_obj_name': 'diluc_skin'},
@@ -860,7 +867,8 @@ DATABASE = {
                         {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'dendro', 'wish_obj_name': 'tighnari'},
                         {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'hydro', 'wish_obj_name': 'nilou'},
                         {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'electro', 'wish_obj_name': 'cyno'},
-                        {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'dendro', 'wish_obj_name': 'nahida'}
+                        {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'dendro', 'wish_obj_name': 'nahida'},
+                        {'wish_type': 'char', 'wish_meta_type': 'element', 'wish_meta_element': 'anemo', 'wish_obj_name': 'wanderer'}
                 ]
         }
 }

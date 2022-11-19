@@ -1,5 +1,5 @@
 {
-  "banner_name": "DEV v3.2",
+  "banner_name": "DEV v3.3",
   "wish_fo_garant": 10,
   "wish_fo_chance": 13.00,
   "wish_fi_garant": 90,
@@ -38,7 +38,8 @@
         "Tighnari",
         "Nilou",
         "Cyno",
-        "Nahida"
+        "Nahida",
+        "Wanderer"
       ],
       "weapon": [
         "Haran Geppaku Futsu",
@@ -73,7 +74,8 @@
         "Lost Prayer to the Sacred Winds",
         "Kagura’s Verity",
         "Everlasting Moonglow",
-        "A Thousand Floating Dreams"
+        "A Thousand Floating Dreams",
+        "Tulaytullah’s Remembrance"
       ]
     },
     "4": {
@@ -117,7 +119,8 @@
         "Dori",
         "Collei",
         "Candace",
-        "Layla"
+        "Layla",
+        "Faruzan"
       ],
       "weapon": [
         "Blackcliff Longsword",
@@ -202,7 +205,8 @@
         "Dodoco Tales",
         "Wine and Song",
         "Fruit of Fulfillment",
-        "Wandering Evenstar"
+        "Wandering Evenstar",
+        "Toukabou Shigure"
       ]
     },
     "3": {

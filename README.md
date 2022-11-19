@@ -11,7 +11,7 @@
 Simulator is written in Python and uses PyGame to display animation, TwitchIO for interaction with chat and rewards on broadcast.
 
 Features:
- - [x] Database of characters and items is relevant for patch `3.2`, is updated with release of updates in game
+ - [x] Database of characters and items is relevant for patch `3.3`, is updated with release of updates in game
  - [x] Both single wishes and multiple wishes are supported (from 2 to infinity)
  - [x] Broadcast's chat and the usage of channel points by viewers are supported
  - [x] Custom backgrounds usage (even animated), sounds and fonts are supported
@@ -311,6 +311,7 @@ Characters, 5★
  - `Nilou`
  - `Cyno`
  - `Nahida`
+ - `Wanderer`
 
 Weapons, 5★
  - `Haran Geppaku Futsu`
@@ -346,6 +347,7 @@ Weapons, 5★
  - `Kagura’s Verity`
  - `Everlasting Moonglow`
  - `A Thousand Floating Dreams`
+ - `Tulaytullah’s Remembrance`
 
 Characters, 4★
  - `Amber`
@@ -377,6 +379,7 @@ Characters, 4★
  - `Collei`
  - `Candace`
  - `Layla`
+ - `Faruzan`
 
 Weapons, 4★
  - `Blackcliff Longsword`
@@ -462,6 +465,7 @@ Weapons, 4★
  - `Wine and Song`
  - `Fruit of Fulfillment`
  - `Wandering Evenstar`
+ - `Toukabou Shigure`
 
 Weapons, 3★
  - `Cool Steel`
