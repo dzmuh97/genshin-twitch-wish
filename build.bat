@@ -1,5 +1,7 @@
 create-version-file.exe version-metadata.yml --outfile version-metadata.txt
 pyinstaller --clean --noupx --onefile --runtime-tmpdir . --icon=icon.ico --name TwitchGenshinWishSim --version-file version-metadata.txt main.py
+rmdir /s /q genshin-twitch-wish_win64
+mkdir genshin-twitch-wish_win64
 copy dist\TwitchGenshinWishSim.exe genshin-twitch-wish_win64\
 copy config.json genshin-twitch-wish_win64\
 copy messages.json genshin-twitch-wish_win64\
