@@ -1,5 +1,4 @@
 import os
-import sys
 
 import time
 import json
@@ -54,6 +53,9 @@ from gacha import Wish
 from gacha import Gacha
 
 from db import UserDB
+
+import ui
+from ui import show_ui_window
 
 from typing import Dict, List, Tuple, Union, Optional
 
@@ -117,6 +119,7 @@ async def _get_version(local_version) -> None:
         return
 
     _log_print(_msg('version_outdate') % (local_version, web_version))
+    show_ui_window(ui.UpdateMessage, cur=local_version, new=web_version)
 
 
 async def _send_stats(chat_bot_work_channel: str, event_bot_work_channel_id: str, version: str) -> None:
@@ -141,7 +144,7 @@ def _threaded_fork(chat_bot_work_channel, event_bot_work_channel_id, version) ->
     asyncio.run(_fork())
 
 
-async def _get_tw_data(state) -> None:
+async def _get_tw_data(state) -> Union[None, Dict]:
     async with aiohttp.ClientSession() as aio_session:
         try:
             async with aio_session.get(URL_TOKEN + state) as twitch_user_data_raw:
@@ -385,18 +388,17 @@ def interactive_auth() -> None:
     if os.path.exists('auth.json'):
         return
 
-    user_y = input(_msg('auth_start_promt'))
-    if user_y != 'y':
+    _log_print(_msg('auth_start_log'))
+
+    user_y, _ = show_ui_window(ui.QuestionMessage, title=_msg('ui_twitch_auth'), text=_msg('auth_start_promt'))
+    if not user_y:
         return
 
-    user_channel_raw = input(_msg('auth_channel_promt'))
+    _, user_channel_raw = show_ui_window(ui.TwitchUsernameRequest)
     user_channel = user_channel_raw.strip()
-    if '/' in user_channel:
-        input(_msg('auth_channel_error_name'))
-        return
 
-    user_y = input(_msg('auth_channel_separ'))
-    if user_y != 'y':
+    user_y, _ = show_ui_window(ui.QuestionMessage, title=_msg('ui_twitch_auth'), text=_msg('auth_channel_separ'))
+    if not user_y:
         auth_type = 'multi'
     else:
         auth_type = 'solo'
@@ -427,18 +429,18 @@ def interactive_auth() -> None:
         else:
             bot_type_text = _msg('auth_bot_type_chat') if bot_type == 'chat' else _msg('auth_bot_type_event')
 
-        input(_msg('auth_browser_promt') % bot_type_text)
+        show_ui_window(ui.InfoMessage, info=_msg('auth_browser_promt') % bot_type_text)
         webbrowser.open(browser_url, new=2)
-        input(_msg('auth_browser_close'))
+        show_ui_window(ui.InfoMessage, info=_msg('auth_browser_close'))
 
         twitch_user_data = asyncio.run(_get_tw_data(state))
         if twitch_user_data is None:
-            input(_msg('auth_gate_error'))
+            show_ui_window(ui.ErrorMessage, error=_msg('auth_gate_error'))
             return
 
         token_error = twitch_user_data.get('error')
         if not (token_error is None):
-            input(_msg('auth_token_error'))
+            show_ui_window(ui.ErrorMessage, error=_msg('auth_token_error'))
             return
 
         bot_token = twitch_user_data.get('access_token')
@@ -463,13 +465,12 @@ def interactive_auth() -> None:
         if auth_type == 'solo':
             break
 
-        input(_msg('auth_create_success'))
+        show_ui_window(ui.InfoMessage, info=_msg('auth_create_success'))
 
     with open('auth.json', 'w', encoding='utf-8') as auth_f:
         json.dump(auth_data, auth_f)
 
-    input(_msg('auth_end'))
-    _log_print('\n')
+    show_ui_window(ui.InfoMessage, info=_msg('auth_end'))
 
 
 class TwitchBot(commands.Bot):
