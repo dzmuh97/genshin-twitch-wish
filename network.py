@@ -895,8 +895,10 @@ def init():
     if not _test_mode:
         interactive_auth()
         if not os.path.exists('auth.json'):
-            sys.exit()
-        AUTH_CONFIG = _config_check('auth.json', AUTH_SCHEMA)
+            show_ui_window(ui.InfoMessage, info=_msg('auth_force_test'))
+            CONFIG['test_mode'] = True
+        else:
+            AUTH_CONFIG = _config_check('auth.json', AUTH_SCHEMA)
 
     AUTH_CHAT_BOT = AUTH_CONFIG['chat_bot']
     AUTH_EVENT_BOT = AUTH_CONFIG['event_bot']
