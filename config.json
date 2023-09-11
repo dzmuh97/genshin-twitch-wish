@@ -163,5 +163,5 @@
     }
   },
   "send_dev_stats": true,
-  "test_mode": true
+  "test_mode": false
 }
