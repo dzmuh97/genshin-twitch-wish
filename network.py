@@ -395,6 +395,8 @@ def interactive_auth() -> None:
         return
 
     _, user_channel_raw = show_ui_window(ui.TwitchUsernameRequest)
+    if user_channel_raw is None:
+        return
     user_channel = user_channel_raw.strip()
 
     user_y, _ = show_ui_window(ui.QuestionMessage, title=_msg('ui_twitch_auth'), text=_msg('auth_channel_separ'))

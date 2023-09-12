@@ -14,6 +14,8 @@ import sys
 import time
 import logging
 
+import ctypes
+
 _script_path = os.path.realpath(sys.argv[0])
 _script_dir = os.path.dirname(_script_path)
 
@@ -46,6 +48,10 @@ network.init()
 from config import _msg
 from config import _log_print
 from config import __version__
+
+# fix windows 7+ taskbar icons
+sim_app_id = f'github.genshinwishsim.wishsim.{__version__}'
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(sim_app_id)
 
 from config import CONFIG
 

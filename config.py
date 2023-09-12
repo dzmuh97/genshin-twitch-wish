@@ -202,6 +202,10 @@ def init():
     global LANG_CONFIG
 
     CONFIG = _config_check('config.json', CONFIG_SCHEMA)
+
+    from ui import show_ui_window, UserSettings
+    show_ui_window(UserSettings)
+
     LANG_CONFIG = CONFIG['language']
 
     _text = _load_text(LANG_CONFIG['text'])

@@ -180,7 +180,7 @@ class Coordinator:
         wish_color = WishSplash(*wish_args, wish_cords_normal, **wish_color_kwargs)
         wish_shadow = WishSplash(*wish_args, wish_cords_shadow, **wish_shadow_kwargs)
 
-        background_delay = self.animation_cfg['end_delay_milti' if is_multi_star else 'end_delay'][wish_stars]
+        background_delay = self.animation_cfg['end_delay_multi' if is_multi_star else 'end_delay'][wish_stars]
 
         self.current_draw_objs.update(
             {
