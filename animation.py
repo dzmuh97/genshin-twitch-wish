@@ -615,6 +615,8 @@ class StaticImage(pygame.sprite.Sprite):
 
             if len(self._resized_buffer) > 0:
                 self.image = self._resized_buffer.pop(0)
+                self.rect = self.image.get_rect()
+                self.rect.center = self.rect_copy.center
 
     def im_sub_load(self, path):
         self.image = pygame.image.load(path)
