@@ -4,6 +4,7 @@ rmdir /s /q genshin-twitch-wish_win64
 mkdir genshin-twitch-wish_win64
 copy dist\TwitchGenshinWishSim.exe genshin-twitch-wish_win64\
 copy config.json genshin-twitch-wish_win64\
+copy config_def.json genshin-twitch-wish_win64\
 copy messages.json genshin-twitch-wish_win64\
 copy icon.png genshin-twitch-wish_win64\
 xcopy background\ genshin-twitch-wish_win64\background\ /E/I
