@@ -204,7 +204,10 @@ def init():
     CONFIG = _config_check('config.json', CONFIG_SCHEMA)
 
     from ui import show_ui_window, UserSettings
-    show_ui_window(UserSettings)
+    _, start = show_ui_window(UserSettings)
+
+    if not start:
+        sys.exit(0)
 
     LANG_CONFIG = CONFIG['language']
 

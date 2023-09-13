@@ -9,7 +9,7 @@ import jsonschema
 from contextlib import contextmanager
 
 from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox, QColorDialog, QFileDialog
-from PyQt5.QtWidgets import QPushButton, QLineEdit, QLabel, QCheckBox, QSpinBox
+from PyQt5.QtWidgets import QPushButton, QLineEdit, QLabel, QCheckBox, QSpinBox, QComboBox
 
 from PyQt5 import QtGui, uic
 
@@ -27,18 +27,20 @@ from typing import Tuple, Any
 class ErrorMessage(QMessageBox):
     def __init__(self, **kwargs):
         error_text = kwargs.get('error', '{error}')
+        window_title = kwargs.get('title', None)
         super().__init__()
         self.setIcon(QMessageBox.Critical)
-        self.setWindowTitle(_msg('ui_error'))
+        self.setWindowTitle(window_title if window_title else _msg('ui_error'))
         self.setText(error_text)
 
 
 class InfoMessage(QMessageBox):
     def __init__(self, **kwargs):
         error_text = kwargs.get('info', '{error}')
+        window_title = kwargs.get('title', None)
         super().__init__()
         self.setIcon(QMessageBox.Information)
-        self.setWindowTitle(_msg('ui_info'))
+        self.setWindowTitle(window_title if window_title else _msg('ui_info'))
         self.setText(error_text)
 
 
@@ -110,6 +112,9 @@ class UserSettings(QWidget):
 
         self._load_settings_to_ui()
         self._reload_ui_text()
+
+    def _local_text(self, text_type: str) -> str:
+        return self.ui_text.get(text_type, 'NULL')
 
     @staticmethod
     @contextmanager
@@ -196,7 +201,8 @@ class UserSettings(QWidget):
 
         for banner_name in self._enumerate_bunners():
             self.combo_banner.addItem(banner_name)
-        self.combo_banner.setCurrentIndex(0)
+        cur_index = self.combo_banner.findText(config_main['banner'])
+        self.combo_banner.setCurrentIndex(cur_index)
 
         self.check_send_stats.setChecked(config_main['send_dev_stats'])
         self.check_test_mode.setChecked(config_main['test_mode'])
@@ -312,21 +318,27 @@ class UserSettings(QWidget):
         self.combo_command_permisson.currentIndexChanged.connect(_combo_gbot_command_permission)
         _combo_gbot_commands()
 
+        config_language = config_main['language']
+
         for text_file in self._enumerate_text_files('text', 'json'):
             self.combo_language_text.addItem(text_file)
-        self.combo_language_text.setCurrentIndex(0)
+        cur_index = self.combo_language_text.findText(config_language['text'])
+        self.combo_language_text.setCurrentIndex(cur_index)
 
         for items_file in self._enumerate_text_files('items', 'json'):
             self.combo_language_wish_items.addItem(items_file)
-        self.combo_language_wish_items.setCurrentIndex(0)
+        cur_index = self.combo_language_wish_items.findText(config_language['wish_items'])
+        self.combo_language_wish_items.setCurrentIndex(cur_index)
 
         for messages_file in self._enumerate_text_files('messages', 'json'):
             self.combo_language_messages.addItem(messages_file)
-        self.combo_language_messages.setCurrentIndex(0)
+        cur_index = self.combo_language_messages.findText(config_language['messages'])
+        self.combo_language_messages.setCurrentIndex(cur_index)
 
         for html_file in self._enumerate_text_files('history', 'html'):
             self.combo_language_html_template.addItem(html_file)
-        self.combo_language_html_template.setCurrentIndex(0)
+        cur_index = self.combo_language_html_template.findText(config_language['html_template'])
+        self.combo_language_html_template.setCurrentIndex(cur_index)
 
         config_history = config_main['history_file']
         self.check_history_enabled.setChecked(config_history['enabled'])
@@ -351,6 +363,8 @@ class UserSettings(QWidget):
 
         for user_background_type in ('static', 'gif'):
             self.combo_anim_type.addItem(user_background_type)
+        cur_index = self.combo_anim_type.findText(config_animations_user_background['type'])
+        self.combo_anim_type.setCurrentIndex(cur_index)
 
         self.edit_user_background_path.setText(config_animations_user_background['path'])
         self.tool_user_background_path.clicked.connect(_file_click(self.edit_user_background_path, 'Background'))
@@ -417,83 +431,80 @@ class UserSettings(QWidget):
         text_data = _load_text(current_text_config)
         self.ui_text.update(text_data['text'])
 
-        def _text(text_type: str) -> str:
-            return self.ui_text.get(text_type, 'NULL')
+        self.button_reset_config.setText(self._local_text('ui_button_reset_config'))
+        self.button_save_config.setText(self._local_text('ui_button_save_config'))
+        self.button_start.setText(self._local_text('ui_button_start'))
 
-        self.button_reset_config.setText(_text('ui_button_reset_config'))
-        self.button_save_config.setText(_text('ui_button_save_config'))
-        self.button_start.setText(_text('ui_button_start'))
+        self.check_command_permission_available.setText(self._local_text('ui_check_command_permission_available'))
 
-        self.check_command_permission_available.setText(_text('ui_check_command_permission_available'))
+        self.tabWidget.setTabText(0, self._local_text('ui_tab_1'))
+        self.tabWidget.setTabText(1, self._local_text('ui_tab_2'))
+        self.tabWidget.setTabText(2, self._local_text('ui_tab_3'))
 
-        self.tabWidget.setTabText(0, _text('ui_tab_1'))
-        self.tabWidget.setTabText(1, _text('ui_tab_2'))
-        self.tabWidget.setTabText(2, _text('ui_tab_3'))
+        self.setWindowTitle(self._local_text('ui_settings'))
+        self.group_animations.setTitle(self._local_text('ui_group_animations'))
+        self.group_chatbot.setTitle(self._local_text('ui_group_chatbot'))
+        self.group_event_bot.setTitle(self._local_text('ui_group_event_bot'))
+        self.group_gbot.setTitle(self._local_text('ui_group_gbot'))
+        self.group_general.setTitle(self._local_text('ui_group_general'))
+        self.group_history.setTitle(self._local_text('ui_group_history'))
+        self.group_language.setTitle(self._local_text('ui_group_language'))
+        self.group_sound.setTitle(self._local_text('ui_group_sound'))
 
-        self.setWindowTitle(_text('ui_settings'))
-        self.group_animations.setTitle(_text('ui_group_animations'))
-        self.group_chatbot.setTitle(_text('ui_group_chatbot'))
-        self.group_event_bot.setTitle(_text('ui_group_event_bot'))
-        self.group_gbot.setTitle(_text('ui_group_gbot'))
-        self.group_general.setTitle(_text('ui_group_general'))
-        self.group_history.setTitle(_text('ui_group_history'))
-        self.group_language.setTitle(_text('ui_group_language'))
-        self.group_sound.setTitle(_text('ui_group_sound'))
-
-        self.label.setText(_text('ui_label'))
-        self.label_2.setText(_text('ui_label_2'))
-        self.label_3.setText(_text('ui_label_3'))
-        self.text_banner.setText(_text('ui_text_banner'))
-        self.text_chatbot_enabled.setText(_text('ui_text_chatbot_enabled'))
-        self.text_chroma_color.setText(_text('ui_text_chroma_color'))
-        self.text_command.setText(_text('ui_text_command'))
-        self.text_command_enabled.setText(_text('ui_text_command_enabled'))
-        self.text_command_permissions.setText(_text('ui_text_command_permissions'))
-        self.text_command_timeout.setText(_text('ui_text_command_timeout'))
-        self.text_default_color.setText(_text('ui_text_default_color'))
-        self.text_draw_wishes.setText(_text('ui_text_draw_wishes'))
-        self.text_enable_colors.setText(_text('ui_text_enable_colors'))
-        self.text_end_delay.setText(_text('ui_text_end_delay'))
-        self.text_end_delay_multi.setText(_text('ui_text_end_delay_multi'))
-        self.text_event_name.setText(_text('ui_text_event_name'))
-        self.text_eventbot_enabled.setText(_text('ui_text_eventbot_enabled'))
-        self.text_font_path.setText(_text('ui_text_font_path'))
-        self.text_fps.setText(_text('ui_text_fps'))
-        self.text_history_3star.setText(_text('ui_text_history_3star'))
-        self.text_history_4star.setText(_text('ui_text_history_4star'))
-        self.text_history_5star.setText(_text('ui_text_history_5star'))
-        self.text_history_enabled.setText(_text('ui_text_history_enabled'))
-        self.text_history_path.setText(_text('ui_text_history_path'))
-        self.text_is_draw_fall.setText(_text('ui_text_is_draw_fall'))
-        self.text_is_draw_usertext.setText(_text('ui_text_is_draw_usertext'))
-        self.text_language_html_template.setText(_text('ui_text_language_html_template'))
-        self.text_language_messages.setText(_text('ui_text_language_messages'))
-        self.text_language_text.setText(_text('ui_text_language_text'))
-        self.text_language_wish_items.setText(_text('ui_text_language_wish_items'))
-        self.text_revards.setText(_text('ui_text_revards'))
-        self.text_self_wish.setText(_text('ui_text_self_wish'))
-        self.text_self_wish_every.setText(_text('ui_text_self_wish_every'))
-        self.text_send_notify.setText(_text('ui_text_send_notify'))
-        self.text_send_stats.setText(_text('ui_text_send_stats'))
-        self.text_sound_3star.setText(_text('ui_text_sound_3star'))
-        self.text_sound_4star.setText(_text('ui_text_sound_4star'))
-        self.text_sound_5star.setText(_text('ui_text_sound_5star'))
-        self.text_sound_enabled.setText(_text('ui_text_sound_enabled'))
-        self.text_sound_fall.setText(_text('ui_text_sound_fall'))
-        self.text_start_delay.setText(_text('ui_text_start_delay'))
-        self.text_test_mode.setText(_text('ui_text_test_mode'))
-        self.text_user_background_enabled.setText(_text('ui_text_user_background_enabled'))
-        self.text_user_background_path.setText(_text('ui_text_user_background_path'))
-        self.text_user_background_type.setText(_text('ui_text_user_background_type'))
-        self.text_user_uid_size.setText(_text('ui_text_user_uid_size'))
-        self.text_window_name.setText(_text('ui_text_window_name'))
-        self.text_wish_chatbot_count.setText(_text('ui_text_wish_chatbot_count'))
-        self.text_wish_command.setText(_text('ui_text_wish_command'))
-        self.text_wish_eventbot_count.setText(_text('ui_text_wish_eventbot_count'))
-        self.text_wish_global_timeout.setText(_text('ui_text_wish_global_timeout'))
-        self.text_wish_name_size.setText(_text('ui_text_wish_name_size'))
-        self.text_wish_prefix.setText(_text('ui_text_wish_prefix'))
-        self.text_wish_timeout.setText(_text('ui_text_wish_timeout'))
+        self.label.setText(self._local_text('ui_label'))
+        self.label_2.setText(self._local_text('ui_label_2'))
+        self.label_3.setText(self._local_text('ui_label_3'))
+        self.text_banner.setText(self._local_text('ui_text_banner'))
+        self.text_chatbot_enabled.setText(self._local_text('ui_text_chatbot_enabled'))
+        self.text_chroma_color.setText(self._local_text('ui_text_chroma_color'))
+        self.text_command.setText(self._local_text('ui_text_command'))
+        self.text_command_enabled.setText(self._local_text('ui_text_command_enabled'))
+        self.text_command_permissions.setText(self._local_text('ui_text_command_permissions'))
+        self.text_command_timeout.setText(self._local_text('ui_text_command_timeout'))
+        self.text_default_color.setText(self._local_text('ui_text_default_color'))
+        self.text_draw_wishes.setText(self._local_text('ui_text_draw_wishes'))
+        self.text_enable_colors.setText(self._local_text('ui_text_enable_colors'))
+        self.text_end_delay.setText(self._local_text('ui_text_end_delay'))
+        self.text_end_delay_multi.setText(self._local_text('ui_text_end_delay_multi'))
+        self.text_event_name.setText(self._local_text('ui_text_event_name'))
+        self.text_eventbot_enabled.setText(self._local_text('ui_text_eventbot_enabled'))
+        self.text_font_path.setText(self._local_text('ui_text_font_path'))
+        self.text_fps.setText(self._local_text('ui_text_fps'))
+        self.text_history_3star.setText(self._local_text('ui_text_history_3star'))
+        self.text_history_4star.setText(self._local_text('ui_text_history_4star'))
+        self.text_history_5star.setText(self._local_text('ui_text_history_5star'))
+        self.text_history_enabled.setText(self._local_text('ui_text_history_enabled'))
+        self.text_history_path.setText(self._local_text('ui_text_history_path'))
+        self.text_is_draw_fall.setText(self._local_text('ui_text_is_draw_fall'))
+        self.text_is_draw_usertext.setText(self._local_text('ui_text_is_draw_usertext'))
+        self.text_language_html_template.setText(self._local_text('ui_text_language_html_template'))
+        self.text_language_messages.setText(self._local_text('ui_text_language_messages'))
+        self.text_language_text.setText(self._local_text('ui_text_language_text'))
+        self.text_language_wish_items.setText(self._local_text('ui_text_language_wish_items'))
+        self.text_revards.setText(self._local_text('ui_text_revards'))
+        self.text_self_wish.setText(self._local_text('ui_text_self_wish'))
+        self.text_self_wish_every.setText(self._local_text('ui_text_self_wish_every'))
+        self.text_send_notify.setText(self._local_text('ui_text_send_notify'))
+        self.text_send_stats.setText(self._local_text('ui_text_send_stats'))
+        self.text_sound_3star.setText(self._local_text('ui_text_sound_3star'))
+        self.text_sound_4star.setText(self._local_text('ui_text_sound_4star'))
+        self.text_sound_5star.setText(self._local_text('ui_text_sound_5star'))
+        self.text_sound_enabled.setText(self._local_text('ui_text_sound_enabled'))
+        self.text_sound_fall.setText(self._local_text('ui_text_sound_fall'))
+        self.text_start_delay.setText(self._local_text('ui_text_start_delay'))
+        self.text_test_mode.setText(self._local_text('ui_text_test_mode'))
+        self.text_user_background_enabled.setText(self._local_text('ui_text_user_background_enabled'))
+        self.text_user_background_path.setText(self._local_text('ui_text_user_background_path'))
+        self.text_user_background_type.setText(self._local_text('ui_text_user_background_type'))
+        self.text_user_uid_size.setText(self._local_text('ui_text_user_uid_size'))
+        self.text_window_name.setText(self._local_text('ui_text_window_name'))
+        self.text_wish_chatbot_count.setText(self._local_text('ui_text_wish_chatbot_count'))
+        self.text_wish_command.setText(self._local_text('ui_text_wish_command'))
+        self.text_wish_eventbot_count.setText(self._local_text('ui_text_wish_eventbot_count'))
+        self.text_wish_global_timeout.setText(self._local_text('ui_text_wish_global_timeout'))
+        self.text_wish_name_size.setText(self._local_text('ui_text_wish_name_size'))
+        self.text_wish_prefix.setText(self._local_text('ui_text_wish_prefix'))
+        self.text_wish_timeout.setText(self._local_text('ui_text_wish_timeout'))
 
     def _update_settings_from_ui(self):
         config_main = CONFIG
@@ -574,15 +585,14 @@ class UserSettings(QWidget):
         current_end_delay_multi = self.combo_end_delay_multi.currentText()
         config_animations['end_delay_multi'][current_end_delay_multi] = self.spin_end_delay_multi.value()
 
-    @staticmethod
-    def _save_settings_from_ui():
+    def _save_settings_from_ui(self):
         config_main = CONFIG
         json_file = 'config.json'
 
         try:
             jsonschema.validate(config_main, schema=CONFIG_SCHEMA)
         except jsonschema.ValidationError as json_error:
-            show_ui_window(ErrorMessage, error=_msg('config_check_error_check') % (json_file, json_error))
+            show_ui_window(ErrorMessage, title=self._local_text('ui_error'), error=self._local_text('config_check_error_check') % (json_file, json_error))
             return
 
         json_config = json.dumps(CONFIG, indent=2)
@@ -592,10 +602,9 @@ class UserSettings(QWidget):
         CONFIG.clear()
         CONFIG.update(_load_json(json_file))
 
-        show_ui_window(InfoMessage, info=_msg('ui_settings_saved_success'))
+        show_ui_window(InfoMessage, title=self._local_text('ui_info'), info=self._local_text('ui_settings_saved_success'))
 
-    @staticmethod
-    def _restore_default_config():
+    def _restore_default_config(self):
         json_bad = 'config.json'
         json_good = 'config_def.json'
 
@@ -605,10 +614,11 @@ class UserSettings(QWidget):
         with open(json_bad, 'w') as fjbad, open(json_good, 'r') as fjgood:
             fjbad.write(fjgood.read())
 
-        show_ui_window(InfoMessage, info=_msg('ui_settings_restored_success'))
-        sys.exit(0)
+        show_ui_window(InfoMessage, title=self._local_text('ui_info'), info=self._local_text('ui_settings_restored_success'))
+        self.close()
 
     def _start(self):
+        self._window_result = True
         self.close()
 
 
