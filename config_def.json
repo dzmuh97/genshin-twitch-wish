@@ -86,7 +86,7 @@
     "text": "text_english",
     "wish_items": "items_english",
     "messages": "messages_english",
-    "html_template": "history_english.html"
+    "html_template": "history_english"
   },
   "gbot_config": {
     "gbot_status": {

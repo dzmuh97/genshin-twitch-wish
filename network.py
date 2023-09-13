@@ -291,7 +291,7 @@ def render_html_history(filter_nick: str, streamer_nick: str) -> Tuple[int, str]
         return -2, ''
 
     tmpl_file = LANG_CONFIG['html_template']
-    tmpl_path = os.path.join('text', tmpl_file)
+    tmpl_path = os.path.join('text', '%s.html' % tmpl_file)
     if not os.path.exists(tmpl_path):
         _log_print(_msg('html_history_template_not_found') % tmpl_path)
         return -4, ''
