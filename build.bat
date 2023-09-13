@@ -13,3 +13,4 @@ xcopy images\ genshin-twitch-wish_win64\images\ /E/I
 xcopy sound\ genshin-twitch-wish_win64\sound\ /E/I
 xcopy banners\ genshin-twitch-wish_win64\banners\ /E/I
 xcopy text\ genshin-twitch-wish_win64\text\ /E/I
+xcopy ui\ genshin-twitch-wish_win64\ui\ /E/I
