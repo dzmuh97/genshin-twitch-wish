@@ -373,6 +373,7 @@ BANNER_SCHEMA = {
                      "wish_fi_chance",
                      "wish_fi_soft_a",
                      "wishes",
+                     "lang"
                      ],
         "additionalProperties": False,
         "properties": {
@@ -382,6 +383,7 @@ BANNER_SCHEMA = {
                 "wish_fi_garant": {"type": "number"},
                 "wish_fi_chance": {"type": "number"},
                 "wish_fi_soft_a": {"type": "number"},
+                "lang": {"type": "string"},
                 "wishes": {
                         "type": "object",
                         "required": [

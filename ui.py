@@ -136,6 +136,23 @@ class UserSettings(QWidget):
             text_filename = os.path.splitext(text_file)[0]
             yield text_filename
 
+    def _change_banners_by_lang(self):
+        current_items_file = self.combo_language_wish_items.currentText()
+        items_json = _load_text(current_items_file)
+        local_lang = items_json['lang']
+
+        filtered_banners = []
+        for banner in self._enumerate_bunners():
+            banner_data = _load_json(os.path.join('banners', '%s.json' % banner))
+            banner_lang = banner_data['lang']
+            if local_lang == banner_lang:
+                filtered_banners.append(banner)
+
+        with self._block_signals(self.combo_banner):
+            self.combo_banner.clear()
+            for banner in filtered_banners:
+                self.combo_banner.addItem(banner)
+
     def _load_settings_to_ui(self):
         fields_set = (
             self.edit_window_name,
@@ -324,6 +341,7 @@ class UserSettings(QWidget):
         cur_index = self.combo_language_text.findText(config_language['text'])
         self.combo_language_text.setCurrentIndex(cur_index)
 
+        self.combo_language_wish_items.currentIndexChanged.connect(self._change_banners_by_lang)
         for items_file in self._enumerate_text_files('items', 'json'):
             self.combo_language_wish_items.addItem(items_file)
         cur_index = self.combo_language_wish_items.findText(config_language['wish_items'])
