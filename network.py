@@ -102,7 +102,7 @@ AUTH_EVENT_BOT = AUTH_CONFIG['event_bot']
 
 
 async def _get_version(local_version) -> None:
-    async with aiohttp.ClientSession() as aio_session:
+    async with aiohttp.ClientSession(trust_env=True) as aio_session:
         try:
             async with aio_session.get(URL_VERSION) as version_data_raw:
                 version_data = await version_data_raw.json()
@@ -128,7 +128,7 @@ async def _send_stats(chat_bot_work_channel: str, event_bot_work_channel_id: str
     stats_data_json = json.dumps(stats_data)
     stat_base64 = base64.urlsafe_b64encode(stats_data_json.encode(encoding='utf-8')).decode(encoding='utf-8')
 
-    async with aiohttp.ClientSession() as aio_session:
+    async with aiohttp.ClientSession(trust_env=True) as aio_session:
         try:
             async with aio_session.post(URL_VERSION, json={'base64data': stat_base64}) as _:
                 logging.debug(_msg('stats_sended'))
@@ -145,7 +145,7 @@ def _threaded_fork(chat_bot_work_channel, event_bot_work_channel_id, version) ->
 
 
 async def _get_tw_data(state) -> Union[None, Dict]:
-    async with aiohttp.ClientSession() as aio_session:
+    async with aiohttp.ClientSession(trust_env=True) as aio_session:
         try:
             async with aio_session.get(URL_TOKEN + state) as twitch_user_data_raw:
                 twitch_user_data = await twitch_user_data_raw.json()
@@ -170,7 +170,7 @@ def update_auth() -> None:
 async def refresh_bot_token(ref_token: str) -> bool:
     _log_print(_msg('token_refresh_try'))
 
-    async with aiohttp.ClientSession() as refresh_session:
+    async with aiohttp.ClientSession(trust_env=True) as refresh_session:
         try:
             async with refresh_session.post(URL_TOKEN_REF, json={'ref_token': ref_token}) as twitch_user_data_raw:
                 twitch_user_data = await twitch_user_data_raw.json()
@@ -847,7 +847,7 @@ class TwitchBot(commands.Bot):
         html_history_b64 = base64.urlsafe_b64encode(html_history.encode(encoding='utf-8')).decode(encoding='utf-8')
         json_data = {'user_id': user_id, 'channel_id': channel_id, 'html': html_history_b64}
 
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(trust_env=True) as session:
             try:
                 async with session.post(URL_HISTORY, json=json_data) as post_data:
                     response = await post_data.json()
