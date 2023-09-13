@@ -7,11 +7,12 @@
 *This simulator uses content and materials from Honey Impact - Genshin Impact DB and Tools.*
 
 ![Example](https://media.discordapp.net/attachments/706496930414592080/980878745894260806/dCB9_I5UULE.jpg)
+![Example](https://media.discordapp.net/attachments/873930944560648254/1151323661706461204/image.png)
 
 Simulator is written in Python and uses PyGame to display animation, TwitchIO for interaction with chat and rewards on broadcast.
 
 Features:
- - [x] Database of characters and items is relevant for patch `3.3`, is updated with release of updates in game
+ - [x] Database of characters and items is relevant for patch `4.1`, is updated with release of updates in game
  - [x] Both single wishes and multiple wishes are supported (from 2 to infinity)
  - [x] Broadcast's chat and the usage of channel points by viewers are supported
  - [x] Custom backgrounds usage (even animated), sounds and fonts are supported
@@ -37,9 +38,11 @@ Follow the link to the latest [release](https://github.com/dzmuh97/genshin-twitc
 - **fonts** - folder, fonds for text
 - **background** - folder, background sprites for animations
 - **text** - folder, all text files
+- **ui** - folder, UI files
 - **TwitchGenshinWishSim.exe** - simulator itself
 - **icon.png** - icon for simulator window
 - **config.json** - settings file
+- **config_def.json** - default settings file
 - **messages.json** - file with messages for simulator and chat-bot
 - **auth.json** - will appear after the first launch, file with Twitch tokens
 - **database.sqlite** - will appear after the first launch, database with viewers' actions
@@ -162,14 +165,14 @@ Copy token and paste it into configuration file `config.json`:
      - **3** - for 3★
      - **4** - for 4★
      - **5** - for 5★
-   - **end_delay_milti** - how long wish result will be shown (in seconds) if more than 1 wish was done
+   - **end_delay_multi** - how long wish result will be shown (in seconds) if more than 1 wish was done
      - **3** - for 3★
      - **4** - for 4★
      - **5** - for 5★
    - **user_background** - section for user backgrounds settings
      - **enabled** - enable or disable section (true or false)
      - **path** - name of file in background folder (just file name, not the full path)
-     - **type** - background type, `static` for JPG or PNG, `gif` forя GIF etc.
+     - **type** - background type, `static` for JPG or PNG, `gif` for GIF (video files like `.mp4` may also work)
    - **font** - section for fonts and text settings
      - **path** - name of file in fonts (just file name, not the full path)
      - **user_uid_size** - text size for displaying user's nickname in the lower right corner
@@ -312,6 +315,12 @@ Characters, 5★
  - `Cyno`
  - `Nahida`
  - `Wanderer`
+ - `Alhaitham`
+ - `Baizhu`
+ - `Dehya`
+ - `Lyney`
+ - `Neuvillette`
+ - `Wriothesley`
 
 Weapons, 5★
  - `Haran Geppaku Futsu`
@@ -348,6 +357,12 @@ Weapons, 5★
  - `Everlasting Moonglow`
  - `A Thousand Floating Dreams`
  - `Tulaytullah’s Remembrance`
+ - `The First Great Magic`
+ - `Beacon of the Reed Sea`
+ - `Jadefall’s Splendor`
+ - `Light of Foliar Incision`
+ - `Cashflow Supervision`
+ - `Tome of the Eternal Flow`
 
 Characters, 4★
  - `Amber`
@@ -380,6 +395,12 @@ Characters, 4★
  - `Candace`
  - `Layla`
  - `Faruzan`
+ - `Freminet`
+ - `Kaveh`
+ - `Lynette`
+ - `Yaoyao`
+ - `Kirara`
+ - `Mika`
 
 Weapons, 4★
  - `Blackcliff Longsword`
@@ -466,6 +487,24 @@ Weapons, 4★
  - `Fruit of Fulfillment`
  - `Wandering Evenstar`
  - `Toukabou Shigure`
+ - `Ballad of the Fjords`
+ - `Finale of the Deep`
+ - `Fleuve Cendre Ferryman`
+ - `Flowing Purity`
+ - `Mailed Flower`
+ - `Ibis Piercer`
+ - `Rightful Reward`
+ - `Sacrificial Jade`
+ - `Scion of the Blazing Sun`
+ - `Song of Stillness`
+ - `Talking Stick`
+ - `Tidal Shadow`
+ - `Wolf-Fang`
+ - `Ballad of the Boundless Blue`
+ - `The Dockhand’s Assistant`
+ - `Portable Power Saw`
+ - `Prospector’s Drill`
+ - `Range Gauge`
 
 Weapons, 3★
  - `Cool Steel`
@@ -504,6 +543,9 @@ Skins, 4★ and 5★
  - `Pact of Stars and Moon`
  - `100% Outrider`
  - `Gunnhildr’s Legacy`
+ - `Sailwind Shadow`
+ - `Blossoming Starlight`
+ - `Springbloom Missive`
  - `Red Dead of Night`
 
 </details>

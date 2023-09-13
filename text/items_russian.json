@@ -2,7 +2,7 @@
   "items": {
     "holodnoelezvie": "Холодное лезвие",
     "fileynozh": "Филейный нож",
-    "temniyzhsw": "Тёмный железный\nмеч",
+    "temniyzhsw": "Тёмный\nжелезный меч",
     "predvestnik": "Предвестник зари",
     "swputeshest": "Меч\nпутешественника",
     "swvsadnik": "Меч небесного\nвсадника",
@@ -15,7 +15,7 @@
 
     "chernayakist": "Чёрная кисть",
     "belayakist": "Белая кисть",
-    "alebardamilelith": "Алебарда Миллелита",
+    "alebardamilelith": "Алебарда\nМиллелита",
 
     "rogatka": "Рогатка",
     "posulniy": "Посыльный",
@@ -118,6 +118,24 @@
     "vinoipesni": "Вино и песни",
     "woodcat": "Плод восполнения",
     "skitzvezda": "Скитающаяся\nзвезда",
+    "balladoffyjarods": "Баллада фьордов",
+    "finaleofthedeep": "Грандиозный\nфинал глубин",
+    "fleuvecendre": "Перевозчик\nФлёв Сандр",
+    "flowingpurity": "Сверкание\nчистых вод",
+    "gswmailedflower": "Цветок в латах",
+    "ibispiecer": "Клюв ибиса",
+    "righfulreward": "Справедливая\nнаграда",
+    "sacrificialjade": "Жертвенный нефрит",
+    "scionblazingsun": "Наследник\nслепящего солнца",
+    "songofstilness": "Мелодия покоя",
+    "talkingsting": "Говорящая палица",
+    "tidalshado": "Тень волны",
+    "wolffang": "Волчий клык",
+    "balladboundless": "Песнь\nнеобъятной лазури",
+    "dockhandassist": "Верфь",
+    "powersaw": "Переносная\nмотопила",
+    "prospectorfrill": "Бур рудоискателя",
+    "rangegauge": "Дальномер",
 
     "barbruh_skin": "Летний блеск",
     "jean_skin": "Сон\nморского бриза",
@@ -128,6 +146,9 @@
     "amber_skin": "Скаут\nна все сто",
     "jean_skin2": "Наследие\nГуннхильдр",
     "fischl_skin": "Сон\nвечной ночи",
+    "kaeya_skin": "Тень ветра\nв парусах",
+    "klee_skin": "Цветущий\nсвет звёзд",
+    "ayaka_skin": "Послание\nвесеннего цветения",
 
     "amber": "Эмбер",
     "barbara": "Барбара",
@@ -159,6 +180,12 @@
     "candace": "Кандакия",
     "layla": "Лайла",
     "faruzan": "Фарузан",
+    "freminet": "Фремине",
+    "kaveh": "Кавех",
+    "linette": "Линетт",
+    "yaoyao": "Яо Яо",
+    "momoka": "Кирара",
+    "mika": "Мика",
 
     "haran": "Харан гэппаку\nфуцу",
     "tuman": "Рассекающий туман",
@@ -181,7 +208,7 @@
     "pokoritel": "Покоритель вихря",
     "nefritkorshun": "Нефритовый коршун",
     "nebesnayaos": "Небесная ось",
-    "alyhpeskov": "Посох алых\nпесков",
+    "alyhpeskov": "Посох\nалых песков",
 
     "elegiyapogib": "Элегия погибели",
     "polarzvezda": "Полярная звезда",
@@ -198,6 +225,12 @@
     "vechnoyesiyanie": "Вечное лунное\nсияние",
     "snovidenysnochey": "Сновидения\nтысячи ночей",
     "catkolokol": "Воспоминания\nТулайтуллы",
+    "firstmagickfreat": "Первый\nвеликий фокус",
+    "gswbeaconreedsea": "Маяк\nтростникового моря",
+    "jadefallplender": "Великолепие\nлазурного свода",
+    "swfoliarincosion": "Свет\nлиственного разреза",
+    "cashflowvision": "Казначейский надзор",
+    "eternalflow": "Обряд\nвечного течения",
 
     "diluc_skin": "Алая ночь",
 
@@ -230,6 +263,12 @@
     "nilou": "Нилу",
     "cyno": "Сайно",
     "nahida": "Нахида",
-    "wanderer": "Странник"
+    "wanderer": "Странник",
+    "alhatham": "Аль-Хайтам",
+    "baizhuer": "Бай Чжу",
+    "dehya": "Дэхья",
+    "liney": "Лини",
+    "neuvillette": "Нёвиллет",
+    "wriothesley": "Ризли"
   }
 }

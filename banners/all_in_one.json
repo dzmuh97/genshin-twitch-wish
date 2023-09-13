@@ -1,5 +1,5 @@
 {
-  "banner_name": "DEV v3.3",
+  "banner_name": "DEV v4.1",
   "wish_fo_garant": 10,
   "wish_fo_chance": 13.00,
   "wish_fi_garant": 90,
@@ -39,7 +39,13 @@
         "Nilou",
         "Cyno",
         "Nahida",
-        "Wanderer"
+        "Wanderer",
+        "Alhaitham",
+        "Baizhu",
+        "Dehya",
+        "Lyney",
+        "Neuvillette",
+        "Wriothesley"
       ],
       "weapon": [
         "Haran Geppaku Futsu",
@@ -75,7 +81,13 @@
         "Kagura’s Verity",
         "Everlasting Moonglow",
         "A Thousand Floating Dreams",
-        "Tulaytullah’s Remembrance"
+        "Tulaytullah’s Remembrance",
+        "The First Great Magic",
+        "Beacon of the Reed Sea",
+        "Jadefall’s Splendor",
+        "Light of Foliar Incision",
+        "Cashflow Supervision",
+        "Tome of the Eternal Flow"
       ]
     },
     "4": {
@@ -90,6 +102,9 @@
         "Pact of Stars and Moon",
         "100% Outrider",
         "Gunnhildr’s Legacy",
+        "Sailwind Shadow",
+        "Blossoming Starlight",
+        "Springbloom Missive",
         "Amber",
         "Barbara",
         "Beidou",
@@ -97,7 +112,6 @@
         "Chongyun",
         "Diona",
         "Fischl",
-        "Ein Immernachtstraum",
         "Gorou",
         "Kaeya",
         "Lisa",
@@ -120,7 +134,13 @@
         "Collei",
         "Candace",
         "Layla",
-        "Faruzan"
+        "Faruzan",
+        "Freminet",
+        "Kaveh",
+        "Lynette",
+        "Yaoyao",
+        "Kirara",
+        "Mika"
       ],
       "weapon": [
         "Blackcliff Longsword",
@@ -206,7 +226,25 @@
         "Wine and Song",
         "Fruit of Fulfillment",
         "Wandering Evenstar",
-        "Toukabou Shigure"
+        "Toukabou Shigure",
+        "Ballad of the Fjords",
+        "Finale of the Deep",
+        "Fleuve Cendre Ferryman",
+        "Flowing Purity",
+        "Mailed Flower",
+        "Ibis Piercer",
+        "Rightful Reward",
+        "Sacrificial Jade",
+        "Scion of the Blazing Sun",
+        "Song of Stillness",
+        "Talking Stick",
+        "Tidal Shadow",
+        "Wolf-Fang",
+        "Ballad of the Boundless Blue",
+        "The Dockhand’s Assistant",
+        "Portable Power Saw",
+        "Prospector’s Drill",
+        "Range Gauge"
       ]
     },
     "3": {

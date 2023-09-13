@@ -1,5 +1,4 @@
 import os
-import sys
 import glob
 import json
 import copy
@@ -9,7 +8,7 @@ import jsonschema
 from contextlib import contextmanager
 
 from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox, QColorDialog, QFileDialog
-from PyQt5.QtWidgets import QPushButton, QLineEdit, QLabel, QCheckBox, QSpinBox, QComboBox
+from PyQt5.QtWidgets import QPushButton, QLineEdit, QLabel, QCheckBox, QSpinBox
 
 from PyQt5 import QtGui, uic
 
