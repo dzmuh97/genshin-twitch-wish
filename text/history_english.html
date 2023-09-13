@@ -127,7 +127,6 @@
                 </thead>
                 <tbody class="main_table_data">
 <!--                <tr class="filtered_items"><td>wish_date</td><td>wish_user</td><td>wish_count</td><td>wish_type</td><td class="wish_style_color">wish_name</td></tr>-->
-                {{{ main_table_content }}}
                 </tbody>
             </table>
             <div class="progress" style="height: 3px;">
@@ -137,70 +136,90 @@
     </div>
 </div>
 <script>
-    const table_elems = document.getElementsByClassName("filtered_items");
-    const searchInput = document.getElementById("search_input");
-    const switcher = document.getElementById("switcher_button");
+let data = [
+    // { date: "wish_date", user: "wish_user", count: "wish_count", type: "wish_type", name: "wish_name", star: "star3" },
+    {{{ main_table_content }}}
+];
 
-    function rows_filter() {
-        const s_text = searchInput.value.toLowerCase();
+const searchInput = document.getElementById("search_input");
+const switcher = document.getElementById("switcher_button");
+const tableBody = document.querySelector(".main_table_data");
 
-        let regex = null;
-        try {
-            regex = new RegExp(s_text);
-        } catch (e) {
-            console.log("Regex error: " + e.name + ":" + e.message);
-            return;
-        }
+function renderTable(filteredData) {
+    const fragment = document.createDocumentFragment();
 
-        let s_type;
+    filteredData.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.className = "filtered_items";
 
-        switch (switcher.textContent) {
-            case "3★ ":
-                s_type = "star3";
-                break;
-            case "4★ ":
-                s_type = "star4";
-                break;
-            case "5★ ":
-                s_type = "star5";
-                break;
-            default:
-                s_type = "";
-                break;
-        }
+        ["date", "user", "count", "type", "name"].forEach(key => {
+            const td = document.createElement("td");
+            if (key === "name") {
+                td.className = row.star;
+            }
+            td.textContent = row[key];
+            tr.appendChild(td);
+        });
 
-        for (let i = 0; i < table_elems.length; i++) {
-            const row_elems = table_elems[i];
-            const name_elem = row_elems.children[row_elems.children.length - 1];
+        fragment.appendChild(tr);
+    });
 
-            const elem_name = name_elem.textContent.toLowerCase();
-            const elem_class = name_elem.getAttribute("class");
+    tableBody.innerHTML = "";
+    tableBody.appendChild(fragment);
+}
 
-            row_elems.style.display = "";
-            if ((s_text.length !== 0) && !regex.test(elem_name)) row_elems.style.display = "none";
-            if ((s_type.length !== 0) && (elem_class !== s_type)) row_elems.style.display = "none";
-        }
+function rows_filter() {
+    const s_text = searchInput.value.toLowerCase();
+    let regex = new RegExp(s_text);
+
+    let s_type = "";
+    switch (switcher.textContent.trim()) {
+        case "3★":
+            s_type = "star3";
+            break;
+        case "4★":
+            s_type = "star4";
+            break;
+        case "5★":
+            s_type = "star5";
+            break;
+        default:
+            break;
     }
 
-    searchInput.addEventListener("keyup", rows_filter);
+    const filteredData = data.filter(row => {
+        const nameMatches = regex.test(row.name.toLowerCase());
+        const typeMatches = s_type ? row.star === s_type : true;
+        return nameMatches && typeMatches;
+    });
 
-    function filter_table(_type) {
-        switch (_type) {
-            case "star3":
-                switcher.textContent = "3★ ";
-                break;
-            case "star4":
-                switcher.textContent = "4★ ";
-                break;
-            case "star5":
-                switcher.textContent = "5★ ";
-                break;
-            default:
-                switcher.textContent = "★ ";
-                break;
-        }
-        rows_filter();
+    renderTable(filteredData);
+}
+
+let timeout;
+searchInput.addEventListener("keyup", function() {
+    clearTimeout(timeout);
+    timeout = setTimeout(rows_filter, 1000);
+});
+
+function filter_table(_type) {
+    switch (_type) {
+        case "star3":
+            switcher.textContent = "3★";
+            break;
+        case "star4":
+            switcher.textContent = "4★";
+            break;
+        case "star5":
+            switcher.textContent = "5★";
+            break;
+        default:
+            switcher.textContent = "★";
+            break;
     }
+    rows_filter();
+}
+renderTable(data);
 </script>
 </body>
 </html>

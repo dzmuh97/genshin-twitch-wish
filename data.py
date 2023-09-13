@@ -684,4 +684,4 @@ DATABASE = {
         }
 }
 
-HTML_HISTORY_TEMPLATE_TABLE = r'<tr class="filtered_items"><td>{{ wish_date }}</td><td>{{ wish_user }}</td><td>{{ wish_count }}</td><td>{{ wish_type }}</td><td class="{{ wish_style_color }}">{{ wish_name }}</td></tr>'
+HTML_HISTORY_TEMPLATE_TABLE = r'{ date: "{{ wish_date }}", user: "{{ wish_user }}", count: "{{ wish_count }}", type: "{{ wish_type }}", name: "{{ wish_name }}", star: "{{ wish_style_color }}" },'
