@@ -1,5 +1,5 @@
 {
-  "banner_name": "Skin v2.8",
+  "banner_name": "Skin v4.1",
   "wish_fo_garant": 10,
   "wish_fo_chance": 13.00,
   "wish_fi_garant": 90,
@@ -25,7 +25,10 @@
         "To the Church’s Free Spirit",
         "Pact of Stars and Moon",
         "100% Outrider",
-        "Gunnhildr’s Legacy"
+        "Gunnhildr’s Legacy",
+        "Sailwind Shadow",
+        "Blossoming Starlight",
+        "Springbloom Missive"
       ],
       "weapon": []
     },
