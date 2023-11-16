@@ -137,6 +137,8 @@
     "powersaw": "Portable\nPower Saw",
     "prospectorfrill": "Prospector’s Drill",
     "rangegauge": "Range Gauge",
+    "narzissenkreuz": "Sword of\nNarzissenkreuz",
+    "ultimatemagicksword": "\"Ultimate Overlord's\nMega Magic Sword\"",
 
     "barbruh_skin": "Summertime\nSparkle",
     "jean_skin": "Sea Breeze\nDandelion",
@@ -187,6 +189,8 @@
     "yaoyao": "Yaoyao",
     "momoka": "Kirara",
     "mika": "Mika",
+    "charlotte": "Charlotte",
+    "chevreuse": "Chevreuse",
 
     "haran": "Haran Geppaku\nFutsu",
     "tuman": "Mistsplitter\nReforged",
@@ -232,6 +236,8 @@
     "swfoliarincosion": "Light of\nFoliar Incision",
     "cashflowvision": "Cashflow\nSupervision",
     "eternalflow": "Tome of\nthe Eternal Flow",
+    "splendorofwaters": "Splendor of\nTranquil Waters",
+    "consideredjudjment": "Considered Judgment",
 
     "diluc_skin": "Red Dead of Night",
 
@@ -270,6 +276,8 @@
     "dehya": "Dehya",
     "liney": "Lyney",
     "neuvillette": "Neuvillette",
-    "wriothesley": "Wriothesley"
+    "wriothesley": "Wriothesley",
+    "furina": "Furina",
+    "navia": "Navia"
   }
 }

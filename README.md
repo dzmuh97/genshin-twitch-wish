@@ -321,6 +321,8 @@ Characters, 5★
  - `Lyney`
  - `Neuvillette`
  - `Wriothesley`
+ - `Furina`
+ - `Navia`
 
 Weapons, 5★
  - `Haran Geppaku Futsu`
@@ -363,6 +365,8 @@ Weapons, 5★
  - `Light of Foliar Incision`
  - `Cashflow Supervision`
  - `Tome of the Eternal Flow`
+ - `Splendor of Tranquil Waters`
+ - `Considered Judgment`
 
 Characters, 4★
  - `Amber`
@@ -401,6 +405,8 @@ Characters, 4★
  - `Yaoyao`
  - `Kirara`
  - `Mika`
+ - `Charlotte`
+ - `Chevreuse`
 
 Weapons, 4★
  - `Blackcliff Longsword`
@@ -505,6 +511,8 @@ Weapons, 4★
  - `Portable Power Saw`
  - `Prospector’s Drill`
  - `Range Gauge`
+ - `Sword of Narzissenkreuz`
+ - `"Ultimate Overlord's Mega Magic Sword"`
 
 Weapons, 3★
  - `Cool Steel`

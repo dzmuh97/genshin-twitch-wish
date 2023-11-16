@@ -137,6 +137,8 @@
     "powersaw": "Переносная\nмотопила",
     "prospectorfrill": "Бур рудоискателя",
     "rangegauge": "Дальномер",
+    "narzissenkreuz": "Меч\nНарциссенкрейца",
+    "ultimatemagicksword": "«Магический супермеч\nвысшего владыки»",
 
     "barbruh_skin": "Летний блеск",
     "jean_skin": "Сон\nморского бриза",
@@ -187,6 +189,8 @@
     "yaoyao": "Яо Яо",
     "momoka": "Кирара",
     "mika": "Мика",
+    "charlotte": "Шарлотта",
+    "chevreuse": "Шеврёз",
 
     "haran": "Харан гэппаку\nфуцу",
     "tuman": "Рассекающий туман",
@@ -232,6 +236,8 @@
     "swfoliarincosion": "Свет\nлиственного разреза",
     "cashflowvision": "Казначейский надзор",
     "eternalflow": "Обряд\nвечного течения",
+    "splendorofwaters": "Блеск тихих вод",
+    "consideredjudjment": "Обдуманное суждение",
 
     "diluc_skin": "Алая ночь",
 
@@ -270,6 +276,8 @@
     "dehya": "Дэхья",
     "liney": "Лини",
     "neuvillette": "Нёвиллет",
-    "wriothesley": "Ризли"
+    "wriothesley": "Ризли",
+    "furina": "Фурина",
+    "navia": "Навия"
   }
 }
