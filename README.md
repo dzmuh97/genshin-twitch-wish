@@ -12,7 +12,7 @@
 Simulator is written in Python and uses PyGame to display animation, TwitchIO for interaction with chat and rewards on broadcast.
 
 Features:
- - [x] Database of characters and items is relevant for patch `4.1`, is updated with release of updates in game
+ - [x] Database of characters and items is relevant for patch `4.3`, is updated with release of updates in game
  - [x] Both single wishes and multiple wishes are supported (from 2 to infinity)
  - [x] Broadcast's chat and the usage of channel points by viewers are supported
  - [x] Custom backgrounds usage (even animated), sounds and fonts are supported

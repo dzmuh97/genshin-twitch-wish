@@ -13,7 +13,7 @@ from data import CONFIG_SCHEMA, MESSAGES_SCHEMA, BANNER_SCHEMA
 
 __title__ = 'genshin-twitch-wish'
 __site__ = 'github.com/dzmuh97/genshin-twitch-wish'
-__version__ = '3.0.1'
+__version__ = '3.0.2'
 
 CONFIG = {}
 BANNER_CONFIG = {}
